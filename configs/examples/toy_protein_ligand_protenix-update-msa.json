@@ -1,0 +1,21 @@
+[
+    {
+        "name": "toy_protein_ligand",
+        "sequences": [
+            {
+                "proteinChain": {
+                    "sequence": "MKTAYIAKQRQISFVKSHFSRQLEERLGLIEVQAPILSRVGDGTQDNLSGAEKAVQVKVKALPDAQFEVVHSLAKWKRQTLGQHDFSAGEGLYTHMKALRPDEDRLSPLHSVYVDQWDWELVMGDGERQFSTLKSTVEAIWAGIKATEAAVSEEFGLAPFLPDQIHFVHSQELLSRYPDLDAKGRERAIAKDLGAVFLVGIGGKLSDGHRHDVRAPDYDDWSTPSELGHAGLNGDILVWNPVLEDAFELSSMGIRVDADTLKHQLALTGDEDRLELEWHQALLRGEMPQTIGGGIGQSRLTMLLLQLPHIGQVQAGVWPAAVRESVPSLL",
+                    "count": 1,
+                    "pairedMsaPath": "/home/srayanta/co_folding/data/designs/smoke_test/protenix/toy_protein_ligand/msa/0/pairing.a3m",
+                    "unpairedMsaPath": "/home/srayanta/co_folding/data/designs/smoke_test/protenix/toy_protein_ligand/msa/0/non_pairing.a3m"
+                }
+            },
+            {
+                "ligand": {
+                    "ligand": "CC(=O)Oc1ccccc1C(=O)O",
+                    "count": 1
+                }
+            }
+        ]
+    }
+]

@@ -1,0 +1,23 @@
+# Vendored source (shallow clones, reproducible via scripts/setup_env.py)
+src/
+
+# Model weights (large, permanent-but-reproducible via scripts/setup_env.py)
+weights/
+
+# Per-backend virtualenvs (reproducible via scripts/setup_env.py)
+.venvs/
+.venv/
+
+# Run outputs and large data (structures, campaign results) — big and
+# reproducible by re-running the scripts; keep boltzgen_examples/ (small
+# reference YAML/CIF scaffolds) since those aren't reproducible from a
+# single source URL the same way.
+data/*
+!data/boltzgen_examples/
+
+# Python
+__pycache__/
+*.pyc
+
+# OS/editor cruft
+.DS_Store

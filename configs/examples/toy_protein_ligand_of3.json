@@ -1,0 +1,20 @@
+{
+  "seeds": [42],
+  "queries": {
+    "toy_protein_ligand": {
+      "chains": [
+        {
+          "molecule_type": "PROTEIN",
+          "chain_ids": ["A"],
+          "sequence": "MKTAYIAKQRQISFVKSHFSRQLEERLGLIEVQAPILSRVGDGTQDNLSGAEKAVQVKVKALPDAQFEVVHSLAKWKRQTLGQHDFSAGEGLYTHMKALRPDEDRLSPLHSVYVDQWDWELVMGDGERQFSTLKSTVEAIWAGIKATEAAVSEEFGLAPFLPDQIHFVHSQELLSRYPDLDAKGRERAIAKDLGAVFLVGIGGKLSDGHRHDVRAPDYDDWSTPSELGHAGLNGDILVWNPVLEDAFELSSMGIRVDADTLKHQLALTGDEDRLELEWHQALLRGEMPQTIGGGIGQSRLTMLLLQLPHIGQVQAGVWPAAVRESVPSLL"
+        },
+        {
+          "molecule_type": "LIGAND",
+          "chain_ids": ["B"],
+          "smiles": "CC(=O)Oc1ccccc1C(=O)O"
+        }
+      ],
+      "use_msas": true
+    }
+  }
+}
