@@ -148,7 +148,10 @@ these are the target architecture from §7's phased plan, not yet built.
 `scripts/{smoke_test,run_design,fetch_target}.py` are the working interim —
 they do a narrower version of what `backends/`+`jobspec/` will eventually
 generalize (currently: Boltz-2/OpenFold3 only, one modality shape, no
-agent-callable tool wrapper yet).
+agent-callable tool wrapper yet). Likewise, `experiments/` is the working
+interim for `eval/` — cross-campaign metric aggregation plus a known-binder
+reference baseline; see `experiments/README.md` for scope and what it
+deliberately doesn't do yet.
 
 ## 5. Unified job specification
 

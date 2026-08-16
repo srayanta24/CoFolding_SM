@@ -15,6 +15,52 @@ weights/
 data/*
 !data/boltzgen_examples/
 
+# Cached reference sequences fetched from RCSB (reproducible via
+# experiments/fetch_reference.py); reference run outputs land under data/designs/
+# and are covered by the data/* rule above.
+experiments/reference_data/
+
+# Local antibody-design databases (large, 100% reproducible via databases/src/) — all
+# the fetch code lives in databases/src/ (tracked in full, so the database can be
+# recreated on another machine from a clone alone) and every per-source data folder is
+# ignored except its provenance README.md.
+#
+# Gotcha (hit and verified twice while writing this, so spelling it out): git will not
+# apply a negation to something nested inside an already-excluded directory — it prunes
+# the whole directory from traversal first. `databases/*` excludes `databases/sabdab`
+# as a directory entry; `!databases/sabdab/README.md` alone does nothing, because
+# `databases/sabdab` itself is still excluded and never gets descended into. Each
+# excluded directory that needs *any* exception inside it must first be re-included as
+# a directory (`!databases/sabdab/`) before a more specific `databases/sabdab/*` +
+# `!databases/sabdab/README.md` pair can take effect on its contents.
+databases/*
+!databases/src/
+!databases/README.md
+!databases/sabdab/
+!databases/aacdb/
+!databases/ab_bind/
+!databases/andd/
+!databases/abdesign_db/
+!databases/asd/
+
+databases/sabdab/*
+!databases/sabdab/README.md
+
+databases/aacdb/*
+!databases/aacdb/README.md
+
+databases/ab_bind/*
+!databases/ab_bind/README.md
+
+databases/andd/*
+!databases/andd/README.md
+
+databases/abdesign_db/*
+!databases/abdesign_db/README.md
+
+databases/asd/*
+!databases/asd/README.md
+
 # Python
 __pycache__/
 *.pyc

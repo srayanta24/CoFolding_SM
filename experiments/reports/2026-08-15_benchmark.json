@@ -1,0 +1,433 @@
+{
+  "date": "2026-08-15",
+  "per_campaign": {
+    "ctrop2_antibody": {
+      "csv_path": "data/designs/ctrop2_antibody/run1/final_ranked_designs/all_designs_metrics.csv",
+      "meta": {
+        "target": "TROP2",
+        "structure_source": "predicted (boltz2)"
+      },
+      "num_designs": 1000,
+      "num_passed_filters": 146,
+      "metrics": {
+        "design_to_target_iptm": {
+          "n": 1000,
+          "n_total": 1000,
+          "mean": 0.34440863,
+          "median": 0.339295,
+          "min": 0.15735,
+          "max": 0.69243,
+          "pass_rate": 0.0,
+          "fail_rate": 0.967
+        },
+        "min_design_to_target_pae": {
+          "n": 1000,
+          "n_total": 1000,
+          "mean": 12.17752518,
+          "median": 11.675885,
+          "min": 3.44595,
+          "max": 21.66247,
+          "pass_rate": 0.0,
+          "fail_rate": 0.0
+        },
+        "design_ptm": {
+          "n": 1000,
+          "n_total": 1000,
+          "mean": 0.70550285,
+          "median": 0.704605,
+          "min": 0.62985,
+          "max": 0.80826,
+          "pass_rate": 0.0,
+          "fail_rate": 0.0
+        },
+        "filter_rmsd": {
+          "n": 1000,
+          "n_total": 1000,
+          "mean": 9.45353691,
+          "median": 8.031445,
+          "min": 1.06681,
+          "max": 21.42957,
+          "pass_rate": 0.23,
+          "fail_rate": 0.565
+        },
+        "complex_plddt": {
+          "n": 1000,
+          "n_total": 1000,
+          "mean": 0.70530134,
+          "median": 0.704645,
+          "min": 0.64761,
+          "max": 0.77176,
+          "pass_rate": 0.0,
+          "fail_rate": 0.406
+        },
+        "liability_score": {
+          "n": 1000,
+          "n_total": 1000,
+          "mean": 148.95,
+          "median": 145.0,
+          "min": 65.0,
+          "max": 285.0,
+          "pass_rate": 0.0,
+          "fail_rate": 0.0
+        },
+        "liability_num_violations": {
+          "n": 1000,
+          "n_total": 1000,
+          "mean": 16.707,
+          "median": 16.0,
+          "min": 7.0,
+          "max": 32.0,
+          "pass_rate": 0.722,
+          "fail_rate": 0.0
+        },
+        "plip_hbonds_refolded": {
+          "n": 1000,
+          "n_total": 1000,
+          "mean": 4.122,
+          "median": 4.0,
+          "min": 0.0,
+          "max": 15.0,
+          "pass_rate": 0.0,
+          "fail_rate": 0.0
+        },
+        "plip_saltbridge_refolded": {
+          "n": 1000,
+          "n_total": 1000,
+          "mean": 1.298,
+          "median": 1.0,
+          "min": 0.0,
+          "max": 6.0,
+          "pass_rate": 0.0,
+          "fail_rate": 0.0
+        },
+        "quality_score": {
+          "n": 1000,
+          "n_total": 1000,
+          "mean": 0.5,
+          "median": 0.5,
+          "min": 0.0,
+          "max": 1.0,
+          "pass_rate": 0.0,
+          "fail_rate": 0.0
+        }
+      }
+    },
+    "hel_antibody": {
+      "csv_path": "data/designs/hel_antibody/run1/final_ranked_designs/all_designs_metrics.csv",
+      "meta": {
+        "target": "HEL (hen egg lysozyme)",
+        "structure_source": "real_pdb (1dpx, apo)"
+      },
+      "num_designs": 50,
+      "num_passed_filters": 2,
+      "metrics": {
+        "design_to_target_iptm": {
+          "n": 50,
+          "n_total": 50,
+          "mean": 0.3040774,
+          "median": 0.28386,
+          "min": 0.16843,
+          "max": 0.57165,
+          "pass_rate": 0.0,
+          "fail_rate": 0.94
+        },
+        "min_design_to_target_pae": {
+          "n": 50,
+          "n_total": 50,
+          "mean": 12.891478,
+          "median": 13.600439999999999,
+          "min": 4.23289,
+          "max": 19.92369,
+          "pass_rate": 0.0,
+          "fail_rate": 0.0
+        },
+        "design_ptm": {
+          "n": 50,
+          "n_total": 50,
+          "mean": 0.6936792,
+          "median": 0.693365,
+          "min": 0.64167,
+          "max": 0.74494,
+          "pass_rate": 0.0,
+          "fail_rate": 0.0
+        },
+        "filter_rmsd": {
+          "n": 50,
+          "n_total": 50,
+          "mean": 11.487239,
+          "median": 12.083345,
+          "min": 1.1334,
+          "max": 17.43951,
+          "pass_rate": 0.04,
+          "fail_rate": 0.96
+        },
+        "complex_plddt": {
+          "n": 50,
+          "n_total": 50,
+          "mean": 0.7541782,
+          "median": 0.753595,
+          "min": 0.70387,
+          "max": 0.8001,
+          "pass_rate": 0.0,
+          "fail_rate": 0.0
+        },
+        "liability_score": {
+          "n": 50,
+          "n_total": 50,
+          "mean": 129.5,
+          "median": 117.5,
+          "min": 75.0,
+          "max": 230.0,
+          "pass_rate": 0.0,
+          "fail_rate": 0.0
+        },
+        "liability_num_violations": {
+          "n": 50,
+          "n_total": 50,
+          "mean": 14.46,
+          "median": 13.0,
+          "min": 8.0,
+          "max": 26.0,
+          "pass_rate": 0.88,
+          "fail_rate": 0.0
+        },
+        "plip_hbonds_refolded": {
+          "n": 50,
+          "n_total": 50,
+          "mean": 3.56,
+          "median": 3.0,
+          "min": 0.0,
+          "max": 10.0,
+          "pass_rate": 0.0,
+          "fail_rate": 0.0
+        },
+        "plip_saltbridge_refolded": {
+          "n": 50,
+          "n_total": 50,
+          "mean": 1.5,
+          "median": 1.5,
+          "min": 0.0,
+          "max": 5.0,
+          "pass_rate": 0.0,
+          "fail_rate": 0.0
+        },
+        "quality_score": {
+          "n": 50,
+          "n_total": 50,
+          "mean": 0.5,
+          "median": 0.5,
+          "min": 0.0,
+          "max": 1.0,
+          "pass_rate": 0.0,
+          "fail_rate": 0.0
+        }
+      }
+    },
+    "trop2_antibody": {
+      "csv_path": "data/designs/trop2_antibody/run1/final_ranked_designs/all_designs_metrics.csv",
+      "meta": {
+        "target": "TROP2",
+        "structure_source": "real_pdb (7e5n)"
+      },
+      "num_designs": 50,
+      "num_passed_filters": 0,
+      "metrics": {
+        "design_to_target_iptm": {
+          "n": 50,
+          "n_total": 50,
+          "mean": 0.281548,
+          "median": 0.258075,
+          "min": 0.18791,
+          "max": 0.5079,
+          "pass_rate": 0.0,
+          "fail_rate": 0.98
+        },
+        "min_design_to_target_pae": {
+          "n": 50,
+          "n_total": 50,
+          "mean": 15.1612108,
+          "median": 15.89671,
+          "min": 7.82148,
+          "max": 21.25423,
+          "pass_rate": 0.0,
+          "fail_rate": 0.0
+        },
+        "design_ptm": {
+          "n": 50,
+          "n_total": 50,
+          "mean": 0.7290202,
+          "median": 0.72787,
+          "min": 0.6561,
+          "max": 0.77043,
+          "pass_rate": 0.0,
+          "fail_rate": 0.0
+        },
+        "filter_rmsd": {
+          "n": 50,
+          "n_total": 50,
+          "mean": 13.9147128,
+          "median": 16.304385,
+          "min": 2.60028,
+          "max": 22.97365,
+          "pass_rate": 0.04,
+          "fail_rate": 0.78
+        },
+        "complex_plddt": {
+          "n": 50,
+          "n_total": 50,
+          "mean": 0.7015064,
+          "median": 0.699375,
+          "min": 0.67473,
+          "max": 0.74819,
+          "pass_rate": 0.0,
+          "fail_rate": 0.52
+        },
+        "liability_score": {
+          "n": 50,
+          "n_total": 50,
+          "mean": 140.5,
+          "median": 125.0,
+          "min": 65.0,
+          "max": 230.0,
+          "pass_rate": 0.0,
+          "fail_rate": 0.0
+        },
+        "liability_num_violations": {
+          "n": 50,
+          "n_total": 50,
+          "mean": 15.82,
+          "median": 14.0,
+          "min": 7.0,
+          "max": 26.0,
+          "pass_rate": 0.76,
+          "fail_rate": 0.0
+        },
+        "plip_hbonds_refolded": {
+          "n": 50,
+          "n_total": 50,
+          "mean": 3.64,
+          "median": 3.0,
+          "min": 0.0,
+          "max": 14.0,
+          "pass_rate": 0.0,
+          "fail_rate": 0.0
+        },
+        "plip_saltbridge_refolded": {
+          "n": 50,
+          "n_total": 50,
+          "mean": 1.04,
+          "median": 1.0,
+          "min": 0.0,
+          "max": 6.0,
+          "pass_rate": 0.0,
+          "fail_rate": 0.0
+        },
+        "quality_score": {
+          "n": 50,
+          "n_total": 50,
+          "mean": 0.5,
+          "median": 0.5,
+          "min": 0.0,
+          "max": 1.0,
+          "pass_rate": 0.0,
+          "fail_rate": 0.0
+        }
+      }
+    }
+  },
+  "cross_campaign": {
+    "design_to_target_iptm": {
+      "num_campaigns": 3,
+      "mean_of_campaign_means": 0.31001134333333336,
+      "mean_pass_rate": 0.0
+    },
+    "min_design_to_target_pae": {
+      "num_campaigns": 3,
+      "mean_of_campaign_means": 13.410071326666666,
+      "mean_pass_rate": 0.0
+    },
+    "design_ptm": {
+      "num_campaigns": 3,
+      "mean_of_campaign_means": 0.70940075,
+      "mean_pass_rate": 0.0
+    },
+    "filter_rmsd": {
+      "num_campaigns": 3,
+      "mean_of_campaign_means": 11.618496236666667,
+      "mean_pass_rate": 0.10333333333333333
+    },
+    "complex_plddt": {
+      "num_campaigns": 3,
+      "mean_of_campaign_means": 0.7203286466666666,
+      "mean_pass_rate": 0.0
+    },
+    "liability_score": {
+      "num_campaigns": 3,
+      "mean_of_campaign_means": 139.65,
+      "mean_pass_rate": 0.0
+    },
+    "liability_num_violations": {
+      "num_campaigns": 3,
+      "mean_of_campaign_means": 15.662333333333335,
+      "mean_pass_rate": 0.7873333333333333
+    },
+    "plip_hbonds_refolded": {
+      "num_campaigns": 3,
+      "mean_of_campaign_means": 3.774,
+      "mean_pass_rate": 0.0
+    },
+    "plip_saltbridge_refolded": {
+      "num_campaigns": 3,
+      "mean_of_campaign_means": 1.2793333333333334,
+      "mean_pass_rate": 0.0
+    },
+    "quality_score": {
+      "num_campaigns": 3,
+      "mean_of_campaign_means": 0.5,
+      "mean_pass_rate": 0.0
+    }
+  },
+  "reference_baselines": {
+    "hel": {
+      "boltz2": [
+        {
+          "confidence_score": 0.8766084909439087,
+          "ptm": 0.7380221486091614,
+          "iptm": 0.6629744172096252
+        }
+      ],
+      "openfold3": [
+        {
+          "ptm": 0.718779,
+          "iptm": 0.624425,
+          "avg_plddt": 91.12455,
+          "sample_ranking_score": 0.643296
+        },
+        {
+          "ptm": 0.718801,
+          "iptm": 0.626183,
+          "avg_plddt": 91.085014,
+          "sample_ranking_score": 0.644706
+        },
+        {
+          "ptm": 0.642278,
+          "iptm": 0.581922,
+          "avg_plddt": 90.660332,
+          "sample_ranking_score": 0.593993
+        },
+        {
+          "ptm": 0.735088,
+          "iptm": 0.663813,
+          "avg_plddt": 91.264633,
+          "sample_ranking_score": 0.678068
+        },
+        {
+          "ptm": 0.740372,
+          "iptm": 0.664136,
+          "avg_plddt": 91.374405,
+          "sample_ranking_score": 0.679383
+        }
+      ]
+    }
+  }
+}
