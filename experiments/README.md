@@ -11,6 +11,18 @@ expanding `reference_targets.py` beyond its one hand-curated entry, though that
 expansion hasn't been built yet. See `databases/README.md` for the full index; the
 structures + affinity corpus this project started with is `databases/sabdab/`.
 
+## Design-improvement experiments
+
+The files below are this folder's original scope (benchmarking existing campaigns).
+Three subfolders hold the active design-improvement work from
+[IMPROVE_DESIGN.md](../IMPROVE_DESIGN.md), one per option, built in order:
+
+| Folder | Status |
+|---|---|
+| `epitope_prediction/` | Detailed plan written ([`PLAN.md`](epitope_prediction/PLAN.md)); implementation not started. |
+| `germinal_comparison/` | Not started — see `IMPROVE_DESIGN.md` §2 for scope. |
+| `finetuning/` | Not started — see `IMPROVE_DESIGN.md` §3 for scope. |
+
 ## What's here
 
 | File | Purpose |

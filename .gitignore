@@ -20,6 +20,13 @@ data/*
 # and are covered by the data/* rule above.
 experiments/reference_data/
 
+# Epitope-prediction training artifacts (large, reproducible via the scripts in
+# experiments/epitope_prediction/) — label caches, extracted-feature caches, trained
+# model checkpoints. Code and docs in that folder stay tracked as normal.
+experiments/epitope_prediction/data/*cache*.json
+experiments/epitope_prediction/**/*.pt
+experiments/epitope_prediction/**/checkpoints/
+
 # Local antibody-design databases (large, 100% reproducible via databases/src/) — all
 # the fetch code lives in databases/src/ (tracked in full, so the database can be
 # recreated on another machine from a clone alone) and every per-source data folder is
@@ -36,6 +43,7 @@ experiments/reference_data/
 databases/*
 !databases/src/
 !databases/README.md
+!databases/splits/
 !databases/sabdab/
 !databases/aacdb/
 !databases/ab_bind/

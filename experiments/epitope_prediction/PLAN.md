@@ -1,0 +1,307 @@
+# Epitope prediction + diffusion steering — detailed plan
+
+Status: draft v1 · 2026-08-16
+
+Implements Option 1 from [IMPROVE_DESIGN.md](../../IMPROVE_DESIGN.md): predict a likely
+epitope on an antigen, feed it into BoltzGen's existing (already trained)
+`binding_types` conditioning to steer the design stage toward it. Two phases: build the
+predictor (this doc's main focus), then wire it into generation.
+
+## 1. Problem framing — which epitope-prediction problem is this
+
+There are two distinct problems in the literature, easy to conflate:
+- **Antibody-aware interface prediction**: given a *specific* antibody and antigen,
+  predict where they contact (e.g. Epi4Ab — uses ESM2 for the antigen + AntiBERTy for
+  the antibody). Not our problem — we don't have a candidate antibody yet; picking the
+  epitope is what happens *before* generation.
+- **Antibody-agnostic epitope/antigenicity prediction** (Discotope-3.0, SEMA-2.0,
+  RoBep): given only the antigen, predict which surface residues are generally
+  antigenic — likely to be *someone's* epitope. **This is our problem.**
+
+Target output format, verified directly in BoltzGen's own schema parser
+(`src/boltzgen/src/boltzgen/data/parse/schema.py:1066-1090`): the design-spec YAML's
+`binding_types` field is a per-residue string, one character per residue —
+`U`nspecified / `B`inding / `N`ot-binding — same length as the sequence (padded with
+`U` if shorter). This is the exact contract the predictor needs to produce.
+
+## 2. Literature grounding (sequence-based vs. structure-based)
+
+- **Structure-based** (Discotope-3.0, SEMA-2.0, RoBep): the field's leading approach,
+  because most real antibody epitopes are *conformational* (spatially clustered on the
+  folded surface, not contiguous in sequence) — a sequence-only model can't see this.
+  SEMA-2.0 reports ROC AUC 0.76 on an independent test set — a concrete number to
+  benchmark against, not just "make it work." **DiscoTope-3.0 specifically trains on
+  both solved and AlphaFold-*predicted* structures** — direct precedent for our
+  situation (we can always produce a structure, real or Boltz-2/OpenFold3-predicted,
+  before predicting an epitope).
+- **Sequence-only** (SeRenDIP-CE, BepiPred-family): weaker for conformational epitopes,
+  no 3D context. Real use case: extremely fast triage, or a fallback when structure
+  prediction is impractical — neither applies here, since this project already has a
+  working structure-prediction pipeline (`scripts/run_design.py`,
+  `scripts/predict_structure.py`).
+
+**Recommendation: structure-based, v1.** "Sequence-only" input isn't a separate
+modeling problem to solve — it's "fold first via the existing Boltz-2 pipeline, then
+run the same structure-based predictor," exactly DiscoTope-3.0's own design choice. A
+pure sequence-only model is not in v1 scope; revisit only if structure prediction proves
+to be a bottleneck in practice (it hasn't been so far in this project).
+
+## 3. Training/eval data — two label sources, used for different things
+
+**Training labels: AACDB's precomputed interface annotations**
+(`databases/aacdb/interacting_res_distance/*.txt`) — free, already on disk, no new
+computation needed. Verified format: three columns (`antibody`, `antigen`, `distance`),
+already self-labeled which residue is on which side — no chain cross-referencing
+needed. Verified cutoff convention: max distance present is 5.99Å (checked directly),
+i.e. AACDB itself only lists pairs ≤6Å — use that as the positive-label threshold, for
+label consistency between train and eval. **Restricted to
+`databases/splits/train_era.txt` structures only** (3,628 of AACDB's 3,674 unique PDBs
+— verified in `databases/splits/README.md`'s cross-reference table) — this is exactly
+what the leak-free splits work exists for.
+
+Framing, matching the field's own standard (DiscoTope-3.0 explicitly calls this
+**positive-unlabeled learning**, not naive binary classification): a residue observed in
+contact with *any* crystallized antibody is a positive (`BINDING`); everything else is
+*unlabeled*, not confidently `NOT_BINDING` — a real epitope simply may not have been
+crystallized yet. Worth carrying this framing into the loss function (e.g. PU-learning
+adjustment or conservative negative sampling), not just labeling everything else `0`.
+
+**Real gap found and how we're fixing it — eval labels need a different source.**
+AACDB's structures are weighted toward pre-2023 PDBs (matches its own May-2024 v1.0
+snapshot): only **4** of our 851 `test`+`dev` structures have an AACDB annotation — far
+too few for a meaningful held-out evaluation. But **1,437** `test`+`dev` structures have
+a real protein antigen and full atomic coordinates already sitting in
+`databases/sabdab/structures/`. Per your decision: **build our own coordinate-based
+interface-contact labeler** rather than accepting the 4-structure eval set.
+
+- Verified feasible with the same lightweight approach already used for
+  `databases/src/build_splits.py`: mmCIF `_atom_site` rows are plain
+  whitespace-delimited text (columns confirmed:
+  `type_symbol, label_asym_id, label_seq_id, Cartn_x/y/z, auth_seq_id, auth_asym_id`,
+  etc.) — no `gemmi`/`biotite` needed, a stdlib parser is enough.
+  - `extract_interface_labels(pdb_id) -> dict[residue_id, bool]`: parse antibody chains
+    (`Hchain`/`Lchain` from `summary.csv`) and antigen chain(s) (`antigen_chain`)
+    coordinates, compute heavy-atom (`type_symbol != "H"`) pairwise distances, label an
+    antigen residue `BINDING` if any of its heavy atoms is within 5Å of any antibody
+    heavy atom (matching AACDB's own ≤6Å convention, slightly tighter — document the
+    exact number used, treat as a tunable parameter).
+  - Used **only for evaluation** (`dev.txt`/`test.txt`), not training — AACDB's
+    precomputed labels remain the training source (already correct, no reason to
+    recompute what AACDB already did well for `train_era`).
+  - This also gives a natural **sanity check**: computing our own labels for the small
+    overlap where AACDB *does* have `train_era` annotations lets us verify our
+    from-scratch labeler agrees with AACDB's before trusting it on the eval set.
+
+## 4. Architecture — build both, compare, use the winner for steering
+
+Per decision: build **two** architectures in parallel rather than deferring the
+language-model variant — compare them properly on `test.txt` and take the better one
+into §6's steering integration, rather than assuming geometric-only is "good enough."
+
+**Shared**: graph structure is a k-NN graph over antigen residues (backbone atoms),
+mirroring BoltzGen's own `InverseFoldingEncoder`
+(`src/boltzgen/src/boltzgen/model/modules/inverse_fold.py:290-513`, `init_knn_graph`,
+`topk=30`) — not reusing its weights (wrong task, wrong output head), but deliberately
+mirroring its architecture pattern for consistency and because it's a proven design for
+this exact class of problem (structure-conditioned per-residue prediction), already
+validated on this codebase's own hardware. Output head for both: per-residue 3-way
+classifier (`BINDING`/`NOT_BINDING`/`UNSPECIFIED` — `UNSPECIFIED` for low-confidence
+residues, so the design-spec doesn't force a wrong constraint on borderline cases).
+
+**Model A — geometric-only**: node features are SASA, secondary structure, backbone
+geometry (curvature, local packing density) — no sequence-embedding dependency. Also
+worth a fast gradient-boosted-trees version of just the hand-engineered features (no
+graph at all) as a cheap sanity floor before either GNN.
+
+**Model B — geometric + ESM2**: same graph/head as Model A, with a learned projection of
+per-residue ESM2 embeddings (`esm2_t30_150M_UR50D`, 640-dim, verified with a real GPU
+forward pass on this machine) concatenated into the node features before the GNN —
+matching SEMA-2.0's own hybrid approach. `fair-esm`, `torch-geometric`, and `freesasa`
+all verified installing and running cleanly on this aarch64 machine (real GPU forward
+passes tested for both torch-geometric's `SAGEConv`/`GATConv` and ESM2 during planning),
+isolated in `.venvs/epitope-prediction/`, bootstrapped by `setup_env.py`. One real gotcha
+hit and fixed: `torch_geometric.nn.knn_graph` needs the optional compiled extension
+`pyg-lib`, not installed — implemented k-NN manually with `torch.cdist`+`topk` instead
+of chasing another possibly-aarch64-fragile compiled dependency (see
+`model/features.py`'s `build_knn_edge_index`).
+
+**Ensemble + confidence** (per your addition — see the dedicated subsection below,
+not an afterthought): each architecture trains as a **5-member bagging-PU ensemble**,
+not a single model, producing a `(propensity, confidence)` pair per residue rather than
+a point estimate.
+
+**Comparison**: both trained on the identical `train_era`-derived AACDB labels, both
+evaluated on the identical from-scratch `test.txt` labels (§3) — a fair, apples-to-apples
+comparison, not just two papers' reported numbers. Report AUC, precision/recall,
+calibration, *and* the downstream conditioning metric (§5) for both — the winner on the
+downstream metric is what actually matters for steering, not classifier AUC in isolation.
+
+### Ensemble training and confidence (bagging-PU)
+
+Each architecture (A and B) trains as a 5-member ensemble
+(`model/gnn.py`'s `ENSEMBLE_SIZE`), where each member sees the same confirmed positives
+but a different bootstrap resample of the *unlabeled* residues as weak negatives —
+standard bagging-PU. This does double duty: it's both the confidence-estimation
+mechanism and a principled treatment of positive-unlabeled label uncertainty (a single
+model trained once on "unlabeled = negative" can't express "I'm not sure this residue
+is really a negative, it just hasn't been crystallized with an antibody yet" — an
+ensemble that disagrees on borderline unlabeled residues does express that).
+
+Per-residue output is a **pair**: `propensity` (mean predicted probability across the 5
+members) and `confidence` (`1 - normalized_std` — agreement across members). High
+propensity + high confidence = strong epitope call; high propensity + low confidence =
+plausible but uncertain; low propensity regardless of confidence = not an epitope
+residue. `eval/classifier_metrics.py` includes a **confidence-sanity check**: residues
+where the ensemble disagrees more (lower confidence) should show measurably higher
+prediction error than high-confidence residues — if not, the confidence signal isn't
+doing its job, and the eval script says so explicitly rather than hiding it.
+
+**Why this feeds "how many residues to select" (your stated goal)**: this pair is
+exactly the contract `steering/binding_types_spec.py` needs: rank antigen residues by
+`propensity`, walk down the ranked list, and stop adding residues to the `B` set once
+`confidence` drops below a floor *or* `propensity` drops below a floor — producing a
+variable-length epitope selection per antigen (a well-supported epitope for an antigen
+the model is confident about; a short list, or none at all — everything left `U` — for
+a genuinely novel antigen the ensemble disagrees on). Also enables an antigen-level
+gate: if *no* residue clears both floors, skip epitope conditioning entirely for that
+target rather than forcing a low-confidence guess.
+
+## 5. Evaluation plan
+
+- **Classifier metrics**: per-residue ROC AUC on `test.txt` (compare directly against
+  SEMA-2.0's reported 0.76 as an external sanity benchmark — a number from a different
+  dataset/method, so not perfectly comparable, but the right order of magnitude to aim
+  for), precision/recall at a few fixed operating thresholds, calibration (reliability
+  curve, Brier score — matters because `propensity` needs to be a genuinely
+  interpretable probability for the residue-count-selection logic in
+  `binding_types_spec.py`, not just a monotonic ranking score), and the
+  confidence-sanity check described above.
+- **Downstream metric — the one that actually matters**: does conditioning BoltzGen's
+  design stage on the predicted epitope (via `binding_types`) actually shift generated
+  designs' real contact residues toward the predicted/true epitope, compared to
+  unconditioned generation on the same target? Measured via the existing analysis
+  pipeline's own interface-residue reporting (`task/analyze/analyze.py`) — a classifier
+  can have a good AUC and still fail to move the needle on actual generation if the
+  conditioning pathway doesn't respond the way we expect. This is the real go/no-go
+  signal for whether to proceed to v2 (true gradient-guided steering) or stop at v1.
+- Discipline: iterate against `dev.txt` only; touch `test.txt` for final reported
+  numbers, same rule established in `databases/splits/README.md`.
+
+## 6. Steering integration — reuse existing conditioning first, new sampling code only as fallback
+
+**v1**: predicted epitope → `binding_types` `U`/`B`/`N` string → design-spec YAML's
+target entity → BoltzGen's existing, already-trained `ContactConditioning` module
+(`model/modules/trunk.py:28-72,175`, verified real and trained-for, not placeholder
+metadata — see `BOLTZGEN_PIPELINE.md` §2). **No new sampling code needed for v1** — this
+is the cheapest, lowest-risk integration point, reusing a pathway the model was already
+trained to respond to.
+
+**v2 (only if the downstream metric in §5 shows `binding_types` conditioning is too
+weak)**: true steered diffusion — gradient/classifier guidance injected directly into
+`AtomDiffusion.sample`'s denoising loop
+(`src/boltzgen/src/boltzgen/model/modules/diffusion.py:501-629`), adding a loss term at
+each step that pulls designed-chain atoms toward proximity with predicted-epitope
+residues. Conceptually similar to Germinal's hotspot-loss (`IMPROVE_DESIGN.md` §2) but
+mechanistically different — gradient guidance during BoltzGen's own diffusion sampling,
+not backprop through a separate frozen oracle. Real new engineering (modifying a
+core sampling loop in vendored code) — correctly sequenced as a fallback, not the
+starting plan.
+
+## 7. Folder layout (`experiments/epitope_prediction/`)
+
+```
+experiments/epitope_prediction/
+  PLAN.md                    # this file
+  setup_env.py                # one-time .venvs/epitope-prediction/ setup (torch, torch-geometric, fair-esm, freesasa, scikit-learn)
+  README.md                  # (once built) results summary, how to reproduce
+  data/
+    interface_labels.py       # our own coordinate-based labeler (auth_asym_id-keyed, see gotcha below), for dev/test eval + a sanity check against AACDB
+    train_labels.py            # AACDB-derived positive labels, restricted to train_era, cached to .train_labels_cache.json
+  model/
+    features.py                 # shared geometric features (SASA, secondary structure, local density) + manual k-NN graph construction
+    esm2_features.py              # per-residue ESM2 embeddings + learned projection (Model B only)
+    dataset.py                     # assembles+caches (features, graph, labels) per structure per split -- .dataset_cache/{train,dev,test}.pt
+    baseline.py                     # gradient-boosted-trees sanity floor, saved to checkpoints/baseline.pkl
+    gnn.py                           # shared GNN architecture (SAGEConv-based) + 5-member bagging-PU ensemble training, saved to checkpoints/model_{A,B}_seed{0-4}.pt
+  eval/
+    classifier_metrics.py         # AUC/precision/recall/calibration/confidence-sanity-check on dev.txt or test.txt, all three models
+    downstream_eval.py             # (not yet built) conditioned-vs-unconditioned generation comparison
+  steering/
+    binding_types_spec.py          # (not yet built) predicted epitope -> design-spec binding_types string
+```
+
+**Real gotcha hit and fixed while building `interface_labels.py`** (worth keeping
+visible, not just in a commit message): `summary.csv`'s `Hchain`/`Lchain`/`antigen_chain`
+columns are **`auth_asym_id`**, not `label_asym_id` — verified systematically across a
+30-structure random sample (`_entity_poly.pdbx_strand_id`, which
+`databases/src/build_splits.py` matches `antigen_chain` against, is consistent with
+`auth_asym_id` in every case, never with `label_asym_id` alone). `build_splits.py` was
+unaffected (it happened to match the right field already), but the first draft of
+`interface_labels.py` filtered atoms by `label_asym_id` and silently produced wrong
+results (caught immediately by testing against a known AACDB-annotated structure before
+trusting it further — see `data/interface_labels.py`'s module docstring for the full
+story and `--sanity-check` for the ongoing verification). Also fixed during the same
+pass: a PDB entry can have multiple AACDB annotation files (multiple antibody copies in
+the asymmetric unit, confirmed for 1,990 of 3,628 overlapping structures) — both the
+labeler and its sanity check now union across all of them rather than comparing against
+an arbitrary single file.
+
+## 8. Milestones
+
+1. ✅ Build `interface_labels.py` (our own coordinate-based labeler); sanity-checked
+   against AACDB's own labels on the `train_era` overlap (mean Jaccard 0.587 after
+   fixing the two bugs above; hand-verified individual cases as high as 0.92, with
+   remaining low-agreement cases traced to genuine SAbDab/AACDB source disagreements,
+   not labeler bugs).
+2. ✅ Build `train_labels.py` (AACDB-derived, `train_era`-restricted: 3,520 structures,
+   2.9M residues, 6.4% positive) + `features.py` (shared geometric features) +
+   `esm2_features.py` (Model B embeddings, alignment-safe by construction) +
+   `dataset.py` (caching layer).
+3. ✅ Build `baseline.py` — GBT AUC 0.574 on `test.txt`.
+4. ✅ Train **both** Model A and Model B as 5-member bagging-PU ensembles.
+5. ✅ Evaluated on `test.txt` — see §9, **Model A wins**.
+6. Build `binding_types_spec.py` (Model A's propensity+confidence -> `U`/`B`/`N`
+   string, per the adaptive-count logic above); run the downstream
+   conditioned-vs-unconditioned comparison for Model A on a handful of `dev.txt`
+   targets — this, not classifier AUC alone, is what actually decides §6's steering
+   integration.
+7. Go/no-go on v2 (true gradient-guided steered diffusion) based on step 6's result.
+
+## 9. Final results and model selection (test.txt, 751 held-out structures)
+
+| | AUC | Brier | Confidence-sanity check |
+|---|---|---|---|
+| GBT baseline | 0.574 | 0.087 | n/a |
+| **Model A (geometric)** | **0.625** | 0.086 | ✅ passes (error 0.276→0.087 monotonically) |
+| Model B (geometric+ESM2) | 0.582 | 0.088 | ❌ fails (non-monotonic, jumps to 0.103 in the top confidence bin) |
+
+**Model A selected for §6's steering integration.**
+
+Two real bugs were caught and fixed before these numbers were trustworthy — both are
+worth remembering, not just fixing silently:
+
+- **`freesasa`'s `hasRelativeAreas` flag doesn't guarantee `relativeTotal` is a real
+  number.** 40% of training structures had NaN in the SASA feature column (non-standard
+  residues, chain termini with no reference max-area), which propagated to NaN training
+  loss across an entire first ensemble run. Fixed with an explicit NaN/Inf check and a
+  raw-area fallback (`model/features.py`'s `compute_sasa`).
+- **Alternate conformations (`label_alt_id` A/B) were not filtered**, producing
+  duplicate atoms per residue (two `CA`, two `CB`, etc.) that also fed NaN into
+  `freesasa`. Fixed by keeping only the primary altloc (`data/interface_labels.py`'s
+  `parse_atom_site`).
+
+A third, non-bug finding mattered just as much: **the first training pass had no early
+stopping** (fixed 30 epochs), and Model B — with much more input capacity via ESM2 —
+overfit hard: lower training loss than Model A (0.23 vs 0.34) but *worse* held-out AUC,
+and a confidence-sanity check that correctly flagged it as unreliable. Adding proper
+early stopping (`gnn.py`'s `split_train_val` + best-checkpoint pattern, held out from
+`train_era` only, distinct from `dev.txt`/`test.txt`) raised Model B's *internal*
+validation AUC substantially (0.86 vs Model A's 0.80) — but on the true, temporally- and
+sequence-cluster-held-out `test.txt`, Model B still underperforms Model A, and its
+confidence signal still fails the sanity check. This is a real generalization gap, not
+a training artifact: ESM2 embeddings likely let the model pick up antigen-family-specific
+patterns well-represented in the older training corpus that don't transfer to genuinely
+novel antigen families, while the geometric features (SASA, secondary structure, local
+packing) are universal biophysical properties that do transfer. The confidence-sanity
+check did exactly the job it was built for — catching this before it silently fed a
+less-trustworthy model into the steering integration.

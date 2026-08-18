@@ -14,9 +14,15 @@ the hood, read [How cofolding works](#how-cofolding-works) and
 [How antibody design works](#how-antibody-design-works) first.
 
 For the full design rationale, hardware-compatibility findings, and every
-workaround discovered along the way, see [DESIGN.md](DESIGN.md) (cofolding)
-and [UI_DESIGN.md](UI_DESIGN.md) (a not-yet-built dashboard layer). This
-README is the practical entry point; those docs are the detailed record.
+workaround discovered along the way, see [DESIGN.md](DESIGN.md) (cofolding),
+[UI_DESIGN.md](UI_DESIGN.md) (a not-yet-built dashboard layer),
+[BOLTZGEN_PIPELINE.md](BOLTZGEN_PIPELINE.md) (exactly how BoltzGen's design
+pipeline works internally — architecture, checkpoints, and config knobs per
+stage, written for improving generation quality rather than just running it),
+and [IMPROVE_DESIGN.md](IMPROVE_DESIGN.md) (the active plan for improving the
+design step: epitope prediction, a Germinal comparison, and fine-tuning, in
+that order). This README is the practical entry point; those docs are the
+detailed record.
 
 ---
 
