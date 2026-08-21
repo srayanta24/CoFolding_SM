@@ -21,8 +21,9 @@ pipeline works internally — architecture, checkpoints, and config knobs per
 stage, written for improving generation quality rather than just running it),
 and [IMPROVE_DESIGN.md](IMPROVE_DESIGN.md) (the active plan for improving the
 design step: epitope prediction, a Germinal comparison, and fine-tuning, in
-that order). This README is the practical entry point; those docs are the
-detailed record.
+that order — epitope prediction is now built and validated, see
+[experiments/epitope_prediction/PLAN.md](experiments/epitope_prediction/PLAN.md)).
+This README is the practical entry point; those docs are the detailed record.
 
 ---
 
@@ -41,6 +42,16 @@ supply both sides. (B) *generates* something new — you supply only the
 target, and the model proposes binders. A prior session in this project
 initially conflated the two ("design an antibody against lysozyme" could
 mean either), so this README keeps them clearly separate throughout.
+
+Three more Claude Code skills support the antibody-design *improvement* work
+(building/using training data and a steering signal, not running Skill A/B
+themselves):
+
+| Skill | Purpose |
+|---|---|
+| [`.claude/skills/database/SKILL.md`](.claude/skills/database/SKILL.md) | Create/recreate the local antibody-design database (`databases/` — SAbDab, AACDB, AB-Bind, ANDD, AbDesign DB, ASD) |
+| [`.claude/skills/splits/SKILL.md`](.claude/skills/splits/SKILL.md) | Build the leak-free train/dev/test splits (`databases/splits/`) used to evaluate anything trained on that data |
+| [`.claude/skills/epitope_guided_design/SKILL.md`](.claude/skills/epitope_guided_design/SKILL.md) | Predict a target's epitope and steer Skill B's diffusion design toward it via BoltzGen's `binding_types` conditioning (`experiments/epitope_prediction/`) |
 
 ---
 
@@ -573,17 +584,30 @@ co_folding/
 ├── README.md                  # this file
 ├── DESIGN.md                   # cofolding backend research, hardware findings, architecture plan
 ├── UI_DESIGN.md                  # planned dashboard layer (not yet built)
-├── .claude/skills/design/SKILL.md # the skill both capabilities are invoked through
+├── BOLTZGEN_PIPELINE.md            # BoltzGen's design pipeline internals
+├── IMPROVE_DESIGN.md                # active plan for improving the design step
+├── .claude/skills/
+│   ├── design/SKILL.md               # Skill A/B, cofolding + antibody/binder design
+│   ├── database/SKILL.md              # create/recreate databases/
+│   ├── splits/SKILL.md                 # build databases/splits/
+│   └── epitope_guided_design/SKILL.md   # predict + steer via binding_types conditioning
 ├── src/                        # shallow clones, editable-installed — real source, not opaque pip packages
 │   ├── boltz/  openfold3/  protenix/  boltzgen/
 ├── weights/                    # permanent model weights (not a cache — see above)
 │   ├── boltz2/  openfold3/  protenix/  protenix_root/  boltzgen/
-├── .venvs/                     # one isolated venv per backend
-│   ├── boltz2/  openfold3/  protenix/  boltzgen/
+├── .venvs/                     # one isolated venv per backend (+ data-fetch, epitope-prediction, mmseqs2)
 ├── configs/examples/            # minimal example JobSpecs, used by the smoke test
 ├── data/
 │   ├── designs/                 # every run_design.py / boltzgen run output lands here
 │   └── boltzgen_examples/        # sparse clone of BoltzGen's example/ dir — Fab/nanobody scaffolds
+├── databases/                   # local antibody-design database (see database skill)
+│   ├── src/                       # fetch code for every source, reproducible on a new machine
+│   ├── splits/                     # leak-free train/dev/test splits (see splits skill)
+│   └── sabdab/  aacdb/  ab_bind/  andd/  abdesign_db/  asd/
+├── experiments/
+│   └── epitope_prediction/         # epitope model + binding_types steering (see epitope_guided_design skill)
+│       ├── PLAN.md                    # methodology, model comparison, downstream steering results
+│       ├── data/  model/  eval/  steering/
 └── scripts/
     ├── _common.py                # shared paths/helpers (REPO_ROOT, WEIGHTS_DIR, venv_bin(), ...)
     ├── setup_env.py                # one-time environment setup for all four backends
