@@ -29,29 +29,36 @@ This README is the practical entry point; those docs are the detailed record.
 
 ## What's actually in here
 
-Two distinct capabilities, backed by different models, invoked through one
-Claude Code skill (`.claude/skills/design/SKILL.md`):
+Three distinct capabilities, backed by different models, invoked through two
+Claude Code skills (`.claude/skills/design/SKILL.md` for A/B,
+`.claude/skills/epitope_guided_design/SKILL.md` for C):
 
 | Capability | Question it answers | Backend(s) | Typical runtime |
 |---|---|---|---|
 | **A. Cofolding** | "If protein X and Y/this small molecule/this nucleic acid are put together, what structure do they form, and how confident is that prediction?" | Boltz-2, OpenFold3 | 1–3 min |
-| **B. Antibody/binder design** | "Generate novel antibody candidates that might bind target X" | BoltzGen | tens of minutes to hours |
+| **B. Binder design** | "Generate novel antibody candidates that might bind target X" | BoltzGen | tens of minutes to hours |
+| **C. Epitope-guided binder design** | "Generate novel antibody candidates that bind target X **at a specific, model-predicted epitope**, not wherever BoltzGen's own sampling happens to land" | BoltzGen + Model A epitope predictor (`experiments/epitope_prediction/`) | epitope prediction: seconds; design: same as B |
 
 These are genuinely different problems. (A) evaluates a *given* pair — you
 supply both sides. (B) *generates* something new — you supply only the
-target, and the model proposes binders. A prior session in this project
-initially conflated the two ("design an antibody against lysozyme" could
-mean either), so this README keeps them clearly separate throughout.
+target, and the model proposes binders. (C) is (B) with an extra conditioning
+signal: an ensemble GNN predicts which antigen residues are likely epitope,
+and that prediction steers BoltzGen's diffusion via its `binding_types`
+mechanism — validated on real held-out targets to measurably shift generated
+designs' real contacts toward the true epitope when the predictor is
+confident (`experiments/epitope_prediction/PLAN.md` sec 10 has the current
+count and results). A prior session
+in this project initially conflated A and B ("design an antibody against
+lysozyme" could mean either), so this README keeps all three clearly
+separate throughout.
 
-Three more Claude Code skills support the antibody-design *improvement* work
-(building/using training data and a steering signal, not running Skill A/B
-themselves):
+Two more Claude Code skills support the underlying training data C depends on
+(not a design capability themselves):
 
 | Skill | Purpose |
 |---|---|
 | [`.claude/skills/database/SKILL.md`](.claude/skills/database/SKILL.md) | Create/recreate the local antibody-design database (`databases/` — SAbDab, AACDB, AB-Bind, ANDD, AbDesign DB, ASD) |
-| [`.claude/skills/splits/SKILL.md`](.claude/skills/splits/SKILL.md) | Build the leak-free train/dev/test splits (`databases/splits/`) used to evaluate anything trained on that data |
-| [`.claude/skills/epitope_guided_design/SKILL.md`](.claude/skills/epitope_guided_design/SKILL.md) | Predict a target's epitope and steer Skill B's diffusion design toward it via BoltzGen's `binding_types` conditioning (`experiments/epitope_prediction/`) |
+| [`.claude/skills/splits/SKILL.md`](.claude/skills/splits/SKILL.md) | Build the leak-free train/dev/test splits (`databases/splits/`) used to evaluate anything trained on that data, including C's epitope predictor |
 
 ---
 
