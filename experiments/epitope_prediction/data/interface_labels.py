@@ -49,6 +49,7 @@ class Atom:
     type_symbol: str
     atom_name: str
     label_asym_id: str
+    label_seq_id: str
     auth_asym_id: str
     auth_seq_id: str
     auth_comp_id: str
@@ -87,6 +88,7 @@ def parse_atom_site(cif_path: Path) -> list[Atom]:
                                # works but auth is consistent with every other field
                                # here being auth-convention, per the module docstring
             label_asym_id=f[6],
+            label_seq_id=f[8],
             auth_asym_id=f[19],
             auth_seq_id=f[18],
             auth_comp_id=f[17],
@@ -135,6 +137,23 @@ def get_chain_atoms(pdb_id: str) -> tuple[list["Atom"], list["Atom"]] | None:
     return antibody_atoms, antigen_atoms
 
 
+def _antigen_contacts(antibody_atoms: list["Atom"], antigen_atoms: list["Atom"],
+                       threshold: float) -> list[tuple["Atom", bool]]:
+    """Shared distance computation behind both key conventions below -- same logic,
+    just keyed differently by the two callers (auth for eval-label reporting, label_seq
+    for cross-referencing against BoltzGen design outputs, which renumber sequentially
+    and don't preserve auth numbering)."""
+    antibody_xyz = np.array([a.xyz for a in antibody_atoms])
+    if antibody_xyz.size == 0 or not antigen_atoms:
+        return [(a, False) for a in antigen_atoms]
+
+    antigen_xyz = np.array([a.xyz for a in antigen_atoms])
+    # Vectorized pairwise distances: (n_antigen, n_antibody)
+    dists = np.linalg.norm(antigen_xyz[:, None, :] - antibody_xyz[None, :, :], axis=-1)
+    within = (dists <= threshold).any(axis=1)
+    return list(zip(antigen_atoms, within.tolist()))
+
+
 def compute_interface_labels(pdb_id: str, threshold: float = THRESHOLD) -> dict[tuple[str, str, str], bool]:
     """Returns {(auth_asym_id, auth_seq_id, auth_comp_id): is_epitope_residue}, for
     every antigen residue with at least one heavy atom in the structure (both True and
@@ -145,24 +164,82 @@ def compute_interface_labels(pdb_id: str, threshold: float = THRESHOLD) -> dict[
     if chains is None:
         return {}
     antibody_atoms, antigen_atoms = chains
-    antibody_xyz = np.array([a.xyz for a in antibody_atoms])
 
     labels: dict[tuple[str, str, str], bool] = {}
-    if antibody_xyz.size == 0 or not antigen_atoms:
-        for a in antigen_atoms:
-            key = (a.auth_asym_id, a.auth_seq_id, a.auth_comp_id)
-            labels.setdefault(key, False)
-        return labels
-
-    antigen_xyz = np.array([a.xyz for a in antigen_atoms])
-    # Vectorized pairwise distances: (n_antigen, n_antibody)
-    dists = np.linalg.norm(antigen_xyz[:, None, :] - antibody_xyz[None, :, :], axis=-1)
-    within = (dists <= threshold).any(axis=1)
-
-    for atom, is_contact in zip(antigen_atoms, within):
+    for atom, is_contact in _antigen_contacts(antibody_atoms, antigen_atoms, threshold):
         key = (atom.auth_asym_id, atom.auth_seq_id, atom.auth_comp_id)
-        labels[key] = labels.get(key, False) or bool(is_contact)
+        labels[key] = labels.get(key, False) or is_contact
     return labels
+
+
+def compute_interface_labels_by_label_seq(pdb_id: str, threshold: float = THRESHOLD) -> dict[int, bool]:
+    """Same distance logic as compute_interface_labels(), keyed by antigen
+    label_seq_id (entity-sequence position, 1-based) instead of auth numbering --
+    needed for eval/downstream_eval.py's contact-overlap comparison against BoltzGen
+    design-output CIFs. Verified empirically (not assumed): a design's antigen chain,
+    included directly from the original structure via `include:`, keeps the exact same
+    resolved-residue order and identity at each label_seq_id position as the original
+    structure (checked pdb_000010gh: 1006/1006 positions, identical residue names in
+    order) -- BoltzGen renumbers auth_seq_id sequentially from 1 in its output, which
+    does NOT match the original structure's auth numbering, so auth-keyed labels can't
+    be used for this comparison."""
+    chains = get_chain_atoms(pdb_id)
+    if chains is None:
+        return {}
+    antibody_atoms, antigen_atoms = chains
+
+    labels: dict[int, bool] = {}
+    for atom, is_contact in _antigen_contacts(antibody_atoms, antigen_atoms, threshold):
+        if not atom.label_seq_id.isdigit():
+            continue
+        key = int(atom.label_seq_id)
+        labels[key] = labels.get(key, False) or is_contact
+    return labels
+
+
+def parse_atom_site_generic(cif_path: Path) -> list["Atom"]:
+    """Header-driven _atom_site parser (builds a column-name -> index map from the
+    `_atom_site.*` header lines instead of hardcoding positions), for CIFs whose layout
+    isn't guaranteed to match SAbDab's fixed 21-field layout that parse_atom_site()
+    above targets. Needed for BoltzGen's own design-output CIFs, verified to use a
+    different, shorter 19-field layout with no separate auth_atom_id/auth_comp_id
+    columns (only auth_seq_id/auth_asym_id) -- those fall back to the label_
+    equivalents, which are identical for a freshly-generated structure with no
+    alternate residue-naming or altlocs beyond what's already filtered below."""
+    lines = cif_path.read_text().splitlines()
+    columns: list[str] = []
+    for line in lines:
+        if line.startswith("_atom_site."):
+            columns.append(line.split(".", 1)[1].strip())
+        elif columns:
+            break  # header block ends at the first non-_atom_site. line after it starts
+    col_idx = {name: i for i, name in enumerate(columns)}
+
+    def get(f: list[str], name: str, fallback: str | None = None) -> str | None:
+        idx = col_idx.get(name, col_idx.get(fallback) if fallback else None)
+        return f[idx] if idx is not None else None
+
+    atoms = []
+    for line in lines:
+        if not ATOM_LINE_RE.match(line):
+            continue
+        f = line.split()
+        if len(f) < len(columns):
+            continue
+        alt_id = get(f, "label_alt_id")
+        if alt_id not in (None, ".", "A"):
+            continue
+        atoms.append(Atom(
+            type_symbol=get(f, "type_symbol"),
+            atom_name=get(f, "auth_atom_id", "label_atom_id"),
+            label_asym_id=get(f, "label_asym_id"),
+            label_seq_id=get(f, "label_seq_id"),
+            auth_asym_id=get(f, "auth_asym_id"),
+            auth_seq_id=get(f, "auth_seq_id", "label_seq_id"),
+            auth_comp_id=get(f, "auth_comp_id", "label_comp_id"),
+            xyz=(float(get(f, "Cartn_x")), float(get(f, "Cartn_y")), float(get(f, "Cartn_z"))),
+        ))
+    return atoms
 
 
 def _parse_aacdb_labels(pdb_id: str) -> dict[tuple[str, str], bool] | None:

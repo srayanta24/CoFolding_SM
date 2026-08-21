@@ -27,6 +27,11 @@ experiments/epitope_prediction/data/*cache*.json
 experiments/epitope_prediction/**/*.pt
 experiments/epitope_prediction/**/checkpoints/
 
+# Downstream BoltzGen campaign outputs (huge — full design/inverse-folding/folding
+# artifacts per target, reproducible via `downstream_eval.py <pdb_id> --launch`).
+# Results are summarized in PLAN.md sec 10 instead of keeping the raw run data.
+experiments/epitope_prediction/eval/.downstream_runs/
+
 # Local antibody-design databases (large, 100% reproducible via databases/src/) — all
 # the fetch code lives in databases/src/ (tracked in full, so the database can be
 # recreated on another machine from a clone alone) and every per-source data folder is

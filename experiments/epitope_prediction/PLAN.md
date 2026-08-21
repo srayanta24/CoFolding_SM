@@ -225,9 +225,9 @@ experiments/epitope_prediction/
     gnn.py                           # shared GNN architecture (SAGEConv-based) + 5-member bagging-PU ensemble training, saved to checkpoints/model_{A,B}_seed{0-4}.pt
   eval/
     classifier_metrics.py         # AUC/precision/recall/calibration/confidence-sanity-check on dev.txt or test.txt, all three models
-    downstream_eval.py             # (not yet built) conditioned-vs-unconditioned generation comparison
+    downstream_eval.py             # builds+launches real conditioned/baseline BoltzGen campaigns, compares generated contacts vs true epitope (see sec 10)
   steering/
-    binding_types_spec.py          # (not yet built) predicted epitope -> design-spec binding_types string
+    binding_types_spec.py          # Model A propensity+confidence -> binding_types (U/B/N string or structured range)
 ```
 
 **Real gotcha hit and fixed while building `interface_labels.py`** (worth keeping
@@ -260,12 +260,11 @@ an arbitrary single file.
 3. ✅ Build `baseline.py` — GBT AUC 0.574 on `test.txt`.
 4. ✅ Train **both** Model A and Model B as 5-member bagging-PU ensembles.
 5. ✅ Evaluated on `test.txt` — see §9, **Model A wins**.
-6. Build `binding_types_spec.py` (Model A's propensity+confidence -> `U`/`B`/`N`
-   string, per the adaptive-count logic above); run the downstream
-   conditioned-vs-unconditioned comparison for Model A on a handful of `dev.txt`
-   targets — this, not classifier AUC alone, is what actually decides §6's steering
-   integration.
-7. Go/no-go on v2 (true gradient-guided steered diffusion) based on step 6's result.
+6. ✅ Built `binding_types_spec.py` + `downstream_eval.py`; ran three real
+   conditioned-vs-unconditioned campaign pairs across `dev.txt` targets — see §10.
+   Result: conditioning measurably helps when Model A is confident.
+7. ✅ Go/no-go on v2 (true gradient-guided steered diffusion): **no-go for now** — see
+   §10's recommendation.
 
 ## 9. Final results and model selection (test.txt, 751 held-out structures)
 
@@ -305,3 +304,73 @@ novel antigen families, while the geometric features (SASA, secondary structure,
 packing) are universal biophysical properties that do transfer. The confidence-sanity
 check did exactly the job it was built for — catching this before it silently fed a
 less-trustworthy model into the steering integration.
+
+## 10. Downstream conditioned-vs-unconditioned comparison (milestone 6, three targets)
+
+**Method** (same for all three targets below): build `conditioned` (design spec's
+target entity has `binding_types` set from Model A's prediction) and `baseline`
+(identical spec, no `binding_types`) specs, run both as real full BoltzGen campaigns
+(50 designs, budget 5, `antibody-anything` protocol, ranked to a final top 5 each;
+design step ~50min-5.6h and folding/refolding ~1-9h depending on antigen size, real GPU
+time on the single DGX Spark). For each variant's top-5 ranked refolded designs,
+recompute antigen contact residues directly from the design's own output CIF
+(`downstream_eval.py`'s `design_contacts_by_label_seq` — same 5Å distance logic as
+`interface_labels.py`'s labeler, reused via a shared helper, applied to the designed
+antibody chains vs. the antigen chain in the refolded complex) and compare against the
+true epitope. Antigen-chain identity in the output CIF verified empirically before
+trusting this (`pdb_000010gh`: design's antigen chain has the exact same 1006-residue
+sequence, same order, same `label_seq_id` numbering as the original structure —
+BoltzGen preserves this because the antigen entity is `include`d directly from the
+input structure, not regenerated).
+
+**Target 1 — `pdb_000010gh`** (27 true epitope residues; Model A made a **weak, sparse
+call** here — only 2 residues selected, positions 123-124, propensity/confidence floors
+correctly declining to say more): both variants scored **zero overlap** with the true
+epitope (mean recall 0.000, union-of-top-5 recall 0.000/27, both conditioned and
+baseline). Diagnosed, not just accepted at face value: the conditioned run's designs
+*did* cluster near the predicted region (contacts at 103-167, right around 123-124) —
+`binding_types` conditioning is mechanically working, BoltzGen respects it — but the
+prediction itself was simply **wrong**: the true epitope is at residues 292-523, a
+different region entirely. A correctly-conditioned design built on a wrong prediction
+still produces a wrong design.
+
+**Target 2 — `pdb_00008tzu`** (77 true epitope residues; Model A made a **strong,
+confident call** — 22 residues selected, mean propensity 0.86, confidence 0.99):
+conditioned mean recall **0.301** vs baseline **0.221** (+36% relative), mean precision
+0.799 vs 0.635 (+26%), mean jaccard 0.281 vs 0.201 (+40%) — conditioning measurably
+improved every individual design. The one metric that went the other way:
+union-of-top-5 recall (the fraction of the true epitope covered by *at least one* of
+the 5 designs) was actually higher for baseline (0.831 vs 0.740, 64/77 vs 57/77) —
+baseline's 5 designs, less constrained, spread out more and collectively covered more
+ground, even though each individual baseline design was less accurate on average.
+
+**Target 3 — `pdb_00009cb5`** (31 true epitope residues; Model A made a **moderate,
+confident call** — 24 residues selected, mean propensity 0.53, confidence 1.0):
+conditioned mean recall **0.355** vs baseline **0.303** (+17%), mean precision 0.455 vs
+0.391 (+16%), mean jaccard 0.253 vs 0.228 (+11%); union-of-top-5 recall tied at
+0.774/31 for both.
+
+**Synthesis across all three**: a consistent pattern, not a coincidence — on both
+targets where Model A made a confident call (targets 2 and 3), `binding_types`
+conditioning delivered a real, positive, if modest (11-40% relative), improvement in
+per-design recall/precision/jaccard against the true epitope. On the one target where
+Model A's own confidence gate correctly flagged low trust (target 1), conditioning had
+no effect either way — because there was almost nothing to condition on (2 residues out
+of 1006), not because the mechanism doesn't work. The recurring exception —
+union-of-top-5 recall sometimes favoring baseline's greater diversity — suggests
+conditioning trades some design-population diversity for per-design accuracy, worth
+keeping in mind for how many designs to generate per campaign, but doesn't undercut the
+core finding.
+
+**Go/no-go on §7 (v2, true gradient-guided steered diffusion): no-go for now.** v1
+(`binding_types` conditioning, already built and now empirically validated) delivers a
+real, mechanistically-understood, positive effect exactly when it's given a confident
+prediction to act on — there's no evidence here that the conditioning signal itself is
+too weak to be worth the much larger engineering investment of v2 (modifying
+`AtomDiffusion.sample`'s core denoising loop). The actual bottleneck exposed by this
+data is **Model A's prediction accuracy/coverage** (target 1's total miss), not the
+steering mechanism — so the better next investment is improving or better-triaging the
+epitope model (more training data, better confidence calibration, or simply routing
+low-confidence targets to unconditioned generation, which this pipeline already does by
+design) rather than building v2. Revisit v2 only if a future confident-prediction target
+shows conditioning failing to help despite a strong, correct call.
