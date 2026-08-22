@@ -305,9 +305,9 @@ packing) are universal biophysical properties that do transfer. The confidence-s
 check did exactly the job it was built for — catching this before it silently fed a
 less-trustworthy model into the steering integration.
 
-## 10. Downstream conditioned-vs-unconditioned comparison (milestone 6, three targets)
+## 10. Downstream conditioned-vs-unconditioned comparison (milestone 6, eight targets)
 
-**Method** (same for all three targets below): build `conditioned` (design spec's
+**Method** (same for all eight targets below): build `conditioned` (design spec's
 target entity has `binding_types` set from Model A's prediction) and `baseline`
 (identical spec, no `binding_types`) specs, run both as real full BoltzGen campaigns
 (50 designs, budget 5, `antibody-anything` protocol, ranked to a final top 5 each;
@@ -322,6 +322,28 @@ trusting this (`pdb_000010gh`: design's antigen chain has the exact same 1006-re
 sequence, same order, same `label_seq_id` numbering as the original structure —
 BoltzGen preserves this because the antigen entity is `include`d directly from the
 input structure, not regenerated).
+
+Targets 1-3 came from `dev.txt` (used to build and validate the pipeline itself).
+Targets 4-8 came from `test.txt` — this project's own held-out convention reserves
+`test.txt` for exactly this kind of final reported comparison — selected purely by
+Model A's own confidence output (never by checking the true epitope first, which would
+bias the evaluation).
+
+**Real bug found and fixed while selecting targets 4-8, worth keeping visible**: an
+initial scan of `test.txt` for confident predictions produced nonsensical "confidence"
+values as high as 18.5 (confidence should be bounded ~0-1). Root cause: 416 of 751
+`test.txt` structures have a **multi-copy antigen** — the same author chain letter
+(`auth_asym_id`) shared by more than one physical copy in the asymmetric unit, which
+makes `label_seq_id` non-unique within what `summary.csv`'s single `antigen_chain`
+field names as one chain (verified directly: `pdb_00009jo9`'s raw propensity/confidence
+values were completely sane, 0.008-0.346 / 0.858-0.997, but 206 of its 2060 "residues"
+shared a `label_seq_id` with another entry). This breaks any per-position aggregation
+keyed by `label_seq_id` alone, and — more importantly for correctness, not just this
+scan — means conditioning `binding_types` against a single named chain is ambiguous
+about which physical copy a selected position refers to. Targets 4-8 were filtered to
+single-copy antigens only (no `label_seq_id` collisions) before ranking by confidence;
+multi-copy antigens are out of scope for this pipeline until that ambiguity is
+resolved.
 
 **Target 1 — `pdb_000010gh`** (27 true epitope residues; Model A made a **weak, sparse
 call** here — only 2 residues selected, positions 123-124, propensity/confidence floors
@@ -350,27 +372,69 @@ conditioned mean recall **0.355** vs baseline **0.303** (+17%), mean precision 0
 0.391 (+16%), mean jaccard 0.253 vs 0.228 (+11%); union-of-top-5 recall tied at
 0.774/31 for both.
 
-**Synthesis across all three**: a consistent pattern, not a coincidence — on both
-targets where Model A made a confident call (targets 2 and 3), `binding_types`
-conditioning delivered a real, positive, if modest (11-40% relative), improvement in
-per-design recall/precision/jaccard against the true epitope. On the one target where
-Model A's own confidence gate correctly flagged low trust (target 1), conditioning had
-no effect either way — because there was almost nothing to condition on (2 residues out
-of 1006), not because the mechanism doesn't work. The recurring exception —
-union-of-top-5 recall sometimes favoring baseline's greater diversity — suggests
-conditioning trades some design-population diversity for per-design accuracy, worth
-keeping in mind for how many designs to generate per campaign, but doesn't undercut the
-core finding.
+**Target 4 — `pdb_00009cct`** (24 true epitope residues; confident call — 42 residues
+selected, confidence 0.94): conditioned mean recall **0.067** vs baseline **0.050**
+(+34% relative, both low absolute), mean jaccard 0.032 vs 0.025; union-of-top-5 recall
+0.250 vs 0.083 (6/24 vs 2/24) — conditioning helped, though the absolute signal is weak
+for both variants on this target.
 
-**Go/no-go on §7 (v2, true gradient-guided steered diffusion): no-go for now.** v1
-(`binding_types` conditioning, already built and now empirically validated) delivers a
-real, mechanistically-understood, positive effect exactly when it's given a confident
-prediction to act on — there's no evidence here that the conditioning signal itself is
-too weak to be worth the much larger engineering investment of v2 (modifying
-`AtomDiffusion.sample`'s core denoising loop). The actual bottleneck exposed by this
-data is **Model A's prediction accuracy/coverage** (target 1's total miss), not the
-steering mechanism — so the better next investment is improving or better-triaging the
-epitope model (more training data, better confidence calibration, or simply routing
-low-confidence targets to unconditioned generation, which this pipeline already does by
-design) rather than building v2. Revisit v2 only if a future confident-prediction target
-shows conditioning failing to help despite a strong, correct call.
+**Target 5 — `pdb_00009me7`** (39 true epitope residues; confident call — 37 residues
+selected, confidence 0.94): conditioned mean recall **0.010** vs baseline **0.026** —
+**conditioning underperformed baseline** here, the first such case. Both variants'
+absolute recall is very low (near-zero real signal either way) — a high self-reported
+confidence (0.938) did not translate into an accurate call on this target, more likely
+a genuine miss by Model A than a conditioning-mechanism failure, but it's a real
+counterexample to "confident implies conditioning helps."
+
+**Target 6 — `pdb_00008pmy`** (23 true epitope residues; confident call — 19 residues
+selected, confidence 0.94): the largest effect observed — conditioned mean recall
+**0.243** vs baseline **0.000** (baseline's entire top-5 scored *zero* overlap with the
+true epitope on this target), mean jaccard 0.192 vs 0.000, union-of-top-5 recall 0.783
+vs 0.000 (18/23 vs 0/23). Unconditioned generation missed this epitope completely;
+conditioning recovered most of it.
+
+**Target 7 — `pdb_00009me5`** (49 true epitope residues; confident call — 25 residues
+selected, confidence 0.93): conditioned mean recall **0.376** vs baseline **0.335**
+(+12%), mean precision 0.725 vs 0.666, mean jaccard 0.329 vs 0.285 (+15%);
+union-of-top-5 recall tied at 0.490/49 for both.
+
+**Target 8 — `pdb_00009uvi`** (18 true epitope residues; confident call — 27 residues
+selected, confidence 0.93): conditioned and baseline mean recall **tied at 0.289**;
+mean jaccard actually favored baseline slightly (0.109 vs 0.117). Union-of-top-5 recall
+favored conditioned (0.500 vs 0.389, 9/18 vs 7/18). A genuine wash on the per-design
+metrics, mild win on population coverage.
+
+**Synthesis across all eight**: excluding target 1 (Model A's own confidence gate
+correctly declined to make a real call there — not part of the "confident" cohort),
+the seven confident-call targets split **5 wins / 1 loss / 1 tie** on mean recall
+(targets 2,3,4,6,7 favor conditioning; target 5 favors baseline; target 8 ties), and
+**5 wins / 2 losses** on mean jaccard (targets 5 and 8 favor baseline there instead).
+Averaged across all seven, conditioning improves mean recall by roughly +0.06
+(6 percentage points) — but that average is pulled up substantially by target 6's
+outlier win (baseline's total miss); excluding it, the average improvement across the
+other six confident targets is closer to +0.03 (3 points). **The pattern from the
+first three targets holds directionally but is noisier than it first looked**:
+conditioning helps more often than not and can produce large wins when Model A's call
+lands on the real epitope (target 6), but it is not a guaranteed improvement — target 5
+shows a confident call that didn't pay off, a reminder that "confident" (per the
+ensemble's own agreement) is not the same as "correct," consistent with Model A's
+still-modest 0.625 test AUC. The union-of-top-5 (population diversity) metric remains
+the least consistent of the three — 3 wins, 2 losses, 3 ties across all eight — meaning
+conditioning's main, reliable effect is tightening individual designs toward the
+predicted region, not necessarily broadening the campaign's overall coverage.
+
+**Go/no-go on §7 (v2, true gradient-guided steered diffusion): no-go, reaffirmed with
+more evidence.** v1 (`binding_types` conditioning) delivers a real, positive effect on
+average across eight real targets, including one dramatic recovery of an otherwise
+total miss (target 6) — there's still no evidence the conditioning signal itself is too
+weak to be worth v2's much larger engineering investment (modifying
+`AtomDiffusion.sample`'s core denoising loop). What the larger sample sharpens is
+*where* the bottleneck actually is: not the steering mechanism, but **Model A's
+prediction accuracy** — target 1's total miss (low confidence, correctly abstained) and
+target 5's miss (high confidence, still wrong) are both prediction-quality failures,
+not conditioning failures. The better next investment remains improving or
+better-calibrating the epitope model (more training data, sharper confidence
+calibration so target-5-like false-positive-confidence cases become rarer) rather than
+building v2. Revisit v2 only if a future confident, *verifiably correct* prediction
+still fails to shift generated contacts — that hasn't happened in any of the eight
+targets tested so far.

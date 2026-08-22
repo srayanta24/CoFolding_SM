@@ -110,3 +110,13 @@ not in a kept copy of the raw campaign output).
   `Renaming with {'A': 'C'}` on every campaign so far). Identify the antigen chain by
   residue count (always far longer than any FAB scaffold chain, ~1000 vs ~100-140
   residues), not a hardcoded letter — see `design_contacts_by_label_seq()`.
+- **Some antigens have multiple physical copies sharing one `auth_asym_id`** — verified
+  on 416 of 751 `test.txt` structures (`summary.csv`'s single `antigen_chain` letter
+  doesn't guarantee a single physical chain). This makes `label_seq_id` non-unique
+  within `predict_epitope()`'s residue list for that "chain," which both breaks
+  per-position aggregation and — more importantly — makes `binding_types` conditioning
+  against that chain id ambiguous about which copy a selected position means. Check for
+  `label_seq_id` collisions in `predict_epitope()`'s output before trusting a target for
+  conditioning; skip (or resolve to a single copy) if any are found. Not yet handled
+  automatically by `binding_types_spec.py` — out of scope for a target until this is
+  fixed.
