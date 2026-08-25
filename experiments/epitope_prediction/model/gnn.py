@@ -28,16 +28,35 @@ from sklearn.metrics import roc_auc_score
 from torch_geometric.nn import SAGEConv
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from dataset import load_cached  # noqa: E402
+from dataset import load_cached, load_cached_c  # noqa: E402
+from egnn_encoder import EGNNREncoder  # noqa: E402
 from esm2_features import PROJECTED_DIM, Projection  # noqa: E402
+from features import GEOMETRIC_DIM, N_RELATIONS, RESIDUE_TYPE_DIM  # noqa: E402 -- features.py is the single source of truth for these
+from res_mp_fork import EDGE_DIM as RESMP_EDGE_DIM  # noqa: E402
+from res_mp_fork import NODE_DIM as RESMP_NODE_DIM  # noqa: E402
+from res_mp_fork import ResMPFork  # noqa: E402
 
-GEOMETRIC_DIM = 4
 HIDDEN_DIM = 64
 NUM_LAYERS = 4
 ENSEMBLE_SIZE = 5
 VAL_FRACTION = 0.1
 PATIENCE = 5  # epochs without validation AUC improvement before stopping
 CHECKPOINT_DIR = Path(__file__).resolve().parent / "checkpoints"
+
+
+def compute_pos_weight(entries: list[dict]) -> float:
+    """(n_negative / n_positive) from the training split, for BCEWithLogitsLoss's
+    pos_weight -- previously absent despite a 6.4-9.8% positive rate (unweighted loss
+    trains on the bagging-PU-bootstrapped batch composition alone, which doesn't
+    correct for the base rate). Clamped to [1, 30] so a pathological bootstrap draw
+    (or a very rare-positive structure) can't destabilize training with an extreme
+    weight."""
+    n_pos = sum(e["labels"].sum().item() for e in entries)
+    n_total = sum(e["labels"].numel() for e in entries)
+    n_neg = n_total - n_pos
+    if n_pos == 0:
+        return 1.0
+    return max(1.0, min(30.0, n_neg / n_pos))
 
 
 def split_train_val(entries: list[dict], val_fraction: float = VAL_FRACTION) -> tuple[list[dict], list[dict]]:
@@ -59,12 +78,7 @@ def _eval_auc(model: "EpitopeGNN", entries: list[dict], device: str) -> float:
     model.eval()
     all_y, all_p = [], []
     for e in entries:
-        x = e["node_features"].to(device)
-        edge_index = e["edge_index"].to(device)
-        esm2 = e.get("esm2_embeddings")
-        if esm2 is not None:
-            esm2 = esm2.to(device)
-        logits = model(x, edge_index, esm2)
+        logits = _forward_entry(model, e, device)
         all_p.append(torch.sigmoid(logits).cpu())
         all_y.append(e["labels"])
     y = torch.cat(all_y).numpy()
@@ -79,11 +93,35 @@ class EpitopeGNN(nn.Module):
     pyg-lib/torch-scatter compiled extensions that knn_graph needed -- see
     model/features.py's build_knn_edge_index for that story), residual connections,
     single-logit-per-residue output head. feature_set="A" (geometric only, 4-dim
-    input) or "B" (geometric + a learned projection of ESM2 embeddings)."""
+    input) or "B" (geometric + a learned projection of ESM2 embeddings).
+
+    feature_set="C" swaps the SAGEConv stack for EGNNREncoder (EpiFormer-inspired
+    multi-relational equivariant encoder, see egnn_encoder.py) -- a different
+    architecture, not just different input features, so its forward() takes
+    (node_scalars, ca_coords, edges_by_relation) instead of (node_features,
+    edge_index). Model A/B's architecture and call signature are unchanged.
+
+    feature_set="D" swaps in ResMPFork (res_mp_fork.py) -- a faithful port of
+    EpiFormer's own antigen-branch encoder code (not a reimplementation, see
+    res_mp_fork.py's module docstring). Same input convention as "C" (reuses Model
+    C's exact cache), but ResMPFork keeps EpiFormer's own hidden_dim=128 (not this
+    class's shared HIDDEN_DIM=64) and projects back down to NODE_DIM before the
+    output head, matching their own ResMP.forward()'s node_proj_out -- so "D"'s
+    output_head input width differs from "A"/"B"/"C"."""
 
     def __init__(self, feature_set: str = "A", hidden_dim: int = HIDDEN_DIM, num_layers: int = NUM_LAYERS):
         super().__init__()
         self.feature_set = feature_set
+        if feature_set == "C":
+            in_dim = GEOMETRIC_DIM + RESIDUE_TYPE_DIM
+            self.encoder = EGNNREncoder(in_dim=in_dim, hidden_dim=hidden_dim, num_layers=num_layers, n_relations=N_RELATIONS)
+            self.output_head = nn.Linear(hidden_dim, 1)
+            return
+        if feature_set == "D":
+            self.encoder = ResMPFork(node_dim=RESMP_NODE_DIM, edge_dim=RESMP_EDGE_DIM)
+            self.output_head = nn.Linear(RESMP_NODE_DIM, 1)
+            return
+
         in_dim = GEOMETRIC_DIM + (PROJECTED_DIM if feature_set == "B" else 0)
         if feature_set == "B":
             self.esm2_projection = Projection()
@@ -101,9 +139,37 @@ class EpitopeGNN(nn.Module):
             h = h + torch.relu(layer(h, edge_index))
         return self.output_head(h).squeeze(-1)  # [N] logits
 
+    def forward_c(self, node_scalars: torch.Tensor, ca_coords: torch.Tensor, edges_by_relation: dict[int, torch.Tensor]) -> torch.Tensor:
+        """Shared by feature_set "C" and "D" -- both encoders take the same
+        (node_scalars, ca_coords, edges_by_relation) signature and return a tensor
+        the shared output_head consumes; only self.encoder's class differs."""
+        h = self.encoder(node_scalars, ca_coords, edges_by_relation)
+        return self.output_head(h).squeeze(-1)  # [N] logits
+
+
+def _forward_entry(model: "EpitopeGNN", e: dict, device: str) -> torch.Tensor:
+    """Dispatches a cached entry through `model`, keyed off model.feature_set --
+    Model A/B entries carry node_features/edge_index(/esm2_embeddings); Model C/D
+    entries carry node_scalars/backbone_coords/edges_by_relation (see
+    features.py's build_multirelational_features / dataset.py's build_c_entries --
+    Model D reuses Model C's cache verbatim, see res_mp_fork.py)."""
+    if model.feature_set in ("C", "D"):
+        node_scalars = e["node_scalars"].to(device)
+        ca_coords = e["backbone_coords"][:, 1, :].to(device)  # index 1 = CA, see build_backbone_coords' [N,CA,CB,O] order
+        edges_by_relation = {rel: idx.to(device) for rel, idx in e["edges_by_relation"].items()}
+        return model.forward_c(node_scalars, ca_coords, edges_by_relation)
+
+    x = e["node_features"].to(device)
+    edge_index = e["edge_index"].to(device)
+    esm2 = e.get("esm2_embeddings")
+    if esm2 is not None:
+        esm2 = esm2.to(device)
+    return model(x, edge_index, esm2)
+
 
 def train_member(train_entries: list[dict], val_entries: list[dict], feature_set: str, seed: int, device: str,
-                  bootstrap_unlabeled: bool = True, max_epochs: int = 60, patience: int = PATIENCE, lr: float = 1e-3) -> EpitopeGNN:
+                  bootstrap_unlabeled: bool = True, max_epochs: int = 60, patience: int = PATIENCE, lr: float = 1e-3,
+                  pos_weight: float = 1.0) -> EpitopeGNN:
     """Trains one ensemble member with early stopping on a held-out validation slice
     (best-checkpoint pattern: track the best validation AUC seen, restore those weights
     at the end, rather than literally halting the loop -- avoids ensemble members
@@ -121,7 +187,7 @@ def train_member(train_entries: list[dict], val_entries: list[dict], feature_set
     gen = torch.Generator().manual_seed(seed)
     model = EpitopeGNN(feature_set=feature_set).to(device)
     opt = torch.optim.Adam(model.parameters(), lr=lr, weight_decay=1e-5)
-    loss_fn = nn.BCEWithLogitsLoss()
+    loss_fn = nn.BCEWithLogitsLoss(pos_weight=torch.tensor(pos_weight, device=device))
 
     best_auc = -1.0
     best_state = None
@@ -133,12 +199,7 @@ def train_member(train_entries: list[dict], val_entries: list[dict], feature_set
         order = torch.randperm(len(train_entries), generator=gen).tolist()
         for idx in order:
             e = train_entries[idx]
-            x = e["node_features"].to(device)
-            edge_index = e["edge_index"].to(device)
             y = e["labels"].to(device)
-            esm2 = e.get("esm2_embeddings")
-            if esm2 is not None:
-                esm2 = esm2.to(device)
 
             if bootstrap_unlabeled:
                 pos_idx = (y == 1).nonzero(as_tuple=True)[0]
@@ -154,7 +215,7 @@ def train_member(train_entries: list[dict], val_entries: list[dict], feature_set
                 mask = torch.ones(len(y), dtype=torch.bool)
 
             opt.zero_grad()
-            logits = model(x, edge_index, esm2)
+            logits = _forward_entry(model, e, device)
             loss = loss_fn(logits[mask], y[mask])
             loss.backward()
             opt.step()
@@ -187,23 +248,21 @@ def train_ensemble(feature_set: str, train_entries: list[dict], device: str, n_m
     train_split, val_split = split_train_val(train_entries)
     print(f"[gnn:{feature_set}] {len(train_split)} train / {len(val_split)} internal-val structures "
           f"(hash-split, distinct from databases/splits/dev.txt)", file=sys.stderr)
-    return [train_member(train_split, val_split, feature_set, seed=i, device=device) for i in range(n_members)]
+    pos_weight = compute_pos_weight(train_split)
+    n_pos = sum(e["labels"].sum().item() for e in train_split)
+    n_total = sum(e["labels"].numel() for e in train_split)
+    print(f"[gnn:{feature_set}] pos_weight={pos_weight:.2f} (positive rate {n_pos/n_total:.1%})", file=sys.stderr)
+    return [train_member(train_split, val_split, feature_set, seed=i, device=device, pos_weight=pos_weight) for i in range(n_members)]
 
 
 @torch.no_grad()
 def ensemble_predict(models: list[EpitopeGNN], entry: dict, device: str) -> tuple[torch.Tensor, torch.Tensor]:
     """Returns (propensity, confidence) per residue: propensity = mean predicted
     probability across ensemble members; confidence = 1 - normalized std (agreement)."""
-    x = entry["node_features"].to(device)
-    edge_index = entry["edge_index"].to(device)
-    esm2 = entry.get("esm2_embeddings")
-    if esm2 is not None:
-        esm2 = esm2.to(device)
-
     probs = []
     for model in models:
         model.eval()
-        logits = model(x, edge_index, esm2)
+        logits = _forward_entry(model, entry, device)
         probs.append(torch.sigmoid(logits).cpu())
     probs = torch.stack(probs, dim=0)  # [n_members, N]
     propensity = probs.mean(dim=0)
@@ -230,15 +289,21 @@ def load_ensemble(feature_set: str, device: str, n_members: int = ENSEMBLE_SIZE)
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("action", choices=["train"])
-    parser.add_argument("--model", required=True, choices=["A", "B"])
+    parser.add_argument("--model", required=True, choices=["A", "B", "C", "D"])
     args = parser.parse_args()
 
     device = "cuda" if torch.cuda.is_available() else "cpu"
-    train_entries = load_cached("train")
+    train_entries = load_cached_c("train") if args.model in ("C", "D") else load_cached("train")
     print(f"[gnn] training Model {args.model} ensemble ({ENSEMBLE_SIZE} members) on {len(train_entries)} structures", file=sys.stderr)
     models = train_ensemble(args.model, train_entries, device)
     save_ensemble(models, args.model)
     print(f"[gnn] saved ensemble to {CHECKPOINT_DIR}", file=sys.stderr)
+
+    import calibration  # local import: calibration.py imports this module too (fit_calibrator uses ensemble_predict)
+    _, val_split = split_train_val(train_entries)  # deterministic (hash-of-pdb_id) -- reproduces the exact slice used for early stopping above
+    calibrator = calibration.fit_calibrator(models, val_split, device)
+    calibration.save_calibrator(calibrator, args.model)
+    print(f"[gnn] fit + saved isotonic calibrator to {CHECKPOINT_DIR}/calibrator_{args.model}.pkl", file=sys.stderr)
 
 
 if __name__ == "__main__":

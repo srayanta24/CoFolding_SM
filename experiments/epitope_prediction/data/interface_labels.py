@@ -35,6 +35,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 import numpy as np
+from scipy.spatial import cKDTree
 
 REPO_ROOT = Path(__file__).resolve().parent.parent.parent.parent
 SABDAB_DIR = REPO_ROOT / "databases" / "sabdab"
@@ -42,6 +43,22 @@ AACDB_DIR = REPO_ROOT / "databases" / "aacdb"
 THRESHOLD = 5.0  # Angstroms; AACDB's own files verified to cap at 5.99A
 
 ATOM_LINE_RE = re.compile(r"^(ATOM|HETATM)\s+")
+
+# Real bug found while expanding training coverage past AACDB's own protein-contact-only
+# scope (PLAN.md-style write-up worth keeping visible): get_chain_atoms() used to filter
+# only by element (type_symbol != "H"), not residue identity, so a SAbDab "antigen_chain"
+# that's actually a bound ion/hapten/sugar (summary.csv's own antigen_type column, e.g.
+# "ION|HAPTEN") got scored as protein epitope residues -- verified concretely on
+# pdb_00001a0q, whose "3 interface residues" were 2 zinc ions + a heparin fragment, not
+# amino acids. Affects 1,915/8,072 (24%) of train_era (dev.txt/test.txt are ~98% clean,
+# 2/100 and 16/751 respectively). Fixed structurally here rather than by consulting
+# antigen_type per-PDB, since a "PROTEIN|ION" mixed structure can still have individual
+# non-protein residues on the same chain that need excluding at the residue level.
+STANDARD_RESIDUES = frozenset({
+    "ALA", "ARG", "ASN", "ASP", "CYS", "GLN", "GLU", "GLY", "HIS", "ILE",
+    "LEU", "LYS", "MET", "PHE", "PRO", "SER", "THR", "TRP", "TYR", "VAL",
+    "MSE", "SEC", "PYL", "UNK",  # common non-standard-but-real polypeptide residues
+})
 
 
 @dataclass
@@ -132,8 +149,10 @@ def get_chain_atoms(pdb_id: str) -> tuple[list["Atom"], list["Atom"]] | None:
             antigen_chains.update(row["antigen_chain"].split("|"))
 
     atoms = parse_atom_site(cif_path)
-    antibody_atoms = [a for a in atoms if a.auth_asym_id in antibody_chains and a.type_symbol != "H"]
-    antigen_atoms = [a for a in atoms if a.auth_asym_id in antigen_chains and a.type_symbol != "H"]
+    antibody_atoms = [a for a in atoms if a.auth_asym_id in antibody_chains and a.type_symbol != "H"
+                       and a.auth_comp_id in STANDARD_RESIDUES]
+    antigen_atoms = [a for a in atoms if a.auth_asym_id in antigen_chains and a.type_symbol != "H"
+                      and a.auth_comp_id in STANDARD_RESIDUES]
     return antibody_atoms, antigen_atoms
 
 
@@ -142,15 +161,23 @@ def _antigen_contacts(antibody_atoms: list["Atom"], antigen_atoms: list["Atom"],
     """Shared distance computation behind both key conventions below -- same logic,
     just keyed differently by the two callers (auth for eval-label reporting, label_seq
     for cross-referencing against BoltzGen design outputs, which renumber sequentially
-    and don't preserve auth numbering)."""
-    antibody_xyz = np.array([a.xyz for a in antibody_atoms])
-    if antibody_xyz.size == 0 or not antigen_atoms:
+    and don't preserve auth numbering).
+
+    Real bug hit while expanding past dev.txt/test.txt's ~1,437 structures to the full
+    train_era (8,072): the original dense pairwise-distance matrix
+    (n_antigen x n_antibody x 3) allocated 338 GiB on one large multi-copy asymmetric
+    unit (142,020 x 106,560 atoms) and crashed. dev/test apparently never hit a
+    structure this large. Fixed with a KD-tree radius query (scipy, already an
+    installed transitive dep) -- same "any antibody heavy atom within threshold"
+    semantics, but memory bounded regardless of structure size."""
+    if not antibody_atoms or not antigen_atoms:
         return [(a, False) for a in antigen_atoms]
 
+    antibody_xyz = np.array([a.xyz for a in antibody_atoms])
     antigen_xyz = np.array([a.xyz for a in antigen_atoms])
-    # Vectorized pairwise distances: (n_antigen, n_antibody)
-    dists = np.linalg.norm(antigen_xyz[:, None, :] - antibody_xyz[None, :, :], axis=-1)
-    within = (dists <= threshold).any(axis=1)
+    antibody_tree = cKDTree(antibody_xyz)
+    counts = antibody_tree.query_ball_point(antigen_xyz, r=threshold, return_length=True)
+    within = counts > 0
     return list(zip(antigen_atoms, within.tolist()))
 
 

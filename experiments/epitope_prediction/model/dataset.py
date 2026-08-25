@@ -19,7 +19,7 @@ import torch
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from esm2_features import compute_esm2_embeddings  # noqa: E402
-from features import build_geometric_features, group_residues  # noqa: E402
+from features import build_geometric_features, build_multirelational_features, group_residues  # noqa: E402
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "data"))
 from interface_labels import REPO_ROOT, compute_interface_labels, get_chain_atoms  # noqa: E402
@@ -73,10 +73,10 @@ def build_entry(pdb_id: str, label_source: str, compute_esm2: bool = True) -> di
 
 
 def build_train_entries(compute_esm2: bool = True) -> list[dict]:
-    aacdb_labels = train_labels_mod.load_train_labels()
+    all_labels = train_labels_mod.load_expanded_train_labels()  # AACDB + coordinate-labeled complement, see train_labels.py
     entries = []
     n_skipped = 0
-    for i, (pdb_id, label_by_str_key) in enumerate(aacdb_labels.items()):
+    for i, (pdb_id, label_by_str_key) in enumerate(all_labels.items()):
         geo = build_geometric_features(pdb_id)
         if geo is None:
             n_skipped += 1
@@ -100,7 +100,7 @@ def build_train_entries(compute_esm2: bool = True) -> list[dict]:
             entry["esm2_embeddings"] = emb if emb is not None else torch.zeros(len(residues), 640)
         entries.append(entry)
         if (i + 1) % 200 == 0:
-            print(f"[dataset] {i + 1}/{len(aacdb_labels)} train structures processed ({n_skipped} skipped)", file=sys.stderr)
+            print(f"[dataset] {i + 1}/{len(all_labels)} train structures processed ({n_skipped} skipped)", file=sys.stderr)
 
     print(f"[dataset] built {len(entries)} train entries, {n_skipped} skipped (no usable antigen)", file=sys.stderr)
     return entries
@@ -123,6 +123,85 @@ def build_eval_entries(split: str, compute_esm2: bool = True) -> list[dict]:
 
     print(f"[dataset] built {len(entries)} {split} entries, {n_skipped} skipped (no usable antigen)", file=sys.stderr)
     return entries
+
+
+def build_c_entry(pdb_id: str, label_source: str, all_train_labels: dict | None = None) -> dict | None:
+    """Model C's entry shape (node_scalars/backbone_coords/edges_by_relation from
+    build_multirelational_features) instead of A/B's (node_features/edge_index) --
+    kept as a fully separate builder/cache rather than overloading build_entry(), so
+    Model A/B's existing cache/entries are untouched (PLAN.md: "Model A/B stay as in
+    Phase 1; Model C is additive, not a replacement")."""
+    geo = build_multirelational_features(pdb_id)
+    if geo is None:
+        return None
+
+    keys_str = [_residue_key_str(k) for k in geo["residue_keys"]]
+    if label_source == "eval":
+        raw_labels = compute_interface_labels(pdb_id)  # {(chain, seq, comp): bool}
+        label_lookup = {_residue_key_str(k): v for k, v in raw_labels.items()}
+    else:
+        label_lookup = all_train_labels[pdb_id]  # already str-keyed, see train_labels.py
+    labels = torch.tensor([1.0 if label_lookup.get(k, False) else 0.0 for k in keys_str], dtype=torch.float32)
+
+    return {
+        "pdb_id": pdb_id,
+        "residue_keys": keys_str,
+        "node_scalars": geo["node_scalars"],
+        "backbone_coords": geo["backbone_coords"],
+        "edges_by_relation": geo["edges_by_relation"],
+        "labels": labels,
+    }
+
+
+def build_c_train_entries() -> list[dict]:
+    all_labels = train_labels_mod.load_expanded_train_labels()
+    entries = []
+    n_skipped = 0
+    for i, pdb_id in enumerate(all_labels):
+        entry = build_c_entry(pdb_id, label_source="train", all_train_labels=all_labels)
+        if entry is None:
+            n_skipped += 1
+            continue
+        entries.append(entry)
+        if (i + 1) % 200 == 0:
+            print(f"[dataset:C] {i + 1}/{len(all_labels)} train structures processed ({n_skipped} skipped)", file=sys.stderr)
+    print(f"[dataset:C] built {len(entries)} train entries, {n_skipped} skipped", file=sys.stderr)
+    return entries
+
+
+def build_c_eval_entries(split: str) -> list[dict]:
+    with open(SPLITS_DIR / f"{split}.txt") as f:
+        pdb_ids = f.read().split()
+    entries = []
+    n_skipped = 0
+    for i, pdb_id in enumerate(pdb_ids):
+        entry = build_c_entry(pdb_id, label_source="eval")
+        if entry is None:
+            n_skipped += 1
+            continue
+        entries.append(entry)
+        if (i + 1) % 200 == 0:
+            print(f"[dataset:C] {i + 1}/{len(pdb_ids)} {split} structures processed ({n_skipped} skipped)", file=sys.stderr)
+    print(f"[dataset:C] built {len(entries)} {split} entries, {n_skipped} skipped", file=sys.stderr)
+    return entries
+
+
+def cache_path_c(split: str) -> Path:
+    return CACHE_DIR / f"{split}_C.pt"
+
+
+def build_and_cache_c(split: str) -> list[dict]:
+    CACHE_DIR.mkdir(parents=True, exist_ok=True)
+    entries = build_c_train_entries() if split == "train" else build_c_eval_entries(split)
+    torch.save(entries, cache_path_c(split))
+    print(f"[dataset:C] cached {len(entries)} entries to {cache_path_c(split)}", file=sys.stderr)
+    return entries
+
+
+def load_cached_c(split: str) -> list[dict]:
+    if not cache_path_c(split).exists():
+        return build_and_cache_c(split)
+    return torch.load(cache_path_c(split), weights_only=False)
 
 
 def cache_path(split: str) -> Path:
@@ -152,8 +231,10 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("action", choices=["build"])
     parser.add_argument("--split", required=True, choices=["train", "dev", "test"])
+    parser.add_argument("--feature-set", choices=["AB", "C"], default="AB",
+                         help="AB = Model A/B's node_features/edge_index cache (default); C = Model C's multi-relational cache")
     args = parser.parse_args()
-    build_and_cache(args.split)
+    (build_and_cache_c if args.feature_set == "C" else build_and_cache)(args.split)
 
 
 if __name__ == "__main__":

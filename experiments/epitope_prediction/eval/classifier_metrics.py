@@ -20,7 +20,8 @@ import torch
 from sklearn.metrics import brier_score_loss, precision_recall_curve, roc_auc_score
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "model"))
-from dataset import load_cached  # noqa: E402
+import calibration  # noqa: E402
+from dataset import load_cached, load_cached_c  # noqa: E402
 from gnn import ENSEMBLE_SIZE, ensemble_predict, load_ensemble  # noqa: E402
 
 
@@ -28,7 +29,7 @@ def eval_baseline(clf, entries: list[dict]) -> dict:
     X = np.concatenate([e["node_features"].numpy() for e in entries], axis=0)
     y = np.concatenate([e["labels"].numpy() for e in entries], axis=0)
     probs = clf.predict_proba(X)[:, 1]
-    return {"y": y, "propensity": probs, "confidence": None}
+    return {"y": y, "propensity": probs, "confidence": None, "propensity_calibrated": None}
 
 
 def eval_ensemble(feature_set: str, entries: list[dict], device: str) -> dict:
@@ -39,11 +40,14 @@ def eval_ensemble(feature_set: str, entries: list[dict], device: str) -> dict:
         all_y.append(e["labels"].numpy())
         all_prop.append(prop.numpy())
         all_conf.append(conf.numpy())
-    return {
-        "y": np.concatenate(all_y),
-        "propensity": np.concatenate(all_prop),
-        "confidence": np.concatenate(all_conf),
-    }
+    y = np.concatenate(all_y)
+    propensity = np.concatenate(all_prop)
+    confidence = np.concatenate(all_conf)
+
+    calibrator = calibration.load_calibrator(feature_set)
+    propensity_calibrated = calibration.apply_calibration(calibrator, propensity) if calibrator is not None else None
+
+    return {"y": y, "propensity": propensity, "confidence": confidence, "propensity_calibrated": propensity_calibrated}
 
 
 def calibration_curve(y: np.ndarray, probs: np.ndarray, n_bins: int = 10) -> list[tuple[float, float, int]]:
@@ -85,18 +89,28 @@ def confidence_sanity_check(y: np.ndarray, propensity: np.ndarray, confidence: n
 
 def report(name: str, result: dict) -> None:
     y, propensity, confidence = result["y"], result["propensity"], result["confidence"]
+    propensity_calibrated = result.get("propensity_calibrated")
     auc = roc_auc_score(y, propensity)
     brier = brier_score_loss(y, propensity)
     precision, recall, thresholds = precision_recall_curve(y, propensity)
 
     print(f"\n=== {name} ===")
     print(f"  AUC: {auc:.4f}  (SEMA-2.0 reference: 0.76)")
-    print(f"  Brier score: {brier:.4f} (lower is better-calibrated)")
+    print(f"  Brier score (raw): {brier:.4f} (lower is better-calibrated)")
+    if propensity_calibrated is not None:
+        brier_cal = brier_score_loss(y, propensity_calibrated)
+        # Isotonic calibration is monotonic, so it cannot move AUC or precision-at-fixed-recall
+        # by construction -- only Brier/reliability. A flat AUC here isn't a failure.
+        print(f"  Brier score (isotonic-calibrated): {brier_cal:.4f}")
     print(f"  n={len(y)}, positive rate={y.mean():.1%}")
 
-    print("  calibration (mean predicted vs. observed fraction, 10 bins):")
+    print("  calibration, raw (mean predicted vs. observed fraction, 10 bins):")
     for mean_pred, observed, n in calibration_curve(y, propensity):
         print(f"    predicted={mean_pred:.3f}  observed={observed:.3f}  n={n}")
+    if propensity_calibrated is not None:
+        print("  calibration, isotonic-calibrated:")
+        for mean_pred, observed, n in calibration_curve(y, propensity_calibrated):
+            print(f"    predicted={mean_pred:.3f}  observed={observed:.3f}  n={n}")
 
     # Precision at a couple of fixed recall points, for a threshold-independent-ish read.
     for target_recall in (0.3, 0.5):
@@ -104,6 +118,14 @@ def report(name: str, result: dict) -> None:
         print(f"  at recall~{recall[idx]:.2f}: precision={precision[idx]:.3f} (threshold={thresholds[min(idx, len(thresholds)-1)]:.3f})")
 
     if confidence is not None:
+        # Deliberately checked against RAW propensity, not calibrated: confidence is
+        # computed from the raw ensemble's own disagreement (std of raw member outputs,
+        # see gnn.py's ensemble_predict), so its error-correlation should be validated
+        # against the same raw signal it was derived from. Isotonic calibration is fit
+        # only on propensity with no awareness of the confidence/disagreement dimension,
+        # so it doesn't preserve per-confidence-bin error ordering -- checking against
+        # calibrated propensity here previously produced a false-looking "failure"
+        # (verified: raw passes monotonically, calibrated doesn't, on the same model).
         confidence_sanity_check(y, propensity, confidence)
 
 
@@ -128,6 +150,12 @@ def main() -> None:
         report("Model A (geometric only)", eval_ensemble("A", entries, device))
     if (checkpoint_dir / f"model_B_seed{ENSEMBLE_SIZE - 1}.pt").exists():
         report("Model B (geometric + ESM2)", eval_ensemble("B", entries, device))
+    if (checkpoint_dir / f"model_C_seed{ENSEMBLE_SIZE - 1}.pt").exists():
+        c_entries = load_cached_c(args.split)  # Model C uses its own multi-relational cache, not `entries` above
+        report("Model C (EpiFormer-inspired EGNN-R)", eval_ensemble("C", c_entries, device))
+    if (checkpoint_dir / f"model_D_seed{ENSEMBLE_SIZE - 1}.pt").exists():
+        d_entries = load_cached_c(args.split)  # Model D reuses Model C's cache verbatim, see res_mp_fork.py
+        report("Model D (EpiFormer ResMP fork)", eval_ensemble("D", d_entries, device))
 
 
 if __name__ == "__main__":
