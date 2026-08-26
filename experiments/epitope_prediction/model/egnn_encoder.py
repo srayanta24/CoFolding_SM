@@ -43,9 +43,22 @@ class EGNNRLayer(nn.Module):
 
     def forward(self, h: torch.Tensor, x: torch.Tensor, edges_by_relation: dict[int, torch.Tensor]) -> tuple[torch.Tensor, torch.Tensor]:
         """h: [N, hidden_dim] invariant scalars. x: [N, 3] equivariant coordinates
-        (CA position). edges_by_relation: {1..n_relations: edge_index [2, E]}."""
+        (CA position). edges_by_relation: {1..n_relations: edge_index [2, E]}.
+
+        Real bug found and fixed here: the coordinate update summed over every
+        neighbor (up to ~120 with KNN_K=30 across 4 relations) with no degree
+        normalization and no bound on the learned scalar magnitude -- a classic EGNN
+        runaway-feedback failure (bigger coordinates -> bigger distances in the next
+        layer -> bigger messages -> bigger coordinates...). Verified concretely:
+        training loss diverged to ~1e20-1e27 from epoch 1 across all 5 ensemble
+        members before this fix, val AUC stuck near chance (~0.5). The real
+        EpiFormer code (src/epiformer/model/res_mp.py) avoids exactly this with
+        degree-normalized ('mean') aggregation -- applied the same fix here, plus a
+        tanh bound on the coordinate scalar (an available but off-by-default option
+        in their own code) since mean-aggregation alone wasn't sufficient in testing."""
         agg_msg = torch.zeros_like(h)
         agg_coord = torch.zeros_like(x)
+        degree = torch.zeros(h.shape[0], 1, device=h.device)
 
         for rel in range(1, self.n_relations + 1):
             edge_index = edges_by_relation.get(rel)
@@ -55,10 +68,15 @@ class EGNNRLayer(nn.Module):
             delta = x[dst] - x[src]
             dist2 = (delta ** 2).sum(-1, keepdim=True)
             m = self.msg_mlps[rel - 1](torch.cat([h[src], h[dst], dist2], dim=-1))
-            s = self.coord_mlps[rel - 1](m)  # [E, 1] learned scalar magnitude
+            s = torch.tanh(self.coord_mlps[rel - 1](m))  # [E, 1] bounded scalar magnitude
             coord_msg = delta / torch.sqrt(dist2 + 1e-8) * s
             agg_msg.index_add_(0, dst, m)
             agg_coord.index_add_(0, dst, coord_msg)
+            degree.index_add_(0, dst, torch.ones(dst.shape[0], 1, device=h.device))
+
+        degree = degree.clamp(min=1.0)
+        agg_msg = agg_msg / degree
+        agg_coord = agg_coord / degree
 
         h_new = h + self.update_mlp(torch.cat([h, agg_msg], dim=-1))
         x_new = x + agg_coord

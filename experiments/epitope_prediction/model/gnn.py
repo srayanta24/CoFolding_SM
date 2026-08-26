@@ -244,7 +244,8 @@ def train_member(train_entries: list[dict], val_entries: list[dict], feature_set
     return model
 
 
-def train_ensemble(feature_set: str, train_entries: list[dict], device: str, n_members: int = ENSEMBLE_SIZE) -> list[EpitopeGNN]:
+def train_ensemble(feature_set: str, train_entries: list[dict], device: str, n_members: int = ENSEMBLE_SIZE,
+                    lr: float = 1e-3, patience: int = PATIENCE, max_epochs: int = 60) -> list[EpitopeGNN]:
     train_split, val_split = split_train_val(train_entries)
     print(f"[gnn:{feature_set}] {len(train_split)} train / {len(val_split)} internal-val structures "
           f"(hash-split, distinct from databases/splits/dev.txt)", file=sys.stderr)
@@ -252,7 +253,8 @@ def train_ensemble(feature_set: str, train_entries: list[dict], device: str, n_m
     n_pos = sum(e["labels"].sum().item() for e in train_split)
     n_total = sum(e["labels"].numel() for e in train_split)
     print(f"[gnn:{feature_set}] pos_weight={pos_weight:.2f} (positive rate {n_pos/n_total:.1%})", file=sys.stderr)
-    return [train_member(train_split, val_split, feature_set, seed=i, device=device, pos_weight=pos_weight) for i in range(n_members)]
+    return [train_member(train_split, val_split, feature_set, seed=i, device=device, pos_weight=pos_weight,
+                          lr=lr, patience=patience, max_epochs=max_epochs) for i in range(n_members)]
 
 
 @torch.no_grad()
@@ -295,7 +297,15 @@ def main() -> None:
     device = "cuda" if torch.cuda.is_available() else "cpu"
     train_entries = load_cached_c("train") if args.model in ("C", "D") else load_cached("train")
     print(f"[gnn] training Model {args.model} ensemble ({ENSEMBLE_SIZE} members) on {len(train_entries)} structures", file=sys.stderr)
-    models = train_ensemble(args.model, train_entries, device)
+    # Model D (~1.3M params, hidden_dim=128, faithfully ported from EpiFormer's own
+    # architecture) badly underperformed with the shared recipe (AUC 0.655, most seeds
+    # stopped by epoch ~10-15) -- most seeds hadn't converged, not necessarily a bad
+    # architecture. Retrying with a lower LR (their own larger net is more sensitive to
+    # the shared 1e-3) and more patience (rule out "stopped too early" before concluding
+    # the architecture itself doesn't transfer). A/B/C keep the original recipe unchanged.
+    lr = 3e-4 if args.model == "D" else 1e-3
+    patience = 15 if args.model == "D" else PATIENCE
+    models = train_ensemble(args.model, train_entries, device, lr=lr, patience=patience)
     save_ensemble(models, args.model)
     print(f"[gnn] saved ensemble to {CHECKPOINT_DIR}", file=sys.stderr)
 
