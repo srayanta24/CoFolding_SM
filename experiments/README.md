@@ -19,7 +19,7 @@ Three subfolders hold the active design-improvement work from
 
 | Folder | Status |
 |---|---|
-| `epitope_prediction/` | Done through milestone 7 ([`PLAN.md`](epitope_prediction/PLAN.md) §8-10) — Model A selected, wired into steering, downstream-validated on 8 targets; v2 (gradient-guided steering) reaffirmed no-go. |
+| `epitope_prediction/` | Done through milestone 7 ([`PLAN.md`](epitope_prediction/PLAN.md) §8-10) — Model A selected, wired into steering, downstream-validated on 8 targets; v2 (gradient-guided steering) reaffirmed no-go. Follow-up pass in progress: expanded training data, calibration, two EpiFormer-inspired architectures — see [`README.md`](epitope_prediction/README.md). |
 | `germinal_comparison/` | Paused after milestone 1 ([`PLAN.md`](germinal_comparison/PLAN.md)) — PyRosetta venv done; JAX/ColabDesign setup deprioritized. |
 | `finetuning/` | Not started — see `IMPROVE_DESIGN.md` §3 for scope. |
 
