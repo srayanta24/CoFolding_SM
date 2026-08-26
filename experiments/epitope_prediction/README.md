@@ -9,7 +9,9 @@ each experiment found, and how to reproduce it. Two work phases:
 - **v2 (this pass)**: expanded training data, fixed a real labeling bug, added features
   and calibration, retrained A/B, and built two new EpiFormer-inspired architectures
   (Models C/D) to see whether a fancier borrowed architecture beats the original simple
-  design. See [§2](#2-v2-data-expansion-calibration-and-two-new-architectures).
+  design. **It does**: Model D (a faithful fork of EpiFormer's own encoder, once given a
+  training recipe suited to its size) now beats Model A on every metric — see
+  [§2](#2-v2-data-expansion-calibration-and-two-new-architectures).
 
 ---
 
@@ -104,9 +106,9 @@ Both models improved substantially (AUC +0.24 for A). More interestingly: Model 
 originally lost outright and failed its confidence-sanity check from overfitting, now
 **ties Model A on AUC/Brier** and its confidence signal is reliable too — the original
 "ESM2 doesn't transfer, geometric features do" story looks like it was partly a
-data-scarcity artifact. Model A still wins clearly on precision-at-fixed-recall, the
-metric that actually matters for selecting a small trustworthy residue set for
-`binding_types` conditioning, so **Model A remains the selected model**.
+data-scarcity artifact. Model A still wins clearly on precision-at-fixed-recall over B —
+but see §2.6: Model D ends up beating A on every metric here too, so A's status as
+"selected model" doesn't survive past this section.
 
 ### 2.5 Model C — EpiFormer-inspired encoder, from scratch (`model/egnn_encoder.py`)
 
@@ -154,13 +156,22 @@ increased):
 |---|---|---|---|---|---|
 | Model D (lr=1e-3, patience=5) | 0.655 | 0.078 | 0.148 | 0.136 | fails badly |
 
-Most ensemble seeds stopped very early (one at epoch 6) — before concluding the
-architecture itself doesn't transfer, retried with a recipe suited to its larger
-parameter count (`lr=3e-4`, `patience=15`), still in progress as of this writing.
-Early signal: val AUC climbing to ~0.89 by epoch 20 on the first seed, well past where
-the original run had already stopped — **the original result looks like it was
-undertraining, not an architectural ceiling.** Final numbers will be added here once
-that run completes.
+Most ensemble seeds stopped very early (one at epoch 6). Rather than conclude the
+architecture doesn't transfer, retried with a recipe suited to its larger parameter
+count (`lr=3e-4`, `patience=15`) — and the result flipped completely:
+
+| | AUC | Brier (calibrated) | precision@recall~0.3 | precision@recall~0.5 | confidence-sanity |
+|---|---|---|---|---|---|
+| **Model D (lr=3e-4, patience=15)** | **0.876** | **0.054** | **0.937** | **0.766** | **passes, cleanly monotonic** |
+
+Model D now **beats Model A on every metric**, including the precision-at-fixed-recall
+numbers that made Model A the clear pick over Model B. The original 0.655 result was
+undertraining, not an architectural ceiling — most of its ensemble seeds under the old
+recipe had stopped by epoch 6–15; under the new one, one seed used the full 60-epoch
+budget without fully converging. **Model D is now the strongest candidate model
+overall** — worth promoting to the selected model for steering, pending confirmation
+that its added size/training cost (1.3M params vs Model A's much smaller SAGEConv net)
+is worth it for the accuracy gain.
 
 ### 2.7 EpiFormer as an independent downstream evaluator (infrastructure ready, not yet applied)
 
