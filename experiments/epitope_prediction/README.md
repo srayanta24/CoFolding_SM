@@ -291,8 +291,8 @@ methodology) mean recall, conditioned vs. baseline — all recomputed with curre
 | pdb_00008pmy | 0.000 | 0.255 | **0.155** (floor=0.85, union-of-5 recall 0.818 vs D's 0.773) | D clearly beats baseline too, though less than A; baseline/A match original closely (was 0.000/0.243) |
 | pdb_00008tzu | 0.221 | 0.301 | *abstained* (confidence never clears 0.6) | matches original exactly; Model D skipped, see above |
 | pdb_00009cb5 | **0.400** | **0.455** | 0.436 (floor=0.6, union-of-5 recall 0.955 vs baseline's 1.000) | **ground truth shifted here** (original: 0.303/0.355) — D still beats baseline, similar relative margin |
-| pdb_00009cct | 0.050 | 0.067 | *running* (floor=0.6) | matches original exactly |
-| pdb_00009me5 | 0.026 | 0.010 | *not started* | matches original exactly (conditioning underperforms here) |
+| pdb_00009cct | 0.050 | 0.067 | **0.000** (floor=0.6) | conditioning HURTS here for both A (EpiFormer's cross-check agrees) and D (worse than A, own-metric now 0.000 vs baseline's 0.050) — a target where conditioning may genuinely backfire regardless of model |
+| pdb_00009me5 | 0.026 | 0.010 | *running* (floor=0.6) | matches original exactly (conditioning underperforms here) |
 | pdb_00009me7 | 0.335 | 0.376 | *not started* | matches original exactly |
 | pdb_00009uvi | **0.247** | **0.247** | *not started* | **ground truth shifted here** (original: tied at 0.289) — still a tie under the new ground truth too |
 
@@ -306,6 +306,7 @@ comparable to the table above, only to its own baseline/Model A rows in §2.7's 
 | pdb_000010gh | 0.000 | 0.000 | 0.000 |
 | pdb_00008pmy | 0.345 | 0.609 | **0.300** — disagrees with the own-metric table above, which shows D beating baseline; EpiFormer rates D's conditioning *worse* than baseline here |
 | pdb_00009cb5 | 0.291 | 0.382 | 0.318 — between baseline and A, same direction (D beats baseline) as the own-metric table |
+| pdb_00009cct | 0.575 | 0.308 | 0.500 — EpiFormer ranks baseline best, D better than A but still below baseline; broadly agrees with the own-metric table that conditioning doesn't help here |
 
 Remaining targets' EpiFormer cross-checks will be added as each Model D campaign
 completes.
