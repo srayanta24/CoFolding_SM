@@ -268,19 +268,33 @@ still produces an empty selection even at 0.6 (its top call's confidence is 0.45
 a genuine abstention under either floor, skipped for this comparison (matches the
 original design's own philosophy: don't force a low-confidence guess).
 
-**Own-metric (5Å geometric contact recomputation, matching §1/PLAN.md §10's original
-methodology) mean recall, conditioned vs. baseline:**
+**A second real gap, found reconciling these numbers**: the `STANDARD_RESIDUES` fix
+(§2.2) changed `compute_interface_labels_by_label_seq()`'s ground-truth epitope
+definition *after* the original PLAN.md §10 numbers were computed with it — since that
+function feeds both the true-epitope set and (via `_antigen_contacts`) the design-contact
+recomputation, re-scoring the *same, unchanged* baseline/Model A campaigns with current
+code doesn't always reproduce the original numbers. Recomputed all 8 (cheap — no GPU
+work, just rescoring already-completed campaigns, via `downstream_eval.py <pdb_id>
+--compare`) rather than assume old and new code agree: 6/8 targets reproduce their
+original PLAN.md numbers exactly or almost exactly; 2 (`pdb_00009cb5`, `pdb_00009uvi`)
+shifted noticeably — consistent with the ~2% of `dev`/`test` structures the original bug
+quantifiably affected. The table below uses the current, freshly-recomputed numbers
+throughout (baseline and Model A included) for a genuine apples-to-apples footing
+against Model D, not the original PLAN.md values.
 
-| target | baseline | conditioned (Model A, orig.) | conditioned (Model D) | notes |
+**Own-metric (5Å geometric contact recomputation, matching §1/PLAN.md §10's original
+methodology) mean recall, conditioned vs. baseline — all recomputed with current code:**
+
+| target | baseline | conditioned (Model A) | conditioned (Model D) | notes |
 |---|---|---|---|---|
-| pdb_000010gh | 0.000 | 0.000 | 0.000 (floor=0.85) | all three agree: complete miss (Model D also made only a 1-residue call here) |
-| pdb_00008pmy | 0.000 | 0.243 | **0.155** (floor=0.85, union-of-5 recall 0.773 vs A's 0.783) | D clearly beats baseline too, though per-design mean recall is lower than A's |
-| pdb_00008tzu | — | — | *abstained* (confidence never clears 0.6) | skipped, see above |
-| pdb_00009cb5 | 0.303 | 0.355 | *running* (floor=0.6) | |
-| pdb_00009cct | 0.050 | 0.067 | *not started* | |
-| pdb_00009me5 | 0.026 | 0.010 | *not started* | |
-| pdb_00009me7 | 0.335 | 0.376 | *not started* | |
-| pdb_00009uvi | 0.289 | 0.289 | *not started* | |
+| pdb_000010gh | 0.000 | 0.000 | 0.000 (floor=0.85) | all three agree: complete miss (Model D also made only a 1-residue call here); matches original exactly |
+| pdb_00008pmy | 0.000 | 0.255 | **0.155** (floor=0.85, union-of-5 recall 0.818 vs D's 0.773) | D clearly beats baseline too, though less than A; baseline/A match original closely (was 0.000/0.243) |
+| pdb_00008tzu | 0.221 | 0.301 | *abstained* (confidence never clears 0.6) | matches original exactly; Model D skipped, see above |
+| pdb_00009cb5 | **0.400** | **0.455** | 0.436 (floor=0.6, union-of-5 recall 0.955 vs baseline's 1.000) | **ground truth shifted here** (original: 0.303/0.355) — D still beats baseline, similar relative margin |
+| pdb_00009cct | 0.050 | 0.067 | *running* (floor=0.6) | matches original exactly |
+| pdb_00009me5 | 0.026 | 0.010 | *not started* | matches original exactly (conditioning underperforms here) |
+| pdb_00009me7 | 0.335 | 0.376 | *not started* | matches original exactly |
+| pdb_00009uvi | **0.247** | **0.247** | *not started* | **ground truth shifted here** (original: tied at 0.289) — still a tie under the new ground truth too |
 
 **Separately, EpiFormer's independent cross-check (§2.7's method) on the same
 conditioned_D campaigns** — note this uses a *different* scoring method (EpiFormer's own
