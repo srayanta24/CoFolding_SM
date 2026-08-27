@@ -305,6 +305,7 @@ comparable to the table above, only to its own baseline/Model A rows in §2.7's 
 |---|---|---|---|
 | pdb_000010gh | 0.000 | 0.000 | 0.000 |
 | pdb_00008pmy | 0.345 | 0.609 | **0.300** — disagrees with the own-metric table above, which shows D beating baseline; EpiFormer rates D's conditioning *worse* than baseline here |
+| pdb_00009cb5 | 0.291 | 0.382 | 0.318 — between baseline and A, same direction (D beats baseline) as the own-metric table |
 
 Remaining targets' EpiFormer cross-checks will be added as each Model D campaign
 completes.
