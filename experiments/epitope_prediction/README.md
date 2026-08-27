@@ -208,8 +208,51 @@ Genuinely mixed (2/5 strong, 3/5 miss) — consistent with EpiFormer's own repor
 F1=0.305 on its harder benchmark split, not a broken pipeline. Its downstream verdicts
 should be treated as one more signal, not a tie-breaker on their own.
 
-**Not yet done**: running this over the real 8 downstream campaign outputs
-(`eval/epiformer_downstream_score.py`, planned but not yet written).
+**A third real bug, found scoring actual generated designs** (not just natural
+structures, all the 5-structure sanity check above used): one whole target (10/10
+designs, both variants) crashed with `TypeError: 'NoneType' object is not
+subscriptable` inside ANARCI's numbering path. Root cause: `results[0]` (per-chain
+ANARCI output) was a non-`None` list whose first element was itself `None` — a
+"detected something domain-like but couldn't number it" failure mode, distinct from
+"no domain found" (`results[0] is None`, already handled by the earlier fix). More
+likely on designed sequences than natural ones (unusual framework residues near the
+CDRs that a natural-sequence-trained HMM alignment doesn't expect). Hardened
+`identify_cdr_residues_anarci()` to check every level of nesting explicitly rather than
+assume a fixed depth is always populated; falls back to the Chothia heuristic for that
+chain instead of crashing.
+
+**Applied to all 8 real downstream targets (`eval/epiformer_downstream_score.py --all`),
+baseline vs. Model A's conditioned campaigns** (mean recall across each variant's top-5
+ranked designs):
+
+| target | baseline | conditioned (Model A) | Δ | agrees with original geometric-method finding (§1, PLAN.md §10)? |
+|---|---|---|---|---|
+| pdb_000010gh | 0.000 | 0.000 | — | yes (both zero) |
+| pdb_00008pmy | 0.345 | **0.609** | +0.264 | yes (this was the "largest effect" target originally too) |
+| pdb_00008tzu | 0.218 | 0.278 | +0.060 | yes |
+| pdb_00009cb5 | 0.291 | 0.382 | +0.091 | yes |
+| pdb_00009cct | **0.575** | 0.308 | **−0.267** | **no — original found conditioning helped here** |
+| pdb_00009me5 | 0.314 | 0.318 | ~0 | partial (original found conditioning clearly hurt; EpiFormer sees a wash) |
+| pdb_00009me7 | 0.554 | 0.549 | ~0 | partial (original found a modest win; EpiFormer sees a wash) |
+| pdb_00009uvi | 0.494 | 0.518 | +0.024 | yes (both saw a near-wash with a mild edge to conditioning) |
+
+Mostly directionally consistent with the original purely-geometric 5Å-contact method —
+useful confirmation that that method's conclusions weren't an artifact of its own
+scoring approach. One real disagreement worth flagging rather than averaging away:
+**pdb_00009cct**, where EpiFormer says conditioning clearly *hurts* (baseline recall
+almost double) while the original method found a (weak) improvement. Neither method is
+obviously right here; treat this specific target's conclusion as unresolved rather than
+picking a side.
+
+**Model D integration and re-run in progress**: `steering/binding_types_spec.py` now
+uses Model D (§2.6) instead of Model A, since it wins the held-out comparison
+comprehensively. Re-running the same 8-target conditioned-vs-baseline campaigns with
+Model D's predictions (`downstream_eval.py --conditioned-variant conditioned_D`) —
+baseline runs are reused unchanged (never depend on the steering model), so only 8 new
+conditioned campaigns are needed, each still costing the same real GPU-hours as the
+original run (design ~50min–5.6h + refold ~1–9h per target). First target
+(`pdb_000010gh`) launched; full 8-target comparison and a fresh EpiFormer cross-check on
+the new results will be added here once complete.
 
 ---
 
