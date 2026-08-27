@@ -250,9 +250,22 @@ comprehensively. Re-running the same 8-target conditioned-vs-baseline campaigns 
 Model D's predictions (`downstream_eval.py --conditioned-variant conditioned_D`) —
 baseline runs are reused unchanged (never depend on the steering model), so only 8 new
 conditioned campaigns are needed, each still costing the same real GPU-hours as the
-original run (design ~50min–5.6h + refold ~1–9h per target). First target
-(`pdb_000010gh`) launched; full 8-target comparison and a fresh EpiFormer cross-check on
-the new results will be added here once complete.
+original run (design ~50min–5.6h + refold ~1–9h per target).
+
+| target | baseline | conditioned (Model A) | conditioned (Model D) | notes |
+|---|---|---|---|---|
+| pdb_000010gh | 0.000 | 0.000 | 0.000 | all three agree: complete miss (Model D also made only a 1-residue call here, same low-confidence pattern as Model A originally) |
+| pdb_00008pmy | 0.345 | 0.609 | *running* | |
+| pdb_00008tzu | 0.218 | 0.278 | *not started* | |
+| pdb_00009cb5 | 0.291 | 0.382 | *not started* | |
+| pdb_00009cct | 0.575 | 0.308 | *not started* | |
+| pdb_00009me5 | 0.314 | 0.318 | *not started* | |
+| pdb_00009me7 | 0.554 | 0.549 | *not started* | |
+| pdb_00009uvi | 0.494 | 0.518 | *not started* | |
+
+(table columns for Model A/baseline are the mean-recall numbers already reported above,
+carried here for a single side-by-side view; will fill in as each Model D campaign and
+its EpiFormer cross-check complete.)
 
 ---
 
