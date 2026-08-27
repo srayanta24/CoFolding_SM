@@ -1,10 +1,14 @@
 #!/usr/bin/env python3
 """Predicted epitope -> BoltzGen design-spec `binding_types` string.
 
-Uses **Model A** (geometric-only) — selected over Model B (geometric+ESM2) after both
-were compared on a genuinely held-out test set (PLAN.md sec 9): Model B overfit despite
-proper early stopping, and its own confidence-sanity check correctly flagged this before
-it was trusted here.
+Uses **Model D** (a faithful fork of EpiFormer's antigen-branch encoder, retrained
+antibody-agnostic on our data) — selected after a 4-way comparison on a genuinely
+held-out test set (see experiments/epitope_prediction/README.md sec 2.6): Model D beats
+Model A (AUC 0.876 vs 0.867, calibrated Brier 0.054 vs 0.060, precision@recall~0.3 0.937
+vs 0.862) on every metric once given a training recipe suited to its larger size, and
+Model A previously beat Models B/C on the same grounds Model A now loses to D. Superseded
+Model A here for exactly the same reason Model A was originally chosen over B: it's the
+model that actually wins the held-out comparison, not the one used historically.
 
 Verified format (src/boltzgen/src/boltzgen/data/parse/schema.py:1066-1090): `binding_types`
 is a single string, one character per residue, in the SAME order as the entity's declared
@@ -31,7 +35,7 @@ from pathlib import Path
 import torch
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "model"))
-from features import build_geometric_features, group_residues  # noqa: E402
+from features import build_multirelational_features, group_residues  # noqa: E402
 from gnn import ensemble_predict, load_ensemble  # noqa: E402
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "data"))
@@ -47,7 +51,7 @@ def predict_epitope(pdb_id: str, device: str | None = None) -> list[dict] | None
     structure has no usable antigen."""
     device = device or ("cuda" if torch.cuda.is_available() else "cpu")
 
-    geo = build_geometric_features(pdb_id)
+    geo = build_multirelational_features(pdb_id)
     if geo is None:
         return None
 
@@ -55,12 +59,17 @@ def predict_epitope(pdb_id: str, device: str | None = None) -> list[dict] | None
     _, antigen_atoms = chains
     residues = group_residues(antigen_atoms)
     # geo["residue_keys"] and `residues` are built from the identical group_residues()
-    # call chain (build_geometric_features calls it internally too), so they're in the
-    # same order -- verified by construction, not just assumed.
+    # call chain (build_multirelational_features calls build_geometric_features
+    # internally, which calls group_residues() too), so they're in the same order --
+    # verified by construction, not just assumed.
     label_seq_ids = [res_atoms[0].label_seq_id for _, res_atoms in residues]
 
-    models = load_ensemble("A", device)
-    entry = {"node_features": geo["node_features"], "edge_index": geo["edge_index"]}
+    models = load_ensemble("D", device)
+    entry = {
+        "node_scalars": geo["node_scalars"],
+        "backbone_coords": geo["backbone_coords"],
+        "edges_by_relation": geo["edges_by_relation"],
+    }
     propensity, confidence = ensemble_predict(models, entry, device)
 
     predictions = [

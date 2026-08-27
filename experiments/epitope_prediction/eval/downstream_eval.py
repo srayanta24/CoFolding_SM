@@ -117,6 +117,16 @@ def validate_spec(spec_path: Path, out_dir: Path) -> bool:
 
 
 def run_campaign(spec_path: Path, num_designs: int = 50, budget: int = 5) -> None:
+    # Skip-if-already-run guard: --launch always re-lists every variant in `specs`
+    # (including "baseline", which never changes across which model produced the
+    # conditioned spec) -- without this check, comparing a second model's conditioned
+    # predictions on a pdb_id already evaluated once would silently re-run and burn
+    # real GPU-hours re-doing an already-completed, already-reported baseline campaign.
+    final_designs_dir = spec_path.parent / "run1" / "final_ranked_designs"
+    if final_designs_dir.exists():
+        print(f"[downstream_eval] {spec_path.parent.name}: run1 already complete "
+              f"({final_designs_dir}) -- skipping, not re-running", file=sys.stderr)
+        return
     cmd = [venv_bin("boltzgen", "boltzgen"), "run", spec_path.name,
            "--output", "run1", "--protocol", "antibody-anything",
            "--num_designs", str(num_designs), "--budget", str(budget),
@@ -125,7 +135,13 @@ def run_campaign(spec_path: Path, num_designs: int = 50, budget: int = 5) -> Non
     subprocess.run(cmd, cwd=spec_path.parent)
 
 
-def build_both_specs(pdb_id: str) -> dict[str, Path]:
+def build_both_specs(pdb_id: str, conditioned_variant: str = "conditioned") -> dict[str, Path]:
+    """conditioned_variant: which subdirectory name to write the conditioned spec under
+    -- defaults to "conditioned" (the original Model A results), but pass e.g.
+    "conditioned_D" to compare a different steering model's predictions without
+    clobbering an earlier model's already-completed campaign in the same pdb_id
+    directory. "baseline" (unconditioned) never varies by model, so it's always just
+    "baseline" and is reused across every conditioned_variant for the same pdb_id."""
     out_root = Path(__file__).resolve().parent / ".downstream_runs" / pdb_id
 
     predictions = predict_epitope(pdb_id)
@@ -133,7 +149,7 @@ def build_both_specs(pdb_id: str) -> dict[str, Path]:
         sys.exit(f"[downstream_eval] {pdb_id}: no usable antigen for epitope prediction")
     selected = select_binding_residues(predictions)
     if not selected:
-        sys.exit(f"[downstream_eval] {pdb_id}: Model A selected zero residues above the "
+        sys.exit(f"[downstream_eval] {pdb_id}: model selected zero residues above the "
                   f"confidence/propensity floor for this target -- pick a different dev.txt "
                   f"structure, this one has no strong enough epitope call to make a "
                   f"meaningful conditioned-vs-unconditioned comparison.")
@@ -142,7 +158,7 @@ def build_both_specs(pdb_id: str) -> dict[str, Path]:
           f"binding_types range: {binding_range}", file=sys.stderr)
 
     specs = {}
-    for variant, bt in [("conditioned", binding_range), ("baseline", None)]:
+    for variant, bt in [(conditioned_variant, binding_range), ("baseline", None)]:
         variant_dir = out_root / variant
         spec_path = write_spec(pdb_id, variant_dir, bt)
         print(f"[downstream_eval] wrote {variant} spec: {spec_path}", file=sys.stderr)
@@ -189,7 +205,7 @@ def _mean(values: list[float]) -> float:
     return sum(values) / len(values) if values else float("nan")
 
 
-def compare_results(pdb_id: str) -> None:
+def compare_results(pdb_id: str, conditioned_variant: str = "conditioned") -> None:
     """Real ground-truth epitope (our own coordinate-based labeler) vs. each variant's
     top-5 ranked designs' actual contact residues (recomputed the same way, on each
     design's own refolded output CIF instead of the original antigen structure) --
@@ -200,7 +216,7 @@ def compare_results(pdb_id: str) -> None:
 
     out_root = Path(__file__).resolve().parent / ".downstream_runs" / pdb_id
     summaries = {}
-    for variant in ("conditioned", "baseline"):
+    for variant in (conditioned_variant, "baseline"):
         run_dir = out_root / variant / "run1"
         design_dir = run_dir / "final_ranked_designs" / "final_5_designs"
         cifs = sorted(design_dir.glob("rank*.cif")) if design_dir.exists() else []
@@ -237,9 +253,9 @@ def compare_results(pdb_id: str) -> None:
               f"({len(union_contacts & true_positive)}/{len(true_positive)} true epitope residues "
               f"covered by at least one of the top {len(cifs)} designs)")
 
-    if "conditioned" in summaries and "baseline" in summaries:
-        c, b = summaries["conditioned"], summaries["baseline"]
-        print(f"\n[downstream_eval] {pdb_id}: conditioned vs baseline "
+    if conditioned_variant in summaries and "baseline" in summaries:
+        c, b = summaries[conditioned_variant], summaries["baseline"]
+        print(f"\n[downstream_eval] {pdb_id}: {conditioned_variant} vs baseline "
               f"(mean recall {c['mean_recall']:.3f} vs {b['mean_recall']:.3f}, "
               f"mean jaccard {c['mean_jaccard']:.3f} vs {b['mean_jaccard']:.3f}, "
               f"union recall {c['union_recall']:.3f} vs {b['union_recall']:.3f}) -- "
@@ -254,19 +270,23 @@ def main() -> None:
     parser.add_argument("--compare", action="store_true", help="Compare already-completed campaign results")
     parser.add_argument("--num_designs", type=int, default=50)
     parser.add_argument("--budget", type=int, default=5)
+    parser.add_argument("--conditioned-variant", default="conditioned",
+                         help="Subdirectory name for the conditioned spec/campaign -- default 'conditioned' "
+                              "(Model A's original results). Pass e.g. 'conditioned_D' to compare a different "
+                              "steering model without clobbering an earlier model's completed campaign.")
     args = parser.parse_args()
 
     if args.compare:
-        compare_results(args.pdb_id)
+        compare_results(args.pdb_id, args.conditioned_variant)
         return
 
-    specs = build_both_specs(args.pdb_id)
+    specs = build_both_specs(args.pdb_id, args.conditioned_variant)
 
     if args.launch:
         for variant, spec_path in specs.items():
             print(f"\n{'=' * 60}\n[downstream_eval] {variant}\n{'=' * 60}", file=sys.stderr)
             run_campaign(spec_path, args.num_designs, args.budget)
-        compare_results(args.pdb_id)
+        compare_results(args.pdb_id, args.conditioned_variant)
     else:
         print("\n[downstream_eval] Both specs validated, not launched (pass --launch to run "
               "both real campaigns). Launch commands:")
