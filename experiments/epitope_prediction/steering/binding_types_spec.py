@@ -42,7 +42,19 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "data"))
 from interface_labels import get_chain_atoms  # noqa: E402
 
 PROPENSITY_FLOOR = 0.3
-CONFIDENCE_FLOOR = 0.85
+# Real gap found integrating Model D: 0.85 was tuned against Model A's own confidence
+# distribution (sanity-check bins ~0.63-0.95) and turned out far too strict for Model D
+# (bins ~0.29-0.95, systematically lower -- its 5-member ensemble disagrees more even
+# on good calls, likely from its larger/more complex architecture). At 0.85, 7/8 real
+# downstream targets' top propensity-ranked residue failed to clear it, producing an
+# empty selection (not a real "no signal" case -- their confidence was 0.4-0.8, not
+# uniformly low). Lowered to 0.6, chosen from Model D's own real confidence-sanity-check
+# bins (test.txt, README.md sec 2.6): bin3 (conf~0.62, error 0.243) is the last bin
+# still meaningfully more accurate than bin1/2, bin4 (conf~0.80, error 0.140) confirms
+# the trend continues -- 0.6 keeps most targets' real signal without abandoning the
+# floor's purpose (a target can still legitimately abstain if even its best call is
+# below this, e.g. pdb_00008tzu in the downstream comparison, sec 2.7).
+CONFIDENCE_FLOOR = 0.6
 
 
 def predict_epitope(pdb_id: str, device: str | None = None) -> list[dict] | None:

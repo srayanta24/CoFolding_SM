@@ -252,20 +252,48 @@ baseline runs are reused unchanged (never depend on the steering model), so only
 conditioned campaigns are needed, each still costing the same real GPU-hours as the
 original run (design ~50min–5.6h + refold ~1–9h per target).
 
-| target | baseline | conditioned (Model A) | conditioned (Model D) | notes |
-|---|---|---|---|---|
-| pdb_000010gh | 0.000 | 0.000 | 0.000 | all three agree: complete miss (Model D also made only a 1-residue call here, same low-confidence pattern as Model A originally) |
-| pdb_00008pmy | 0.345 | 0.609 | *running* | |
-| pdb_00008tzu | 0.218 | 0.278 | *not started* | |
-| pdb_00009cb5 | 0.291 | 0.382 | *not started* | |
-| pdb_00009cct | 0.575 | 0.308 | *not started* | |
-| pdb_00009me5 | 0.314 | 0.318 | *not started* | |
-| pdb_00009me7 | 0.554 | 0.549 | *not started* | |
-| pdb_00009uvi | 0.494 | 0.518 | *not started* | |
+**Real gap found integrating Model D, worth flagging plainly**: `binding_types_spec.py`'s
+`CONFIDENCE_FLOOR=0.85` was tuned against Model A's own confidence distribution and
+turned out far too strict for Model D — its 5-member ensemble disagrees more even on
+good calls (bins ~0.29–0.95 vs Model A's ~0.63–0.95), so at 0.85, most targets' top
+propensity-ranked residue never cleared it, and one target (`pdb_00008tzu`) produced an
+empty selection outright (not a real "no signal" case — its confidence was 0.4–0.8, just
+not ≥0.85). Lowered to `0.6`, chosen from Model D's own real confidence-sanity-check
+bins (§2.6: bin3 confidence~0.62/error 0.243 is the last bin still meaningfully more
+accurate than bin1/2). **Caveat this creates**: targets 1–2 below were already run under
+the old 0.85 floor before this was caught; re-running them would cost more GPU-hours for
+uncertain benefit, so they're left as-is rather than redone — reported with their actual
+floor noted, not silently treated as uniform with targets 4 onward. `pdb_00008tzu`
+still produces an empty selection even at 0.6 (its top call's confidence is 0.453) —
+a genuine abstention under either floor, skipped for this comparison (matches the
+original design's own philosophy: don't force a low-confidence guess).
 
-(table columns for Model A/baseline are the mean-recall numbers already reported above,
-carried here for a single side-by-side view; will fill in as each Model D campaign and
-its EpiFormer cross-check complete.)
+**Own-metric (5Å geometric contact recomputation, matching §1/PLAN.md §10's original
+methodology) mean recall, conditioned vs. baseline:**
+
+| target | baseline | conditioned (Model A, orig.) | conditioned (Model D) | notes |
+|---|---|---|---|---|
+| pdb_000010gh | 0.000 | 0.000 | 0.000 (floor=0.85) | all three agree: complete miss (Model D also made only a 1-residue call here) |
+| pdb_00008pmy | 0.000 | 0.243 | **0.155** (floor=0.85, union-of-5 recall 0.773 vs A's 0.783) | D clearly beats baseline too, though per-design mean recall is lower than A's |
+| pdb_00008tzu | — | — | *abstained* (confidence never clears 0.6) | skipped, see above |
+| pdb_00009cb5 | 0.303 | 0.355 | *running* (floor=0.6) | |
+| pdb_00009cct | 0.050 | 0.067 | *not started* | |
+| pdb_00009me5 | 0.026 | 0.010 | *not started* | |
+| pdb_00009me7 | 0.335 | 0.376 | *not started* | |
+| pdb_00009uvi | 0.289 | 0.289 | *not started* | |
+
+**Separately, EpiFormer's independent cross-check (§2.7's method) on the same
+conditioned_D campaigns** — note this uses a *different* scoring method (EpiFormer's own
+learned call, not our 5Å-contact recomputation) so its absolute numbers aren't directly
+comparable to the table above, only to its own baseline/Model A rows in §2.7's table:
+
+| target | baseline (EpiFormer) | conditioned Model A (EpiFormer) | conditioned Model D (EpiFormer) |
+|---|---|---|---|
+| pdb_000010gh | 0.000 | 0.000 | 0.000 |
+| pdb_00008pmy | 0.345 | 0.609 | **0.300** — disagrees with the own-metric table above, which shows D beating baseline; EpiFormer rates D's conditioning *worse* than baseline here |
+
+Remaining targets' EpiFormer cross-checks will be added as each Model D campaign
+completes.
 
 ---
 
