@@ -294,7 +294,7 @@ methodology) mean recall, conditioned vs. baseline — all recomputed with curre
 | pdb_00009cct | 0.050 | 0.067 | **0.000** (floor=0.6) | conditioning HURTS here for both A (EpiFormer's cross-check agrees) and D (worse than A, own-metric now 0.000 vs baseline's 0.050) — a target where conditioning may genuinely backfire regardless of model |
 | pdb_00009me5 | 0.335 | 0.376 | 0.237 (floor=0.6) | **row was transcribed swapped with me7 in an earlier edit of this table, corrected here** — matches original exactly for baseline/A; D underperforms baseline here, retaining ~71% of its recall |
 | pdb_00009me7 | 0.026 | 0.010 | 0.015 (floor=0.6) | matches original exactly (conditioning underperforms baseline here for both A and D, D slightly less bad) — but EpiFormer's cross-check disagrees, see below |
-| pdb_00009uvi | **0.247** | **0.247** | *not started* | **ground truth shifted here** (original: tied at 0.289) — still a tie under the new ground truth too |
+| pdb_00009uvi | **0.247** | **0.247** | 0.259 (floor=0.6, union-of-5 recall 0.529 vs baseline's 0.353) | **ground truth shifted here** (original: tied at 0.289) — D edges out both baseline and A slightly |
 
 **Separately, EpiFormer's independent cross-check (§2.7's method) on the same
 conditioned_D campaigns** — note this uses a *different* scoring method (EpiFormer's own
@@ -308,9 +308,47 @@ comparable to the table above, only to its own baseline/Model A rows in §2.7's 
 | pdb_00009cb5 | 0.291 | 0.382 | 0.318 — between baseline and A, same direction (D beats baseline) as the own-metric table |
 | pdb_00009cct | 0.575 | 0.308 | 0.500 — EpiFormer ranks baseline best, D better than A but still below baseline; broadly agrees with the own-metric table that conditioning doesn't help here |
 | pdb_00009me7 | 0.554 | 0.549 | **0.564** — disagrees with the own-metric table, which shows D underperforming baseline here; EpiFormer rates D's conditioning best of all three variants |
+| pdb_00008tzu | 0.218 | 0.278 | *abstained* (same as own-metric table — no Model D call to score) |
+| pdb_00009me5 | 0.314 | 0.318 | 0.229 — agrees with the own-metric table: D underperforms both baseline and A here |
+| pdb_00009uvi | 0.494 | 0.518 | 0.518 — ties A, both above baseline; agrees directionally with the own-metric table (D beats baseline: 0.259 vs 0.247) |
 
-Remaining targets' EpiFormer cross-checks will be added as each Model D campaign
-completes.
+All 8 targets' cross-checks complete (7 scored, 1 abstained).
+
+### Synthesis: does Model D's offline superiority hold up downstream?
+
+All 8 targets done (7 scored, `pdb_00008tzu` abstained under either confidence floor).
+Tallying conditioning-vs-baseline wins/losses/ties on mean recall, same convention as
+the original PLAN.md §10 synthesis:
+
+- **Own-metric (5Å-contact recomputation)**: `pdb_00008pmy`, `pdb_00009cb5`, `pdb_00009uvi`
+  win; `pdb_00009cct`, `pdb_00009me5`, `pdb_00009me7` lose; `pdb_000010gh` ties (both
+  zero) — **3 wins / 3 losses / 1 tie**.
+- **EpiFormer's independent cross-check**: `pdb_00009cb5`, `pdb_00009me7`, `pdb_00009uvi`
+  win; `pdb_00008pmy`, `pdb_00009cct`, `pdb_00009me5` lose; `pdb_000010gh` ties —
+  **3 wins / 3 losses / 1 tie**, the same aggregate split, but **not the same targets**:
+  `pdb_00008pmy` and `pdb_00009me7` flip between the two scoring methods.
+
+**Compared to Model A's original result (PLAN.md §10): 5 wins / 1 loss / 1 tie across
+the same 7 confident-call targets.** This is a real, somewhat humbling finding worth
+stating plainly rather than glossing over: **Model D's clear offline superiority over
+Model A (§2.6 — AUC 0.876 vs 0.867, precision@recall~0.3 0.937 vs 0.862, a cleaner
+confidence-sanity signal) did not translate into better real downstream steering.** If
+anything, Model D's win rate here is worse than Model A's original one. A better
+held-out classifier is not automatically a better steering signal — the two are related
+but distinct properties, and this 8-target re-run is direct evidence they can diverge.
+
+Some caveats worth carrying forward rather than treating this as the final word:
+targets 1–2 ran under Model D's original (too-strict) confidence floor before that bug
+was caught (§ above), so their calls may not reflect Model D at its best; `pdb_00009cct`
+and `pdb_000010gh` look like genuinely hard/misleading epitope calls regardless of which
+model or scoring method is used (both methods agree conditioning doesn't help there);
+and the two scoring methods disagreeing on 2 of 7 targets' win/loss status is itself a
+reminder that no single metric here — offline AUC, our own 5Å-contact recall, or
+EpiFormer's independent call — should be trusted as the sole arbiter of "which model is
+actually better for steering." **Given this, keeping Model A as the production steering
+model (reverting `binding_types_spec.py`) is at least as defensible as keeping Model D**
+— this hasn't been decided here and is a real open question, not a conclusion this
+README reaches on its own.
 
 ---
 
