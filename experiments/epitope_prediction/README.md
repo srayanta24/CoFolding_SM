@@ -293,7 +293,7 @@ methodology) mean recall, conditioned vs. baseline — all recomputed with curre
 | pdb_00009cb5 | **0.400** | **0.455** | 0.436 (floor=0.6, union-of-5 recall 0.955 vs baseline's 1.000) | **ground truth shifted here** (original: 0.303/0.355) — D still beats baseline, similar relative margin |
 | pdb_00009cct | 0.050 | 0.067 | **0.000** (floor=0.6) | conditioning HURTS here for both A (EpiFormer's cross-check agrees) and D (worse than A, own-metric now 0.000 vs baseline's 0.050) — a target where conditioning may genuinely backfire regardless of model |
 | pdb_00009me5 | 0.335 | 0.376 | 0.237 (floor=0.6) | **row was transcribed swapped with me7 in an earlier edit of this table, corrected here** — matches original exactly for baseline/A; D underperforms baseline here, retaining ~71% of its recall |
-| pdb_00009me7 | 0.026 | 0.010 | *running* (floor=0.6) | **row was transcribed swapped with me5 in an earlier edit of this table, corrected here** — matches original exactly (conditioning underperforms here for A too) |
+| pdb_00009me7 | 0.026 | 0.010 | 0.015 (floor=0.6) | matches original exactly (conditioning underperforms baseline here for both A and D, D slightly less bad) — but EpiFormer's cross-check disagrees, see below |
 | pdb_00009uvi | **0.247** | **0.247** | *not started* | **ground truth shifted here** (original: tied at 0.289) — still a tie under the new ground truth too |
 
 **Separately, EpiFormer's independent cross-check (§2.7's method) on the same
@@ -307,6 +307,7 @@ comparable to the table above, only to its own baseline/Model A rows in §2.7's 
 | pdb_00008pmy | 0.345 | 0.609 | **0.300** — disagrees with the own-metric table above, which shows D beating baseline; EpiFormer rates D's conditioning *worse* than baseline here |
 | pdb_00009cb5 | 0.291 | 0.382 | 0.318 — between baseline and A, same direction (D beats baseline) as the own-metric table |
 | pdb_00009cct | 0.575 | 0.308 | 0.500 — EpiFormer ranks baseline best, D better than A but still below baseline; broadly agrees with the own-metric table that conditioning doesn't help here |
+| pdb_00009me7 | 0.554 | 0.549 | **0.564** — disagrees with the own-metric table, which shows D underperforming baseline here; EpiFormer rates D's conditioning best of all three variants |
 
 Remaining targets' EpiFormer cross-checks will be added as each Model D campaign
 completes.
