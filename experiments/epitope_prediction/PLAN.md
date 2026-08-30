@@ -438,3 +438,70 @@ calibration so target-5-like false-positive-confidence cases become rarer) rathe
 building v2. Revisit v2 only if a future confident, *verifiably correct* prediction
 still fails to shift generated contacts — that hasn't happened in any of the eight
 targets tested so far.
+
+## 11. Root-cause analysis: why Model D's offline superiority didn't hold downstream (2026-08-30)
+
+Follow-up to README.md §2.7's synthesis, which left "Model D wins offline on every
+metric but loses the downstream 8-target comparison (3W/3L/1T vs Model A's original
+5W/1L/1T)" as an open, unresolved question. Investigated by comparing what the offline
+metrics measure against what the deployed steering path (`binding_types_spec.py`)
+actually does, using the real, already-generated campaign spec YAMLs
+(`.downstream_runs/<pdb_id>/conditioned{,_D}/<pdb_id>_spec.yaml`) as ground truth for
+what was actually fed to BoltzGen — not a recomputation with today's checkpoints (Model
+A's checkpoint has since been overwritten by v2 retraining, so it can no longer
+regenerate the exact predictions behind the original `conditioned` campaigns).
+
+**Finding 1 — a real selection-size collapse, not a quality reversal, on most targets.**
+`select_binding_residues()` doesn't threshold independently; it walks the
+propensity-sorted list and stops at the *first* residue whose confidence dips below
+`CONFIDENCE_FLOOR`. Reading the real deployed `binding_types` ranges off both variants'
+spec files: on 5 of 8 targets Model D's real selection was **10-38% the size** of Model
+A's (`pdb_00009cct`: 4 vs 42; `pdb_00009me7`: 5 vs 37; `pdb_00008pmy`: 7 vs 19;
+`pdb_00009cb5`: 9 vs 24; `pdb_00008tzu`: 0 vs 22 — an outright abstention). In every one
+of these cases the stop reason was confidence, never the propensity floor — so
+`CONFIDENCE_FLOOR` alone governs selection size in practice, and it was tuned
+(README §2.7) against an aggregate error-vs-confidence-bin curve, never checked against
+whether it reproduces selection *sizes* comparable to Model A's real per-target
+behavior. A narrow B-region gives BoltzGen's conditioning much less to steer toward
+regardless of how individually correct those few residues are.
+
+**Verified with an offline proxy** (no GPU cost — reranks Model D's own already-cached
+propensity output, current on-disk checkpoint, confirmed to reproduce the real deployed
+selections exactly): dropping the confidence gate and taking Model D's own top-K by
+propensity alone, K set to Model A's real deployed count for that target —
+- `pdb_00009cct`: selection-recall **0.000 → 0.500** (0/24 → 12/24) — the clearest case;
+  the gate was discarding real, present signal.
+- `pdb_00009me7`: **0.077 → 0.231** (3/39 → 9/39) — same direction, smaller effect.
+- `pdb_00008tzu`: only **0.039** (3/77) reachable, because only 12 residues on the whole
+  antigen ever clear `PROPENSITY_FLOOR=0.3` — this target's gap is *not* fixable by
+  touching the confidence floor; Model D's raw propensity signal itself is too thin here,
+  a genuine target-specific model-quality gap distinct from Finding 1.
+
+**Finding 2 — `pdb_00009me5` is a genuine per-target quality miss, not a threshold
+artifact.** Both models selected exactly 25 residues here (no size gap), but only 7
+overlapped. Model A's 18 unique picks are 72% close-or-correct (10 exact hits + 3 within
+3.8Å) vs Model D's 18 unique picks at 61% (5 exact + 6 within ~8Å) — Model D is simply
+less accurate on this specific antigen despite winning in aggregate over all of
+`test.txt`. Both models' wrong calls cluster in the *same* wrong sequence region
+(A: residues 233-240, D: residues 225-226, sequence-adjacent) — a shared blind spot
+(plausibly a decoy convex/high-SASA patch), not independent architecture-specific noise.
+
+**Net picture**: three separable causes, not one — (1) an under-tuned confidence floor
+actively costing Model D real signal on some targets (`cct`, partly `me7`), fixable by
+re-tuning or replacing the floor mechanism; (2) targets where Model D's raw propensity
+signal is genuinely weaker regardless of thresholding (`tzu`); (3) targets that are a
+real, individual-target regression for Model D despite its better aggregate metrics
+(`me5`), including a cross-architecture shared blind spot. Only (1) looks fixable
+without new model training.
+
+**Next step (not yet run)**: launch a real BoltzGen campaign for `pdb_00009cct` with a
+budget-matched Model D selection (top-42 by propensity, `PROPENSITY_FLOOR=0.3` only, no
+confidence gate — matching Model A's real deployed count on this target) as a new
+`conditioned_D_budgetmatched` variant, reusing the existing completed `baseline` run, to
+test whether the offline selection-recall recovery (0.000 → 0.500) survives all the way
+through real design + refolding, or whether BoltzGen's actual generation behaves
+differently from what the selection-quality proxy predicts. If it does survive,
+`CONFIDENCE_FLOOR` for Model D should be replaced with a per-target adaptive budget
+(e.g. sized relative to antigen length or Model A's own historical selection sizes)
+rather than a fixed global threshold, before trusting Model D over Model A in
+production.
