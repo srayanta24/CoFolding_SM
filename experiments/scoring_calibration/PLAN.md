@@ -152,18 +152,59 @@ than measuring its deposited structure.
   reporting on its own.
 - **Separation** — ROC-AUC of each single metric, and of BoltzGen's own
   worst-weighted-rank score (`BOLTZGEN_RANKING_WEIGHTS` in `experiments/thresholds.py`),
-  for A vs D. This is the first point at which a filter rule can honestly be compared
-  against the default.
+  for **hard_negative vs matched_positive**. This is the first point at which a filter
+  rule can honestly be compared against the default.
 - Split discipline, same rule as everywhere else in this project: iterate on `dev`,
-  touch `test` only for final reported numbers.
+  touch `test` only for final reported numbers. The pilot's clean arm is therefore
+  `dev`-only, which caps it at 32 entries — thin, accepted deliberately rather than
+  padded from `test`.
+
+### Provenance constraint — which comparisons are legitimate
+
+Established while building the manifest, and it changes the separation analysis above.
+Structural sets (clean and contaminated positives) share one extraction path
+(`_atom_site` resolved coordinates), so the memorisation-gap comparison between them
+is provenance-clean. The mutant sets necessarily use AbDesign-DB's own curated
+sequences — **there is no crystal structure of a point mutant** — so they carry a
+different sequence provenance.
+
+So: compare **within** a provenance, never across it.
+
+| Comparison | Sets | Provenance |
+|---|---|---|
+| Calibration percentiles | clean_positive alone | structural |
+| Memorisation gap | clean vs contaminated | structural, both sides |
+| Dose-response vs log(Kd) | contaminated_positive | structural |
+| Separation / ROC | hard_negative vs **matched_positive** | curated, both sides |
+
+Scoring hard negatives against clean positives would confound sequence provenance with
+the thing being measured, and would likely produce a flatteringly high AUC for the
+wrong reason. `matched_positive` exists precisely so that comparison has a same-source,
+same-parent-complex control.
 
 ## 8. Milestones
 
 1. ✅ Data inventory and contamination audit — §3-§5 above, all numbers verified directly
    against the files on disk.
-2. ⬜ Set construction (`build_sets.py`) — assemble A/B/C/D as a tidy manifest with
-   labels and provenance, filtering AB-Bind to its antibody-antigen subset per §5. No
-   GPU.
+2. ✅ Set construction (`build_sets.py`) — one tidy manifest, `sets/manifest.tsv`,
+   **1,366 entries**: 283 `clean_positive` (dev 32 / test 251), 207
+   `contaminated_positive` (all `train_era`, Kd-labelled), 256 `hard_negative`,
+   620 `matched_positive`. Plus `sets/pilot.tsv` (332 entries) and
+   `sets/summary.json`. AB-Bind is not read directly — AbDesign-DB already
+   reprocesses its usable rows with sequences attached, which avoids both the
+   non-antibody entries and any mutation-application numbering risk.
+
+   **Real bug caught here, before it cost GPU time**: the first version read
+   sequences from `_entity_poly`, which is the *declared construct* and silently
+   included signal peptides — `pdb_000011zw`'s heavy chain came out as
+   `MPMGSLQPLATLYLLGMLVASVLA|EVQLVESGGG…`, its antigen as
+   `MGILPSPGMPALLSLVSLLSVLLMGCVA|ETGTPELEVVQ…`. Cofolding those would have produced
+   disordered termini, depressed every confidence metric, and inflated GPU cost —
+   while calibrating against something the design pipeline never sees, since that
+   pipeline conditions on a structure. Now built from `_atom_site` (resolved
+   coordinates only): the same entry is 214/212/113 residues instead of 261/·/175
+   and starts cleanly at `EVQLVESGGG`. `esm2_features.py` reached the same
+   conclusion independently for the same reason.
 3. ⬜ **Pilot**: ~300 cofolds (100 clean positives / 100 contaminated / 100 hard
    negatives), stratified. Estimated ~20 GPU-hours at 3-5 min per Fab+antigen complex —
    *an estimate from the paper's own per-residue timing and this project's observed

@@ -1,0 +1,43 @@
+{
+  "full": {
+    "total_entries": 1366,
+    "by_set": {
+      "clean_positive": 283,
+      "contaminated_positive": 207,
+      "matched_positive": 620,
+      "hard_negative": 256
+    },
+    "by_split": {
+      "test": 251,
+      "dev": 32,
+      "train_era": 207
+    },
+    "residues": {
+      "min": 293,
+      "max": 1192,
+      "mean": 599.3,
+      "total": 818677
+    }
+  },
+  "pilot": {
+    "total_entries": 332,
+    "by_set": {
+      "clean_positive": 32,
+      "contaminated_positive": 100,
+      "hard_negative": 100,
+      "matched_positive": 100
+    },
+    "by_split": {
+      "dev": 32,
+      "train_era": 100
+    },
+    "residues": {
+      "min": 293,
+      "max": 1044,
+      "mean": 595.6,
+      "total": 197729
+    }
+  },
+  "max_total_residues": 1200,
+  "min_antigen_residues": 25
+}
