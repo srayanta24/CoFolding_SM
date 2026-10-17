@@ -80,3 +80,16 @@ __pycache__/
 
 # OS/editor cruft
 .DS_Store
+
+# CHRNA2 campaign — excluded by request. 3.9GB of BoltzGen run outputs (design,
+# inverse-folding, folding artifacts for 3,000 designs) plus its own planning docs.
+# Same class of thing as .downstream_runs/ above: reproducible campaign output, too
+# large to track. If a future campaign under experiments/actual_campaigns/ should be
+# tracked, add its docs explicitly and keep its run1/ ignored.
+experiments/actual_campaigns/chrna2/
+
+# Backup copy of the v1 epitope-model checkpoints, kept on disk for comparison against
+# the v2 retrain. Ignored for the same reason as checkpoints/ above (trained artifacts,
+# reproducible via model/gnn.py) — and because the **/*.pt rule would otherwise let only
+# its baseline.pkl through, committing an incomplete set.
+experiments/epitope_prediction/model/checkpoints_baseline_v1/
