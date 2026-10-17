@@ -41,8 +41,11 @@ def render_markdown(
         "Aggregates the per-design metrics BoltzGen already computes for each campaign "
         "(`data/designs/*/run*/final_ranked_designs/all_designs_metrics.csv`) — no "
         "confidence metric here is recomputed, only summarized. Thresholds and their "
-        "provenance (README-sourced vs. heuristic) are documented in "
-        "`experiments/thresholds.py`.",
+        "provenance are documented in `experiments/thresholds.py`; the `source` column "
+        "below says which kind each is — `boltzgen` (read off the tool's own code), "
+        "`literature` (a published, validated operating point), `readme` (this "
+        "project's own guidance, written for cofolding) or `heuristic` (invented "
+        "here, treat as a placeholder).",
         "",
         "## Per-campaign summary",
         "",
