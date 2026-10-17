@@ -99,3 +99,7 @@ experiments/epitope_prediction/model/checkpoints_baseline_v1/
 # labelled manifests under sets/ stay tracked: they're small and decision-bearing,
 # same split as databases/ and epitope_prediction/.
 experiments/scoring_calibration/.scores/
+
+# Boltz-2 stdout from the calibration run — noisy per-entry progress, megabytes,
+# and reproducible. results/scores.tsv (the actual data) stays tracked.
+experiments/scoring_calibration/results/*.log

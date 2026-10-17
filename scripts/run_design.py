@@ -74,13 +74,25 @@ def split_partner_chains(modality: str, partner_value: str) -> list[str]:
     return [partner_value]
 
 
-def build_boltz_config(target_seq: str, modality: str, partner_value: str, out_path: Path) -> Path:
+def build_boltz_config(target_seq: str, modality: str, partner_value: str, out_path: Path,
+                       use_msa: bool = True) -> Path:
+    """use_msa=False puts every protein chain in Boltz-2's single-sequence mode
+    (`msa: empty`). That is what BoltzGen's own folding stage does -- it refolds
+    designs with the target template and *no* MSAs (paper sec 3.5) -- so any
+    scoring meant to be comparable with a campaign's own metrics should match it.
+    An MSA also makes no sense for a de novo designed binder, which has no
+    evolutionary family to align against."""
     partner_key = MODALITY_TO_BOLTZ[modality]
     chains = split_partner_chains(modality, partner_value)
     chain_ids = ["B", "C"][: len(chains)]
-    sequences = [{"protein": {"id": "A", "sequence": target_seq}}]
+    target_entry = {"id": "A", "sequence": target_seq}
+    if not use_msa:
+        target_entry["msa"] = "empty"
+    sequences = [{"protein": target_entry}]
     for cid, seq in zip(chain_ids, chains):
         entry = {"id": cid, ("smiles" if partner_key == "ligand" else "sequence"): seq}
+        if not use_msa and partner_key == "protein":
+            entry["msa"] = "empty"
         sequences.append({partner_key: entry})
     config = {"version": 1, "sequences": sequences}
     # JSON is valid YAML 1.2, so writing plain JSON avoids needing PyYAML and
@@ -89,7 +101,8 @@ def build_boltz_config(target_seq: str, modality: str, partner_value: str, out_p
     return out_path
 
 
-def build_of3_config(target_seq: str, modality: str, partner_value: str, name: str, out_path: Path) -> Path:
+def build_of3_config(target_seq: str, modality: str, partner_value: str, name: str, out_path: Path,
+                     use_msa: bool = True) -> Path:
     of3_type = MODALITY_TO_OF3[modality]
     chains = split_partner_chains(modality, partner_value)
     chain_ids = ["B", "C"][: len(chains)]
@@ -106,7 +119,7 @@ def build_of3_config(target_seq: str, modality: str, partner_value: str, name: s
                     {"molecule_type": "PROTEIN", "chain_ids": ["A"], "sequence": target_seq},
                     *partner_chains,
                 ],
-                "use_msas": True,
+                "use_msas": use_msa,
             }
         },
     }
@@ -114,10 +127,10 @@ def build_of3_config(target_seq: str, modality: str, partner_value: str, name: s
     return out_path
 
 
-def run_boltz2(config_path: Path, out_dir: Path) -> bool:
+def run_boltz2(config_path: Path, out_dir: Path, use_msa: bool = True) -> bool:
     cmd = [
         venv_bin("boltz2", "boltz"), "predict", str(config_path),
-        "--use_msa_server",
+        *(["--use_msa_server"] if use_msa else []),
         "--num_workers", "0",   # avoids a DataLoader/CUDA fork deadlock (DESIGN.md §3)
         "--no_kernels",         # cuequivariance-ops-torch has no aarch64 build (DESIGN.md §3)
         "--out_dir", str(out_dir),
@@ -127,12 +140,12 @@ def run_boltz2(config_path: Path, out_dir: Path) -> bool:
     return produced_structure(out_dir)
 
 
-def run_openfold3(config_path: Path, out_dir: Path) -> bool:
+def run_openfold3(config_path: Path, out_dir: Path, use_msa: bool = True) -> bool:
     ckpt = WEIGHTS_DIR / "openfold3" / "of3-p2-155k.pt"
     cmd = [
         venv_bin("openfold3", "run_openfold"), "predict",
         "--query-json", str(config_path),
-        "--use-msa-server", "true",
+        "--use-msa-server", "true" if use_msa else "false",
         "--output-dir", str(out_dir),
     ]
     if ckpt.exists():
@@ -171,6 +184,13 @@ def main() -> None:
     parser.add_argument("--name", default="design", help="Job name, used for output paths")
     parser.add_argument("--backend", choices=["boltz2", "openfold3", "both"], default="both")
     parser.add_argument("--out-dir", default=None, help="Output root (default: data/designs/<name>)")
+    parser.add_argument(
+        "--no-msa", action="store_true",
+        help="Single-sequence mode: no MSA search. Matches BoltzGen's own refold "
+             "stage (paper sec 3.5) and is much faster, at some accuracy cost on "
+             "natural sequences. Use when scores must be comparable to a campaign's "
+             "own metrics, or when the partner is a de novo design with no family.",
+    )
     args = parser.parse_args()
 
     if args.partner_modality in NO_SPECIAL_HANDLING:
@@ -192,17 +212,17 @@ def main() -> None:
         if backend == "boltz2":
             config_path = build_boltz_config(
                 target_seq, args.partner_modality, args.partner_value,
-                out_root / f"{args.name}_boltz2.yaml",
+                out_root / f"{args.name}_boltz2.yaml", use_msa=not args.no_msa,
             )
             out_dir = out_root / "boltz2"
-            passed = run_boltz2(config_path, out_dir)
+            passed = run_boltz2(config_path, out_dir, use_msa=not args.no_msa)
         else:
             config_path = build_of3_config(
                 target_seq, args.partner_modality, args.partner_value, args.name,
-                out_root / f"{args.name}_of3.json",
+                out_root / f"{args.name}_of3.json", use_msa=not args.no_msa,
             )
             out_dir = out_root / "openfold3"
-            passed = run_openfold3(config_path, out_dir)
+            passed = run_openfold3(config_path, out_dir, use_msa=not args.no_msa)
 
         print(f"[{backend}] {'PASS' if passed else 'FAIL'}")
         if passed:
