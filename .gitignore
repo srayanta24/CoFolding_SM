@@ -93,3 +93,9 @@ experiments/actual_campaigns/chrna2/
 # reproducible via model/gnn.py) — and because the **/*.pt rule would otherwise let only
 # its baseline.pkl through, committing an incomplete set.
 experiments/epitope_prediction/model/checkpoints_baseline_v1/
+
+# Scoring-calibration cofold outputs (one predicted complex per benchmark entry —
+# large and reproducible via experiments/scoring_calibration/score_sets.py). The
+# labelled manifests under sets/ stay tracked: they're small and decision-bearing,
+# same split as databases/ and epitope_prediction/.
+experiments/scoring_calibration/.scores/

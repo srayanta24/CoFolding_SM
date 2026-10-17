@@ -156,20 +156,33 @@ refold RMSD 2.5Å), mark their provenance the way that module already requires
 disk. Everything downstream depends on this; doing it after the filtering work would mean
 tuning filters against a broken target.
 
-### Step 2 — filtering and ranking experiments (zero GPU)
+### Step 2 — build a labelled scoring benchmark → [experiments/scoring_calibration/PLAN.md](experiments/scoring_calibration/PLAN.md)
 
-The full design pools from completed campaigns are on disk with all 197 metric columns,
-and `steps.yaml` + `config/` are retained, so `boltzgen execute --reuse` can re-run the
-filtering stage alone. Nothing needs regenerating. Work:
+**Rescoped 2026-10-17, after step 1.** This was originally "sweep filter weights on the
+existing design pools at zero GPU cost." Step 1's re-scoring showed that is not viable:
+across all 1,100 designs on disk only **2** clear both bars, and more fundamentally
+**we have no binding labels for designs at all** — a filter rule has nothing to be tuned
+or validated against.
 
-- Sweep `--metrics_override` weights and `alpha` against the known defaults above.
-- Evaluate the "RMSD-Tuned Triad" training-free filter rule from the autoresearch filter
-  paper (reported ROC-AUC 0.637 → 0.806 on 7 antibody-antigen systems) as an alternative
-  to BoltzGen's worst-weighted-rank.
-- **Caveat to carry**: we have no wet-lab labels, so "better filter" can only be scored
-  against proxies (epitope-contact recovery, held-out reference complexes via
-  `experiments/score_reference.py`). State that limit in any result rather than implying
-  a validated improvement.
+The labels exist, but for *real* complexes, in `databases/`, and nothing in this project
+has ever scored them through the design pipeline's own metric path. Step 2 is now
+building that benchmark: 851 leak-free confirmed binders from `dev`/`test`, 493
+Kd-labelled pairs for dose-response, and AB-Bind/SKEMPI destabilising mutants as hard
+negatives, all cofolded through `scripts/run_design.py` so the numbers land in the same
+space as a campaign's `all_designs_metrics.csv`.
+
+Two reasons this is worth more than the original version:
+
+- It fixes what step 1 exposed. `thresholds.py`'s ipTM > 0.6 is imported from Bennett
+  et al.'s **AlphaFold3** results on their hardware. Measuring what a known-real binder
+  scores *here* replaces a borrowed constant with a measured one.
+- It surfaces the memorisation gap. 99.6% of the Kd-labelled pairs fall inside
+  BoltzGen's own training window, so scoring the clean and contaminated sets side by
+  side quantifies how inflated any pre-2023-derived threshold is.
+
+**Carry the transfer caveat**: all of it calibrates on real antibodies, not designed
+ones. The calibration is high-confidence; a filter rule transferred to designs is not,
+and the plan says so explicitly rather than averaging the two together.
 
 ### Step 4 — interpose a cheap pre-refold filter (engineering)
 

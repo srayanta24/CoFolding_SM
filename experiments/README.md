@@ -20,8 +20,9 @@ Three subfolders hold the active design-improvement work from
 | Folder | Status |
 |---|---|
 | `epitope_prediction/` | Done through milestone 7 ([`PLAN.md`](epitope_prediction/PLAN.md) §8-10) — Model A selected, wired into steering, downstream-validated on 8 targets; v2 (gradient-guided steering) reaffirmed no-go. Follow-up pass in progress: expanded training data, calibration, two EpiFormer-inspired architectures — see [`README.md`](epitope_prediction/README.md). |
+| `scoring_calibration/` | **Active** ([`PLAN.md`](scoring_calibration/PLAN.md)) — building a labelled benchmark of real antibody-antigen complexes scored through this pipeline's own metric path, to replace the imported ipTM threshold with a measured one and to give filter-rule work something to be validated against. Data inventory + contamination audit done; pilot next. |
 | `germinal_comparison/` | Paused after milestone 1 ([`PLAN.md`](germinal_comparison/PLAN.md)) — PyRosetta venv done; JAX/ColabDesign setup deprioritized. |
-| `finetuning/` | Not started — see `IMPROVE_DESIGN.md` §3 for scope. |
+| `finetuning/` | Not started — see `IMPROVE_DESIGN.md` §6.3 for scope. |
 
 ## What's here
 
