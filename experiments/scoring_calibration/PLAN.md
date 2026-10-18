@@ -224,8 +224,17 @@ same-parent-complex control.
      the parent-paired check. ipTM weakly detects binding being *abolished* while
      being blind to the affinity continuum — consistent with it measuring "can a
      credible interface be modelled at all."
-5. ⬜ Recalibrate `experiments/thresholds.py` from measured values, replacing the
-   `literature` provenance on `design_to_target_iptm` with `measured`.
+5. ✅ Recalibrated `experiments/thresholds.py` from measured values. Both
+   `design_to_target_iptm` and `complex_plddt` are now anchored to the real-binder
+   distribution under one scheme — **pass ≥ the median real binder, borderline ≥ their
+   p25, fail below** — with a new `measured` provenance kind and a `MEASURED_REFERENCE`
+   table of percentiles other code can cite. ipTM's pass mark moved *up* (0.6 → 0.699),
+   since Bennett et al.'s 0.6 is where they stopped testing, not where something
+   resembles a real binder; it now sits inside the borderline band. `complex_plddt`
+   graduated from heuristic to measured, and the old guess (0.85/0.70, rescaled from
+   README's single-chain bands) turned out close — 0.85 admits 50% of real binders,
+   0.70 admits 88%. The module now also carries the affinity caveat prominently:
+   clearing the ipTM bar means a credible interface can be modelled, not that it binds.
 6. ⬜ *(conditional on 4)* Filter-rule development against set A vs D, compared to
    BoltzGen's default ranking.
 7. ⬜ *(conditional on 6)* **Transfer validation** — the step that decides whether any of

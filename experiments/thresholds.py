@@ -9,6 +9,12 @@ liability_num_violations below) and callers need to know which kind they're look
 
 Provenance kinds, in decreasing order of how much weight to put on them:
 
+``measured``
+    Measured on this pipeline, on this hardware, against known-real binders —
+    see ``MEASURED_REFERENCE`` below and
+    ``experiments/scoring_calibration/EXPERIMENT_01_iptm_calibration.md``. The
+    strongest kind available, because it involves no transfer assumption from
+    another model, another machine, or another task.
 ``boltzgen``
     Read directly out of BoltzGen's own running code (file:line cited in the
     threshold's ``doc``). This is what the tool itself does, not an interpretation
@@ -45,13 +51,56 @@ method is extreme oversampling plus hard filtering (its own protocol generates t
 thousands and advances ~15), so low raw pass rates at this project's 50-3,000 design
 scale are expected and are not by themselves evidence the pipeline underperforms. See
 IMPROVE_DESIGN.md sec 2.
+
+Recalibration, 2026-10-18 (scoring_calibration PLAN.md milestone 5)
+-------------------------------------------------------------------
+EXPERIMENT_01 cofolded 32 leak-free, crystallographically confirmed antibody-antigen
+binders through this exact pipeline. ``design_to_target_iptm`` and ``complex_plddt``
+are now anchored to that measured distribution instead of to imported or invented
+numbers, using one consistent scheme for both:
+
+    pass        >= the MEDIAN real binder   ("as good as a typical real binder")
+    borderline  >= the 25th percentile      ("inside the range real binders occupy")
+    fail        <  the 25th percentile      ("worse than 3 in 4 real binders")
+
+This makes every verdict interpretable as a statement about real antibodies rather
+than about an arbitrary constant. It also moves ipTM's pass mark UP, from 0.6 to
+0.699 — Bennett et al.'s 0.6 is the point below which they stopped testing, not the
+point at which something resembles a real binder, and it now lands inside the
+borderline band. Campaign pass rates will fall as a result; that is the measurement
+being honest, not a regression.
+
+**The caveat that matters most, from the same experiment.** ipTM does NOT track
+binding affinity: Spearman vs log10(Kd) = +0.134 across 100 real complexes spanning
+nine orders of magnitude, with the trend mildly *backwards*. Clearing the ipTM bar
+means "a credible interface can be modelled here," NOT "this binds tightly." Do not
+read a high ipTM as predicted potency, and do not rank candidates by it expecting the
+ordering to reflect affinity. See IMPROVE_DESIGN.md sec 4's filtration subsection for
+what to use instead.
 """
 
 from dataclasses import dataclass
 from typing import Callable, Literal
 
 Verdict = Literal["pass", "borderline", "fail", "unknown"]
-Source = Literal["boltzgen", "literature", "readme", "heuristic"]
+Source = Literal["measured", "boltzgen", "literature", "readme", "heuristic"]
+
+# Percentiles of each metric over the 32 leak-free, crystallographically confirmed
+# antibody-antigen binders of EXPERIMENT_01's `clean_positive` set, cofolded through
+# this pipeline (Boltz-2, no MSA) on this hardware. Exposed so reports and downstream
+# analysis can phrase a design's score as "the Nth percentile of real binders" rather
+# than as a bare number. n=32 (dev only, per split discipline): the medians are usable,
+# the tails are thin. Regenerate with experiments/scoring_calibration/analyze.py.
+MEASURED_REFERENCE: dict[str, dict[str, float]] = {
+    "design_to_target_iptm": {
+        "p05": 0.443, "p10": 0.487, "p25": 0.578, "p50": 0.699,
+        "p75": 0.798, "p90": 0.885, "min": 0.368, "max": 0.967, "n": 32,
+    },
+    "complex_plddt": {
+        "p05": 0.623, "p10": 0.679, "p25": 0.751, "p50": 0.848,
+        "p75": 0.902, "p90": 0.925, "min": 0.581, "max": 0.943, "n": 32,
+    },
+}
 
 
 @dataclass(frozen=True)
@@ -97,17 +146,23 @@ BOLTZGEN_RANKING_WEIGHTS: dict[str, int] = {
 
 
 def _iptm_classify(v: float) -> Verdict:
-    # LITERATURE: Bennett et al., "Atomically accurate de novo design of antibodies
-    # with RFdiffusion", Nature 2025. ipTM is predictive of real binding success at
-    # AUC 0.86, and they propose ipTM > 0.6 as a filter (noting only 9% of their
-    # ordered VHH designs clear it). The <0.5 floor is retained from README.md's
-    # "below ~0.5 means don't trust the binding pose at all"; the 0.5-0.6 band between
-    # the two is the honest "neither source endorses this" gap.
-    if v > 0.6:
+    # MEASURED (EXPERIMENT_01): anchored to the real-binder distribution rather than
+    # to an imported constant. pass = at or above the median real binder (0.699);
+    # borderline = inside their interquartile range (>= p25, 0.578); fail = below
+    # what 3 in 4 real binders achieve.
+    #
+    # For orientation against the previous marks: 0.8 (the pre-step-1 value, from
+    # README's cofolding guidance) admits only 22% of real binders; 0.6 (Bennett
+    # et al.'s AlphaFold3 operating point, used between step 1 and now) admits 72%
+    # and sits inside the borderline band here.
+    #
+    # Reminder, because it is easy to forget once this returns "pass": a high ipTM
+    # does NOT imply tight binding. See the module docstring.
+    if v >= MEASURED_REFERENCE["design_to_target_iptm"]["p50"]:
         return "pass"
-    if v < 0.5:
-        return "fail"
-    return "borderline"
+    if v >= MEASURED_REFERENCE["design_to_target_iptm"]["p25"]:
+        return "borderline"
+    return "fail"
 
 
 def _filter_rmsd_classify(v: float) -> Verdict:
@@ -131,16 +186,16 @@ def _filter_rmsd_classify(v: float) -> Verdict:
 
 
 def _complex_plddt_classify(v: float) -> Verdict:
-    # HEURISTIC, unchanged by the 2026-10-17 recalibration: no README equivalence and
-    # no BoltzGen filter uses this column, so nothing better-grounded was available.
-    # README's 85/70 pLDDT bands are documented for predict_structure.py's standalone
-    # single-chain fold (0-100 scale), a different quantity than this CSV's
-    # complex_plddt, which is on a 0-1 fractional scale (verified directly: observed
-    # range ~0.65-0.80 across the campaigns on disk). Rescaled 85/70 -> 0.85/0.70 as a
-    # plausible-but-unverified guess pending real calibration data.
-    if v >= 0.85:
+    # MEASURED (EXPERIMENT_01), upgraded from heuristic. Same scheme as ipTM: pass at
+    # the median real binder (0.848), borderline at their p25 (0.751).
+    #
+    # Worth recording rather than quietly overwriting: the old heuristic was a guess
+    # that rescaled README's single-chain pLDDT bands 85/70 -> 0.85/0.70, and it turned
+    # out to be close. 0.85 admits 50% of real binders (the median is 0.848) and 0.70
+    # admits 88%. The guess was sound; it is now simply measured instead of assumed.
+    if v >= MEASURED_REFERENCE["complex_plddt"]["p50"]:
         return "pass"
-    if v >= 0.70:
+    if v >= MEASURED_REFERENCE["complex_plddt"]["p25"]:
         return "borderline"
     return "fail"
 
@@ -159,10 +214,13 @@ def _liability_violations_classify(v: float) -> Verdict:
 
 THRESHOLDS: dict[str, Threshold] = {
     "design_to_target_iptm": Threshold(
-        "design_to_target_iptm", "literature",
-        "Bennett et al. Nature 2025: ipTM > 0.6 as a de novo design filter, AUC 0.86 "
-        "for predicting binding success. Was 0.8 (README cofolding guidance) until "
-        "2026-10-17 — that is the wrong task's threshold and scored 0% everywhere.",
+        "design_to_target_iptm", "measured",
+        "EXPERIMENT_01: pass at the median of 32 real leak-free binders cofolded "
+        "through this pipeline (0.699), borderline at their p25 (0.578). Was 0.8 "
+        "(README cofolding guidance, admits 22% of real binders) until 2026-10-17, "
+        "then 0.6 (Bennett et al., admits 72%) until 2026-10-18. CAVEAT: ipTM does "
+        "not track affinity (Spearman vs log10(Kd) = +0.134, wrong sign) — passing "
+        "means a credible interface can be modelled, not that it binds tightly.",
         _iptm_classify,
     ),
     "filter_rmsd": Threshold(
@@ -174,9 +232,11 @@ THRESHOLDS: dict[str, Threshold] = {
         _filter_rmsd_classify,
     ),
     "complex_plddt": Threshold(
-        "complex_plddt", "heuristic",
-        "No README equivalence and no BoltzGen filter for this column; borrowed from "
-        "predict_structure.py's unrelated single-chain pLDDT bands (85/70) as a guess.",
+        "complex_plddt", "measured",
+        "EXPERIMENT_01: pass at the median of 32 real leak-free binders (0.848), "
+        "borderline at their p25 (0.751). Previously a heuristic rescaling of "
+        "README's single-chain pLDDT bands to 0.85/0.70 — which measurement shows "
+        "was a good guess (0.85 admits 50% of real binders, 0.70 admits 88%).",
         _complex_plddt_classify,
     ),
     "liability_num_violations": Threshold(
