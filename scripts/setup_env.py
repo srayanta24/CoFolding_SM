@@ -43,6 +43,21 @@ REPOS = {
     "boltzgen": "https://github.com/HannesStark/boltzgen",
 }
 
+# Source-only clones: reference implementations we read, transcribe from, or patch,
+# but do not pip-install and do not give a venv. They belong here for the same reason
+# the backends do -- src/ is gitignored, so a fresh clone of this repo reproduces
+# nothing unless setup_env.py knows how to fetch it. Keeping a third-party algorithm
+# vendored (rather than only transcribed into our own code) means the reference is
+# always on disk to diff against when a result looks wrong.
+#
+# epiformer was cloned by hand during the epitope-prediction work and never
+# registered, which quietly broke that reproducibility promise; registering it here
+# closes that gap retroactively.
+REFERENCE_REPOS = {
+    "ipsae": "https://github.com/DunbrackLab/IPSAE",
+    "epiformer": "https://github.com/mansoor181/epiformer",
+}
+
 # Protenix's non-torch runtime deps, installed explicitly with --no-deps so the
 # resolver never sees (and can't act on) Protenix's exact torch==2.3.1 pin.
 PROTENIX_DEPS = [
@@ -84,14 +99,21 @@ def install_torch(name: str) -> None:
     uv_pip(name, "torch", "--index-url", TORCH_INDEX)
 
 
-def ensure_source(name: str) -> Path:
+def ensure_source(name: str, url: str | None = None) -> Path:
     src_path = SRC_DIR / name
     if src_path.exists():
         print(f"[{name}] source already cloned at {src_path}, reusing")
         return src_path
-    print(f"[{name}] cloning source from {REPOS[name]}")
-    run(["git", "clone", "--depth", "1", REPOS[name], str(src_path)])
+    url = url or REPOS[name]
+    print(f"[{name}] cloning source from {url}")
+    run(["git", "clone", "--depth", "1", url, str(src_path)])
     return src_path
+
+
+def setup_reference_sources(names: list[str] | None = None) -> None:
+    """Clone the read-only reference implementations. No venv, no install."""
+    for name in (names or list(REFERENCE_REPOS)):
+        ensure_source(name, REFERENCE_REPOS[name])
 
 
 def clear_stale_site_packages(name: str, pkg: str) -> None:
@@ -191,11 +213,18 @@ def main() -> None:
         "--only", nargs="+", choices=list(BACKENDS), default=list(BACKENDS),
         help="Only set up these backends (default: all)",
     )
+    parser.add_argument(
+        "--skip-reference-sources", action="store_true",
+        help=f"Don't clone the read-only reference sources ({', '.join(REFERENCE_REPOS)})",
+    )
     args = parser.parse_args()
 
     VENVS_DIR.mkdir(exist_ok=True)
     SRC_DIR.mkdir(exist_ok=True)
     WEIGHTS_DIR.mkdir(exist_ok=True)
+    if not args.skip_reference_sources:
+        setup_reference_sources()
+        print()
     for name in args.only:
         BACKENDS[name]()
         print(f"[{name}] done\n")
