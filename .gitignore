@@ -103,3 +103,4 @@ experiments/scoring_calibration/.scores/
 # Boltz-2 stdout from the calibration run — noisy per-entry progress, megabytes,
 # and reproducible. results/scores.tsv (the actual data) stays tracked.
 experiments/scoring_calibration/results/*.log
+experiments/scoring_calibration/results/rosetta_run.log
