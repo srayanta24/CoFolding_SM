@@ -205,13 +205,25 @@ same-parent-complex control.
    coordinates only): the same entry is 214/212/113 residues instead of 261/·/175
    and starts cleanly at `EVQLVESGGG`. `esm2_features.py` reached the same
    conclusion independently for the same reason.
-3. ⬜ **Pilot**: ~300 cofolds (100 clean positives / 100 contaminated / 100 hard
-   negatives), stratified. Estimated ~20 GPU-hours at 3-5 min per Fab+antigen complex —
-   *an estimate from the paper's own per-residue timing and this project's observed
-   refold cost, not yet measured here.* Matches the smoke-test-then-scale discipline
-   used for every other campaign in this repo.
-4. ⬜ Analysis (§7) on the pilot. Decide whether the signal justifies scaling to the full
-   851 (~2-3 days GPU).
+3. ✅ **Pilot**: 332 cofolds (32 clean / 100 contaminated / 100 hard negative / 100
+   matched positive) via `score_sets.py`, Boltz-2, no MSA. **16.9 GPU-hours, zero
+   failures.** Measured cost **3.1 min/complex** mean (2.5 median, 9.3 max) — the low
+   end of the 3-5 min estimate.
+4. ✅ Analysis (`analyze.py` → `results/calibration_report.{md,json}`). Headline
+   results, full detail in the report:
+   - **Calibration**: a real binder scores median ipTM **0.699**. The old 0.8 mark
+     rejects **78%** of genuine binders; 0.6 rejects **28%**. Bennett et al.'s 0.6
+     transfers to this Boltz-2 pipeline, but is not conservative.
+   - **ipTM does not track affinity.** Spearman vs log10(Kd) = **+0.134** across 100
+     complexes spanning nine orders of magnitude, and the trend is mildly *backwards*
+     (pM median 0.710, weak-binder median 0.824). The pilot's most consequential
+     finding, and the cheapest question it asked.
+   - **Memorisation gap**: +0.088 median, P(contaminated > clean) 0.628 — real but
+     modest, and the affinity confound runs against it being an overestimate.
+   - **Separation**: ROC-AUC **0.634** (matched_positive vs hard_negative), 9/17 on
+     the parent-paired check. ipTM weakly detects binding being *abolished* while
+     being blind to the affinity continuum — consistent with it measuring "can a
+     credible interface be modelled at all."
 5. ⬜ Recalibrate `experiments/thresholds.py` from measured values, replacing the
    `literature` provenance on `design_to_target_iptm` with `measured`.
 6. ⬜ *(conditional on 4)* Filter-rule development against set A vs D, compared to

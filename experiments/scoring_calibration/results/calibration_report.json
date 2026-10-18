@@ -1,0 +1,118 @@
+{
+  "n_scored": 332,
+  "sets": {
+    "clean_positive": {
+      "n": 32,
+      "median": 0.699,
+      "mean": 0.6884,
+      "p10": 0.4873,
+      "p25": 0.5784,
+      "p75": 0.7976,
+      "p90": 0.8854,
+      "min": 0.3679,
+      "max": 0.9673,
+      "frac_ge_0.6": 0.7188,
+      "frac_ge_0.8": 0.2188
+    },
+    "contaminated_positive": {
+      "n": 100,
+      "median": 0.7872,
+      "mean": 0.757,
+      "p10": 0.5401,
+      "p25": 0.6514,
+      "p75": 0.8767,
+      "p90": 0.9384,
+      "min": 0.411,
+      "max": 0.9696,
+      "frac_ge_0.6": 0.8,
+      "frac_ge_0.8": 0.46
+    },
+    "hard_negative": {
+      "n": 100,
+      "median": 0.6946,
+      "mean": 0.7131,
+      "p10": 0.5699,
+      "p25": 0.6225,
+      "p75": 0.8221,
+      "p90": 0.877,
+      "min": 0.3983,
+      "max": 0.9561,
+      "frac_ge_0.6": 0.87,
+      "frac_ge_0.8": 0.29
+    },
+    "matched_positive": {
+      "n": 100,
+      "median": 0.79,
+      "mean": 0.7749,
+      "p10": 0.5998,
+      "p25": 0.6762,
+      "p75": 0.8597,
+      "p90": 0.9312,
+      "min": 0.3565,
+      "max": 0.9702,
+      "frac_ge_0.6": 0.89,
+      "frac_ge_0.8": 0.48
+    }
+  },
+  "calibration": {
+    "basis": "clean_positive (leak-free dev binders)",
+    "n": 32,
+    "frac_real_binders_rejected_at_0.6": 0.2812,
+    "frac_real_binders_rejected_at_0.8": 0.7812,
+    "median": 0.699
+  },
+  "memorisation": {
+    "clean_median": 0.699,
+    "contaminated_median": 0.7872,
+    "gap": 0.0882,
+    "p_contaminated_greater": 0.6281,
+    "n_clean": 32,
+    "n_contaminated": 100
+  },
+  "dose_response": {
+    "n": 100,
+    "spearman_iptm_vs_log10_kd": 0.134,
+    "expected_sign": "negative (tighter binders should score higher)",
+    "bands": [
+      {
+        "band": "pM (<100pM)",
+        "n": 17,
+        "median_iptm": 0.7098
+      },
+      {
+        "band": "100pM-10nM",
+        "n": 52,
+        "median_iptm": 0.7747
+      },
+      {
+        "band": "10nM-1uM",
+        "n": 27,
+        "median_iptm": 0.8176
+      },
+      {
+        "band": "weak (>1uM)",
+        "n": 4,
+        "median_iptm": 0.8238
+      }
+    ]
+  },
+  "separation": {
+    "comparison": "matched_positive vs hard_negative (both AbDesign-DB curated)",
+    "n_pos": 100,
+    "n_neg": 100,
+    "pos_median": 0.79,
+    "neg_median": 0.6946,
+    "roc_auc_iptm": 0.6344,
+    "paired_within_parent": {
+      "n_complexes": 17,
+      "positive_higher": 9
+    }
+  },
+  "timing": {
+    "n": 332,
+    "mean_min": 3.07,
+    "median_min": 2.49,
+    "max_min": 9.26,
+    "total_hours": 16.97
+  }
+}
