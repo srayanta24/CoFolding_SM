@@ -158,6 +158,20 @@ tuning filters against a broken target.
 
 ### Step 2 — build a labelled scoring benchmark → [experiments/scoring_calibration/PLAN.md](experiments/scoring_calibration/PLAN.md)
 
+**✅ Pilot complete 2026-10-18** — 332 cofolds, 16.9 GPU-hours, zero failures. Full
+record: [EXPERIMENT_01](experiments/scoring_calibration/EXPERIMENT_01_iptm_calibration.md).
+Headline: **ipTM does not measure binding affinity.** Spearman vs log10(Kd) = +0.134
+across 100 real complexes spanning nine orders of magnitude, with the trend mildly
+*backwards* (pM median 0.710, weak-binder median 0.824). A real binder scores median
+0.699, so step 1's 0.6 threshold is validated locally (0.8 would reject 78% of genuine
+antibodies). Separation on binding-destroying mutants is weak, ROC-AUC 0.634.
+
+The consistent reading is that ipTM measures *whether a credible interface can be
+modelled at all* — roughly binary — not interface quality on a continuum. A de novo
+funnel has to rank thousands of candidates against each other, which is exactly the
+continuum it cannot see. This is why the filtration subsection below exists, and it
+adds a third branch to §5's open question.
+
 **Rescoped 2026-10-17, after step 1.** This was originally "sweep filter weights on the
 existing design pools at zero GPU cost." Step 1's re-scoring showed that is not viable:
 across all 1,100 designs on disk only **2** clear both bars, and more fundamentally
@@ -195,6 +209,90 @@ post-refold ranking on an existing pool (which step 2's work produces as a by-pr
 
 *(Numbering follows the working list these were agreed from; there is no separate step 3.)*
 
+### Filtration — what to score with instead of ipTM
+
+Literature review prompted by EXPERIMENT_01's finding. The question: if ipTM is blind to
+the affinity continuum, what metric isn't? Candidates below are ordered by
+value-per-unit-cost on *our* setup, not by how impressive they are in the abstract.
+
+**The single most useful external result** is a meta-analysis of **3,766 experimentally
+characterised binders** across 15 targets (436 confirmed binders, 11.6% hit rate) —
+[Overath et al. 2025](https://www.biorxiv.org/content/10.1101/2025.08.14.670059v1.full).
+It ranks in-silico metrics by how well they actually predict wet-lab success:
+
+| rank | feature | note |
+|---|---|---|
+| 1 | **ipSAE_min** | best single feature; 1.4× the average precision of ipAE |
+| 2 | **ipSAE_min × interface ΔG/ΔSASA** | best *interaction* feature — ML confidence × Rosetta energy |
+| 3 | LIS × interface shape complementarity | |
+| 4 | ipTM | what we currently use |
+| 5 | AF2 initial-guess ipAE | |
+
+Two things to take from that ordering. First, **ipTM is mid-table** among metrics
+computable from the same prediction. Second, **physics complements rather than replaces**
+— the best combinations pair an ML confidence score with an orthogonal physical interface
+descriptor. But the gain from combining is modest (median AP 0.58 vs 0.57) and their
+greedy feature selection found that adding 2–5 features *rarely improved generalisation*
+to novel targets. So: pick one good confidence metric and one good physics term, and
+resist building a stack.
+
+**Tier 0 — ipSAE. Free, nothing new to compute.**
+[Rēs ipSAE loquunt](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11844409/) diagnoses
+what is wrong with ipTM and fixes it: count only residue pairs with good interchain PAE,
+set `d0` from the number of such residues rather than total chain length, and use the PAE
+value directly instead of a probability distribution. Reported 1.4× higher precision than
+ipTM/ipAE for binder ranking, and it explicitly supports **Boltz** outputs. **We already
+have every PAE matrix** — `pae_*.npz` is written per entry and all 332 are on disk. This
+is a pure re-analysis of data we already paid for.
+
+**Tier 1 — Rosetta interface energy. Cheap, CPU-only, already installed.**
+`InterfaceAnalyzer` gives ΔG, **ΔG/ΔSASA** (the meta-analysis's best physics term),
+buried SASA and shape complementarity (the recommended pre-filter uses `sc > 0.62`).
+Bennett et al.'s deep-learning binder paper found Rosetta ddG gave roughly **10× higher
+experimental success rate** than the unfiltered population — though the same paper found
+AF2 confidence metrics outperformed Rosetta energies for binary binder prediction, which
+is consistent with the meta-analysis putting physics in a *complementary* role.
+
+Two practical notes. **FastRelax before scoring is mandatory, not optional** — the
+Rosetta scorefunction is sensitive to sub-ångström atom placement, so scoring a
+non-Rosetta structure raw produces meaningless energies. And **PyRosetta 2023.11 is
+already installed and verified on this aarch64 box** (`.venvs/germinal`, from the paused
+Germinal work — `FastRelax` and `InterfaceAnalyzerMover` both confirmed loading). That
+work's main deliverable turns out to be useful here rather than there.
+
+**Tier 2 — inverse-folding log-likelihood. The most interesting option, and nearly free.**
+[AbBiBench](https://arxiv.org/abs/2506.04235) (155,853 mutated antibodies, 9 antigens)
+finds that **structure-conditioned inverse-folding models are the best available
+affinity predictors** — ProteinMPNN avg Spearman 0.30, ESM-IF 0.28, with ρ≈0.35–0.50
+reported on some sets. That is weak in absolute terms but it is *the right sign and the
+right quantity*, which ipTM is not.
+
+The opportunity specific to us: **BoltzGen already runs an inverse-folding model as
+pipeline stage 2**, and its per-sequence likelihood is computed and then discarded. We
+would be extracting a signal the pipeline already produces. Worth testing on the 332
+structures before anything more exotic.
+
+**Tier 3 — ΔΔG predictors (FoldX / Flex ddG). Benchmarkable, weak, known numbers.**
+On AB-Bind specifically — one of our own sources — FoldX reaches Pearson **0.34**; on
+SKEMPI2, FoldX 0.319 and Rosetta 0.311, with Flex ddG above FoldX. "MD + FoldX" has been
+reported best among eight methods for antibody-antigen specifically. These are weak, but
+they are *affinity-correlated*, which sets a meaningful floor: anything we adopt should
+beat Pearson ~0.3 on our own data.
+
+**Tier 4 — MM-GBSA / MM-PBSA. Probably not worth it here.** Full protocols with MD
+equilibration run **~1 hour per complex on a single GPU**, which is unusable at
+funnel scale (BoltzGen's own protocol generates tens of thousands). Nwat-MM-GBSA does
+report +20–30% ROC-AUC over standard MM-GBSA for protein-protein screening, so it is not
+without merit — but on this single-GPU box it could only ever rescore a final top-N, and
+Tiers 0–2 should be exhausted first. **Recommend deferring**, not pursuing.
+
+**Proposed next experiment (EXPERIMENT_02)**: compute ipSAE, Rosetta ΔG/ΔSASA + shape
+complementarity (post-FastRelax), and BoltzGen inverse-folding likelihood over the *same
+332 structures already on disk*, and re-run EXPERIMENT_01's four hypotheses against each.
+Zero new GPU time for Tiers 0 and 2; Tier 1 is CPU. The benchmark exists, the labels
+exist, the structures exist — this is the cheapest high-information experiment available
+to this project right now.
+
 ---
 
 ## 5. The comprehensive question — deferred until after §4
@@ -210,6 +308,27 @@ Feynman-Kac steering, which is inference-time and gradient-free), and the v1 opt
 below remain live. But choosing among them before knowing how much of the current gap is
 *tuning* versus *training* would be guessing. Revisit this section with real numbers from
 §4 in hand.
+
+**Third branch, added 2026-10-18 after EXPERIMENT_01.** The question was framed above as
+*tuning vs. training*. The calibration experiment adds a third possibility that is not a
+property of the generator at all: **the selection signal may not measure the property we
+want.** ipTM is blind to the affinity continuum, and it drives both BoltzGen's internal
+ranking and every judgement this project has made about design quality.
+
+This matters for sequencing, because the three branches are not independent:
+
+- If the scoring branch dominates, then improving the generator is partly wasted — a
+  better generator still gets selected by a metric that cannot see affinity, and the
+  campaign's reported quality would not move.
+- It also casts doubt on past conclusions that *relied* on ipTM-family metrics to
+  compare pipelines or models, including parts of the epitope downstream work.
+- And it is by far the cheapest branch to investigate: EXPERIMENT_02 (§4's filtration
+  subsection) runs on structures already on disk.
+
+So the revised recommendation is to resolve the scoring branch *before* reopening
+tuning vs. training, not because it is more likely to be the dominant cause, but because
+it is cheap, it is a prerequisite for measuring the other two honestly, and a wrong
+selection signal would contaminate any conclusion drawn about them.
 
 ---
 
@@ -292,6 +411,24 @@ and `.claude/skills/splits/SKILL.md`. Worth writing.
 ---
 
 ## Sources for the v2 literature pass (2026-10-17)
+
+Filtration review (§4), added 2026-10-18:
+
+- Overath et al., *Predicting Experimental Success in De Novo Binder Design: A
+  Meta-Analysis of 3,766 Experimentally Characterised Binders* —
+  https://www.biorxiv.org/content/10.1101/2025.08.14.670059v1.full
+- *Rēs ipSAE loquunt: What's wrong with AlphaFold's ipTM score and how to fix it* —
+  https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11844409/
+- *AbBiBench: A Benchmark for Antibody Binding Affinity Maturation and Design* —
+  https://arxiv.org/abs/2506.04235
+- Bennett et al., *Improving de novo protein binder design with deep learning* —
+  https://www.nature.com/articles/s41467-023-38328-5
+- *Flex ddG: Rosetta ensemble-based estimation of changes in protein-protein binding
+  affinity upon mutation* — https://www.biorxiv.org/content/10.1101/221689.full.pdf
+- Rosetta Relax application docs (FastRelax before scoring non-Rosetta structures) —
+  https://docs.rosettacommons.org/docs/latest/application_documentation/structure_prediction/relax
+
+Original v2 pass:
 
 - BoltzGen, *Toward Universal Binder Design* — https://hannes-stark.com/assets/boltzgen.pdf
   (read directly; closes BOLTZGEN_PIPELINE.md §7's "paper not fetched" gap)
