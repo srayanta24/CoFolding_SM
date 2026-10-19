@@ -7,6 +7,19 @@ does not track binding affinity. This asks the obvious next question: does anyth
 
 Everything here reuses EXPERIMENT_01's structures. No new structure prediction was run.
 
+> **Correction, 2026-10-19.** An earlier version of this document (and of
+> IMPROVE_DESIGN.md §4) claimed packstat and shape complementarity are "already computed
+> inside BoltzGen's analysis stage, so adopting them costs a `--metrics_override`." That
+> is **wrong**, verified against a real campaign's 197-column metrics CSV: `packstat`
+> and `sc_value` appear nowhere in it. Both come only from Rosetta's
+> `InterfaceAnalyzerMover`, so adopting them means paying the 22.7 min/structure
+> Rosetta cost — the very thing finding 3 rules out funnel-wide.
+>
+> What *is* free is narrower but still useful: **buried SASA (13/17, p=0.025) is
+> available as `delta_sasa_refolded`**, and it is already weight-2 in BoltzGen's own
+> default ranking. So the free change is re-weighting the existing six metrics —
+> toward `delta_sasa_refolded`, away from `design_iptm` — not adding new columns.
+
 ---
 
 ## 1. What was the experiment

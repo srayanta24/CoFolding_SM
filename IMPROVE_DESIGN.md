@@ -322,9 +322,19 @@ target. On the 17 parent complexes carrying both mutant types:
 | *ll_antigen (control)* | *9/17* | *0.500 — correct null* |
 
 **The funnel is ranked by a metric that performs at chance on the comparison it is used
-for, while two cheap geometric terms do better.** And conveniently, packstat and shape
-complementarity are **already computed inside BoltzGen's analysis stage** — adopting
-them costs a `--metrics_override`, not new code.
+for, while three geometric terms do better.**
+
+**Correction to an earlier draft of this section**: it claimed packstat and shape
+complementarity are already computed in BoltzGen's analysis stage. They are not —
+verified against a campaign's 197-column metrics CSV, where `packstat` and `sc_value`
+appear nowhere. Both are Rosetta-only, so adopting them means paying Rosetta's
+22.7 min/structure, which the cost finding rules out funnel-wide.
+
+What *is* free: **buried SASA also reaches 13/17 (p=0.025)** and is available as
+`delta_sasa_refolded` — which BoltzGen already weights at 2 in its default ranking,
+against `design_iptm` at 1. So the zero-cost change is **re-weighting the six metrics
+BoltzGen already has**, pushing weight toward `delta_sasa_refolded` and away from
+`design_iptm`, not adding new columns.
 
 Why each tier failed to beat ipTM at the headline task, since the reasons differ:
 
