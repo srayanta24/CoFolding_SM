@@ -252,6 +252,39 @@ same-parent-complex control.
    generated designs, so this does not follow automatically. The existing campaign
    pools on disk already carry both columns, so a first look costs no GPU time.
 
+## 8b. Deferred: re-weighting BoltzGen's ranking on real campaign pools
+
+**Status: parked 2026-10-19, blocked on data retention — not on effort.**
+
+EXPERIMENT_02 showed `delta_sasa_refolded` (13/17, p=0.025) discriminates where
+`design_iptm` (9/17) does not, and both are already in BoltzGen's default ranking at
+weights 2 and 1. The obvious follow-up is to re-weight toward the former, re-run only
+the filtering stage on pools already on disk, and check whether the selected top-N
+improves. Zero GPU.
+
+Two blockers, both worth recording so the next attempt does not rediscover them:
+
+1. **BoltzGen's `final_rank` could not be reproduced.** Implementing Algorithm 2's
+   worst-weighted-rank gives 11.0 where the CSV stores `quality_score` 1.0.
+   `quality_score` turns out to be a normalised rank, and `final_rank` additionally
+   reflects Algorithm 3's quality-diversity greedy selection. The `rank_*` columns are
+   also only ~88% monotone with their own metrics, which remains unexplained. Any
+   re-weighting is therefore *our* ranking, not a faithful variant of theirs — fine for
+   a comparison, but it must be labelled as such.
+2. **The evaluation signal is range-restricted.** Of 1,150 designs across the 23
+   epitope-downstream campaigns, only ~10 per campaign-variant have a retained CIF, and
+   those are the ones BoltzGen *already* ranked top-10. Epitope-contact recovery can
+   therefore only be computed for designs that already won. Re-ranking can be tested for
+   reordering *within* a top-10, never for surfacing a better design from the unranked
+   remainder — which is the question that actually matters.
+
+**What unblocks it**: campaigns that retain structures for a stratified sample across
+the whole rank range, not only the top `budget`. That is a campaign-launch decision
+(`--budget`, or keeping `intermediate_*` outputs more broadly), so the cost is disk
+rather than compute. Revisit when the next real design campaign is run — note the
+retention requirement *before* launching, since it cannot be recovered afterwards
+without re-folding every design.
+
 ## 9. The risk, stated plainly
 
 **Everything here calibrates on real antibodies, not designed ones.** The assumption is

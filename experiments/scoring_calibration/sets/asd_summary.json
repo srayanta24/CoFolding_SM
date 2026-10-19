@@ -1,0 +1,98 @@
+{
+  "total_abbd_rows": 155853,
+  "targets_found": 8,
+  "targets_in_scope": [
+    {
+      "target_pdb": "2fjg",
+      "n": 2223,
+      "antigen_res": 102,
+      "approx_total_res": 434,
+      "spread": 3.51,
+      "min": -3.01,
+      "max": 0.5
+    },
+    {
+      "target_pdb": "1mlc",
+      "n": 1229,
+      "antigen_res": 129,
+      "approx_total_res": 460,
+      "spread": 14.28,
+      "min": -4.1,
+      "max": 10.18
+    },
+    {
+      "target_pdb": "1mhp",
+      "n": 39,
+      "antigen_res": 192,
+      "approx_total_res": 522,
+      "spread": 2.16,
+      "min": 7.99,
+      "max": 10.15
+    },
+    {
+      "target_pdb": "4fqi",
+      "n": 130629,
+      "antigen_res": 519,
+      "approx_total_res": 856,
+      "spread": 3.83,
+      "min": 6.0,
+      "max": 9.83
+    },
+    {
+      "target_pdb": "3gbn",
+      "n": 3729,
+      "antigen_res": 518,
+      "approx_total_res": 860,
+      "spread": 3.15,
+      "min": 7.0,
+      "max": 10.15
+    },
+    {
+      "target_pdb": "1n8z",
+      "n": 419,
+      "antigen_res": 607,
+      "approx_total_res": 942,
+      "spread": 3.65,
+      "min": 5.6,
+      "max": 9.25
+    }
+  ],
+  "targets_rejected": [
+    {
+      "target_pdb": "aayl49",
+      "n": 13265,
+      "antigen_res": 14,
+      "approx_total_res": 245,
+      "spread": 4.19,
+      "min": 8.24,
+      "max": 12.43,
+      "rejected": "antigen < 25 res (peptide target)"
+    },
+    {
+      "target_pdb": "aayl51",
+      "n": 4320,
+      "antigen_res": 14,
+      "approx_total_res": 248,
+      "spread": 3.13,
+      "min": 8.18,
+      "max": 11.31,
+      "rejected": "antigen < 25 res (peptide target)"
+    }
+  ],
+  "targets_chosen": [
+    "2fjg",
+    "1mlc",
+    "1mhp"
+  ],
+  "entries": 337,
+  "entries_by_target": {
+    "1mhp": 37,
+    "1mlc": 150,
+    "2fjg": 150
+  },
+  "total_residues": 153414,
+  "scope": {
+    "max_total_residues": 1200,
+    "min_antigen_residues": 25
+  }
+}

@@ -65,8 +65,12 @@ RESULTS_TSV = RESULTS_DIR / "scores.tsv"
 
 # Carried through from the manifest so the results file is self-contained for
 # analysis — no join back to the manifest needed.
+# Superset of label columns across both benchmarks; missing ones come through blank,
+# so one scorer serves the EXPERIMENT_01 manifest and the ASD within-antigen manifest
+# without the two needing identical schemas.
 CARRY = ["entry_id", "set", "source", "pdb", "split", "label",
-         "kd_molar", "ddg_kcal", "elisa_ratio", "n_res_total"]
+         "kd_molar", "ddg_kcal", "elisa_ratio", "n_res_total",
+         "target_pdb", "neg_log_kd", "affinity_decile"]
 METRICS = ["confidence_score", "ptm", "iptm", "complex_plddt", "complex_iplddt",
            "complex_pde", "complex_ipde", "ligand_iptm", "protein_iptm"]
 OUT_FIELDS = CARRY + METRICS + ["status", "seconds", "cif_path"]
@@ -136,6 +140,9 @@ def score_entry(row: dict, keep_structures: bool) -> dict:
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("--manifest", default=str(HERE / "sets" / "pilot.tsv"))
+    ap.add_argument("--out", default=None,
+                    help="results TSV (default results/scores.tsv); use a separate "
+                         "file for a different benchmark so the two never mix")
     ap.add_argument("--limit", type=int, default=None,
                     help="score at most N not-yet-done entries (smoke test)")
     ap.add_argument("--sets", default=None,
@@ -149,20 +156,21 @@ def main() -> None:
         want = {s.strip() for s in args.sets.split(",")}
         rows = [r for r in rows if r["set"] in want]
 
-    done = already_done(RESULTS_TSV)
+    results_tsv = Path(args.out) if args.out else RESULTS_TSV
+    done = already_done(results_tsv)
     todo = [r for r in rows if r["entry_id"] not in done]
     if args.limit:
         todo = todo[: args.limit]
 
-    RESULTS_DIR.mkdir(parents=True, exist_ok=True)
+    results_tsv.parent.mkdir(parents=True, exist_ok=True)
     SCORES_DIR.mkdir(parents=True, exist_ok=True)
-    new_file = not RESULTS_TSV.exists()
+    new_file = not results_tsv.exists()
 
     print(f"[score_sets] manifest {args.manifest}: {len(rows)} entries, "
           f"{len(done)} already done, {len(todo)} to score", flush=True)
 
     t_start = time.time()
-    with RESULTS_TSV.open("a", newline="", encoding="utf-8") as fh:
+    with results_tsv.open("a", newline="", encoding="utf-8") as fh:
         w = csv.DictWriter(fh, fieldnames=OUT_FIELDS, delimiter="\t",
                            extrasaction="ignore", lineterminator="\n")
         if new_file:
@@ -179,7 +187,7 @@ def main() -> None:
                   f"| avg {rate/60:.1f} min/entry, ETA {(len(todo)-i)*rate/3600:.1f}h",
                   flush=True)
 
-    print(f"[score_sets] done in {(time.time()-t_start)/3600:.2f}h -> {RESULTS_TSV}")
+    print(f"[score_sets] done in {(time.time()-t_start)/3600:.2f}h -> {results_tsv}")
 
 
 if __name__ == "__main__":
