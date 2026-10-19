@@ -286,12 +286,72 @@ report +20–30% ROC-AUC over standard MM-GBSA for protein-protein screening, so
 without merit — but on this single-GPU box it could only ever rescore a final top-N, and
 Tiers 0–2 should be exhausted first. **Recommend deferring**, not pursuing.
 
-**Proposed next experiment (EXPERIMENT_02)**: compute ipSAE, Rosetta ΔG/ΔSASA + shape
-complementarity (post-FastRelax), and BoltzGen inverse-folding likelihood over the *same
-332 structures already on disk*, and re-run EXPERIMENT_01's four hypotheses against each.
-Zero new GPU time for Tiers 0 and 2; Tier 1 is CPU. The benchmark exists, the labels
-exist, the structures exist — this is the cheapest high-information experiment available
-to this project right now.
+### ✅ EXPERIMENT_02 — results (2026-10-19)
+
+Run: [EXPERIMENT_02](experiments/scoring_calibration/EXPERIMENT_02_alternative_metrics.md).
+All three tiers computed over the same 332 structures. **The answer changed the
+question.**
+
+A null control (ESM-IF1 scoring the *antigen* chain, which is identical between a
+binding-retained and a binding-destroyed mutant and therefore cannot carry signal)
+invalidated two of three analysis columns. It scored +0.341 on cross-complex
+dose-response — stronger than any real metric — and 0.396 on unpaired AUC. Two direct
+checks confirmed why: `matched_positive` and `hard_negative` share only 17 of 34 parent
+complexes, so the unpaired comparison partly measures composition; and log10(Kd) spread
+*within* a repeated antigen is 1.73 against 7.97 across the corpus, so four-fifths of
+the affinity variance is between antigens and any antigen-only feature correlates
+spuriously.
+
+**Cross-complex affinity ranking is therefore untested on this benchmark, not
+disproven** — including for ipTM. EXPERIMENT_01's "monotonically backwards"
+dose-response is better explained as a property of the corpus than of the metric, and
+that document now carries the correction.
+
+The valid test is **within-complex** — which is also the only comparison a design
+campaign actually poses, since BoltzGen ranks thousands of candidates against *one*
+target. On the 17 parent complexes carrying both mutant types:
+
+| metric | paired /17 | p |
+|---|---|---|
+| **packstat** | **14/17** | **0.006** |
+| **shape complementarity** | **13/17** | **0.025** |
+| −dG/dSASA, −dG_separated | 12/17 | 0.072 |
+| ipTM | 9/17 | 0.500 — chance |
+| ipSAE_min | 8/17 | 0.685 — chance |
+| ESM-IF1 ll_antibody | 8/17 | 0.685 — chance |
+| *ll_antigen (control)* | *9/17* | *0.500 — correct null* |
+
+**The funnel is ranked by a metric that performs at chance on the comparison it is used
+for, while two cheap geometric terms do better.** And conveniently, packstat and shape
+complementarity are **already computed inside BoltzGen's analysis stage** — adopting
+them costs a `--metrics_override`, not new code.
+
+Why each tier failed to beat ipTM at the headline task, since the reasons differ:
+
+- **Tier 0 (ipSAE)** reweights the same PAE matrix and inherits its blindness by
+  construction. 43% of entries collapse to exactly 0.0 at Dunbrack's PAE<10 cutoff,
+  calibrated on AlphaFold-with-MSA against our higher no-MSA Boltz-2 PAEs. *No
+  PAE-derived metric can rescue a PAE-derived metric.*
+- **Tier 1 (Rosetta)** does win the valid test — but through its *geometric* terms, not
+  its energy terms (p=0.072, marginal).
+- **Tier 2 (ESM-IF1)** is the only metric with the correct cross-complex sign (−0.037),
+  but negligible against AbBiBench's ≈0.28. Likely because AbBiBench scores crystal
+  structures and these are no-MSA predictions — an inverse-folding likelihood is only as
+  good as the backbone it conditions on. Cheap to test by re-running on deposited
+  structures; not done.
+
+**Cost, measured.** Rosetta ran ~15 min/structure against ~3 min of GPU to *generate* a
+design: rescoring is **5× more expensive than generation**, which rules it out as a
+funnel-wide filter at 60,000-design scale regardless of accuracy. ESM-IF1 (7 s) and
+ipSAE (~0) are funnel-viable but do not work. packstat/sc are the fortunate case —
+effective *and* already free.
+
+**Correction to this section's earlier Tier 2 claim.** It said BoltzGen "already runs an
+inverse-folding model and discards the likelihood," implying a one-line extraction. The
+decoder's `forward()` does expose a teacher-forced logits path, but it randomises edge
+visibility (`inverse_fold.py:622`) so a single pass is stochastic, and driving it
+requires building BoltzGen's full feature dict. ESM-IF1 was both less work and the model
+AbBiBench actually measured.
 
 ---
 
@@ -329,6 +389,20 @@ So the revised recommendation is to resolve the scoring branch *before* reopenin
 tuning vs. training, not because it is more likely to be the dominant cause, but because
 it is cheap, it is a prerequisite for measuring the other two honestly, and a wrong
 selection signal would contaminate any conclusion drawn about them.
+
+**Update 2026-10-19, after EXPERIMENT_02.** The scoring branch is now partly resolved,
+and the finding is actionable rather than merely cautionary. On the comparison a design
+campaign actually makes — ranking candidates against one target — ipTM performs at
+chance (9/17), while packstat (14/17, p=0.006) and shape complementarity (13/17,
+p=0.025) discriminate. Both are already computed in BoltzGen's analysis stage, so the
+fix is a `--metrics_override`, not new machinery.
+
+Two cautions carry forward. The result rests on 17 parent complexes and would not
+survive Bonferroni correction over the ten metrics tested, so it is a strong lead rather
+than a settled fact. And it was measured on *point mutants*, which are a much subtler
+perturbation than two independently generated designs — whether the advantage transfers
+to real design diversity is exactly milestone 7's transfer question, now with a concrete
+hypothesis to test rather than an open-ended one.
 
 ---
 

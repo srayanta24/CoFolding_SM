@@ -235,10 +235,22 @@ same-parent-complex control.
    README's single-chain bands) turned out close — 0.85 admits 50% of real binders,
    0.70 admits 88%. The module now also carries the affinity caveat prominently:
    clearing the ipTM bar means a credible interface can be modelled, not that it binds.
-6. ⬜ *(conditional on 4)* Filter-rule development against set A vs D, compared to
-   BoltzGen's default ranking.
+6. ✅ *(reframed)* Alternative-metric comparison rather than filter-rule fitting —
+   see [EXPERIMENT_02](EXPERIMENT_02_alternative_metrics.md). Three independent metric
+   families (ipSAE / Rosetta / ESM-IF1) over the same 332 structures. A null control
+   invalidated the unpaired-AUC and cross-complex columns, leaving the parent-paired
+   test as the only valid one. There: **packstat 14/17 (p=0.006)** and **shape
+   complementarity 13/17 (p=0.025)** beat **ipTM at 9/17 (chance)**; ipSAE and ESM-IF1
+   are also at chance. Fitting a multi-feature rule was *not* attempted — the
+   meta-analysis this plan cites found adding 2-5 features rarely improves
+   generalisation, and with 17 parents there is nothing to fit against safely.
 7. ⬜ *(conditional on 6)* **Transfer validation** — the step that decides whether any of
-   this is usable. See §9.
+   this is usable. See §9. EXPERIMENT_02 gives it a concrete hypothesis to test rather
+   than an open question: *do packstat and shape complementarity separate good from bad
+   designs in a real campaign pool, as they separate retained from destroyed point
+   mutants here?* Point mutants are a far subtler perturbation than independently
+   generated designs, so this does not follow automatically. The existing campaign
+   pools on disk already carry both columns, so a first look costs no GPU time.
 
 ## 9. The risk, stated plainly
 

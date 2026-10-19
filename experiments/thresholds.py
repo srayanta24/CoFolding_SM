@@ -70,13 +70,23 @@ point at which something resembles a real binder, and it now lands inside the
 borderline band. Campaign pass rates will fall as a result; that is the measurement
 being honest, not a regression.
 
-**The caveat that matters most, from the same experiment.** ipTM does NOT track
-binding affinity: Spearman vs log10(Kd) = +0.134 across 100 real complexes spanning
-nine orders of magnitude, with the trend mildly *backwards*. Clearing the ipTM bar
-means "a credible interface can be modelled here," NOT "this binds tightly." Do not
-read a high ipTM as predicted potency, and do not rank candidates by it expecting the
-ordering to reflect affinity. See IMPROVE_DESIGN.md sec 4's filtration subsection for
-what to use instead.
+**The caveat that matters most**, updated 2026-10-18 after EXPERIMENT_02 retested
+it with a null control. Clearing the ipTM bar means "a credible interface can be
+modelled here," NOT "this binds tightly."
+
+The evidence is now the *within-complex* test, which is the one a design campaign
+actually poses (rank many candidates against one target). On the 17 parent complexes
+carrying both a binding-retained and a binding-destroyed point mutant, ipTM scores
+9/17 -- exactly chance -- while Rosetta's packstat reaches 14/17 (p=0.006) and shape
+complementarity 13/17 (p=0.025). So ipTM does not discriminate on the comparison it
+is being used for.
+
+EXPERIMENT_01's original evidence for this (Spearman vs log10(Kd) = +0.134 across
+complexes) is no longer cited: that cross-complex test turned out to be confounded by
+antigen identity, and an antigen-only control that cannot carry signal scored +0.341
+on it. Cross-complex affinity ranking is untested here, not disproven. The conclusion
+is unchanged; the argument for it is different. See IMPROVE_DESIGN.md sec 4's
+filtration subsection.
 """
 
 from dataclasses import dataclass

@@ -8,6 +8,24 @@ Formal record of the first scoring-calibration experiment. Method rationale live
 This document is the self-contained account: what was asked, how it was asked, and what
 came back.
 
+> **Correction, 2026-10-19 (from [EXPERIMENT_02](EXPERIMENT_02_alternative_metrics.md)).**
+> §6's headline — "ipTM does not measure binding affinity" — **still stands**, but one of
+> the two arguments offered for it below does not. The dose-response result (§3's H3,
+> Spearman +0.134 with a "monotonically backwards" trend) was read here as a property of
+> ipTM. EXPERIMENT_02 added a null control and showed the cross-complex test is
+> **confounded by antigen identity**: within a repeated antigen, log10(Kd) spread is 1.73
+> against 7.97 across the corpus, so roughly four-fifths of the affinity variance is
+> between antigens. Any antigen-only feature correlates with Kd spuriously — ESM-IF1's
+> antigen-chain score, which cannot carry real signal, reaches +0.341, stronger than
+> anything measured here.
+>
+> So cross-complex affinity ranking is **untested on this benchmark**, not disproven, for
+> ipTM or anything else. What survives is the *within-complex* finding, which
+> EXPERIMENT_02 tested properly: ipTM scores 9/17 on parent-paired discrimination —
+> exactly chance — while Rosetta's packstat reaches 14/17 (p=0.006). The conclusion is
+> unchanged and the operational implication is stronger, since a design campaign is
+> always a within-complex problem. Read §3's H3 and §6's finding 1 with this attached.
+
 ---
 
 ## 1. What was the experiment

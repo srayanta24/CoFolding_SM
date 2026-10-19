@@ -1,0 +1,333 @@
+entry_id	set	label	kd_molar	ddg_kcal	elisa_ratio	iptm	ll_heavy	ll_light	ll_antibody_mean	ll_antigen	n_heavy	n_light	n_antigen	status	seconds
+clean__pdb_000013bf	clean_positive	binder				0.797423	-1.009177	-0.943677	-0.976427	-1.897169	221	215	51	ok	6.5
+clean__pdb_00008r4q	clean_positive	binder				0.783812	-1.370148	-1.141177	-1.255663	-1.084511	128	118	314	ok	7.1
+clean__pdb_00008tui	clean_positive	binder				0.888314	-1.185340	-1.011988	-1.098664	-1.578417	225	212	98	ok	7.1
+clean__pdb_00008v5v	clean_positive	binder				0.486423	-1.330151	-1.098271	-1.214211	-1.874335	125	106	444	ok	8.4
+clean__pdb_00009dng	clean_positive	binder				0.581507	-1.101116	-1.144457	-1.122786	-1.907161	125	108	442	ok	8.3
+clean__pdb_00009e6k	clean_positive	binder				0.700950	-0.936561	-0.940233	-0.938397	-2.067699	216	215	115	ok	7.3
+clean__pdb_00009eah	clean_positive	binder				0.953082	-1.288600	-1.227995	-1.258297	-1.703096	121	107	378	ok	7.7
+clean__pdb_00009eai	clean_positive	binder				0.967308	-1.199319	-1.139814	-1.169566	-1.677773	122	109	373	ok	7.6
+clean__pdb_00009iya	clean_positive	binder				0.848497	-1.076145	-1.081304	-1.078724	-1.650850	222	212	373	ok	9.6
+clean__pdb_00009jim	clean_positive	binder				0.617355	-1.495342	-0.888223	-1.191782	-1.855897	130	108	151	ok	5.8
+clean__pdb_00009kwe	clean_positive	binder				0.639634	-1.064098	-1.048466	-1.056282	-1.302259	225	214	212	ok	8.1
+clean__pdb_00009l9o	clean_positive	binder				0.777222	-1.093952	-1.071126	-1.082539	-1.478548	218	212	396	ok	9.7
+clean__pdb_00009mkg	clean_positive	binder				0.859284	-1.076336	-0.938727	-1.007531	-1.386949	213	217	123	ok	7.2
+clean__pdb_00009mr1	clean_positive	binder				0.732155	-1.068415	-1.206648	-1.137532	-2.146665	117	112	254	ok	6.7
+clean__pdb_00009o7d	clean_positive	binder				0.620548	-1.257513	-1.092992	-1.175252	-1.675110	224	216	278	ok	8.7
+clean__pdb_00009o7h	clean_positive	binder				0.683679	-1.093389	-1.067702	-1.080545	-1.574559	216	214	281	ok	8.7
+clean__pdb_00009op1	clean_positive	binder				0.494987	-1.158374	-1.061144	-1.109759	-2.455677	232	210	324	ok	9.1
+clean__pdb_00009q7c	clean_positive	binder				0.798254	-1.227350	-0.966849	-1.097100	-1.483469	113	107	82	ok	5.1
+clean__pdb_00009ruh	clean_positive	binder				0.720128	-1.076862	-1.124974	-1.100918	-1.342825	219	210	178	ok	7.5
+clean__pdb_00009s6r	clean_positive	binder				0.367901	-1.354846	-1.346594	-1.350720	-2.138398	128	105	385	ok	7.8
+clean__pdb_00009ugo	clean_positive	binder				0.697072	-1.320173	-1.131432	-1.225803	-2.251185	222	215	98	ok	7.1
+clean__pdb_00009uvt	clean_positive	binder				0.918368	-1.183923	-1.186560	-1.185242	-1.687927	120	108	335	ok	7.2
+clean__pdb_00009uzf	clean_positive	binder				0.569017	-0.994483	-1.022447	-1.008465	-2.123424	219	218	237	ok	8.2
+clean__pdb_00009vnp	clean_positive	binder				0.620364	-1.245836	-1.067355	-1.156595	-2.222367	216	216	96	ok	7.0
+clean__pdb_00009ybg	clean_positive	binder				0.676894	-1.268422	-1.076402	-1.172412	-1.821398	226	215	98	ok	7.2
+clean__pdb_00009yfu	clean_positive	binder				0.721039	-1.097624	-0.961248	-1.029436	-1.693651	222	212	338	ok	9.4
+clean__pdb_00009yxw	clean_positive	binder				0.437037	-1.243411	-0.982536	-1.112974	-2.076932	231	212	277	ok	8.8
+clean__pdb_00009z3j	clean_positive	binder				0.727073	-1.119816	-1.007309	-1.063563	-1.230595	213	212	341	ok	9.5
+clean__pdb_00009z5u	clean_positive	binder				0.553804	-1.559249	-1.017511	-1.288380	-1.591547	115	105	203	ok	6.1
+clean__pdb_00009z66	clean_positive	binder				0.448117	-1.255830	-0.921682	-1.088756	-1.734422	121	111	473	ok	8.6
+clean__pdb_00009zr7	clean_positive	binder				0.843970	-1.099452	-1.040809	-1.070130	-1.372477	125	108	261	ok	6.6
+clean__pdb_00009zt7	clean_positive	binder				0.499025	-0.946932	-1.044626	-0.995779	-1.843421	224	214	415	ok	10.2
+aff__pdb_00001dqj	contaminated_positive	binder	2.860e-09			0.822183	-0.993366	-1.126612	-1.059989	-0.786102	210	214	129	ok	7.2
+aff__pdb_00001e6j	contaminated_positive	binder	2.900e-08			0.854446	-1.026575	-1.071129	-1.048852	-1.625023	219	210	210	ok	8.0
+aff__pdb_00001eo8	contaminated_positive	binder	8.900e-09			0.749875	-1.099804	-1.094407	-1.097106	-1.184816	217	210	319	ok	9.1
+aff__pdb_00001jrh	contaminated_positive	binder	1.420e-08			0.947145	-1.452685	-1.513773	-1.483229	-1.596645	180	167	95	ok	6.4
+aff__pdb_00001mlc	contaminated_positive	binder	9.100e-08			0.699111	-1.031817	-1.028437	-1.030127	-0.959804	218	214	129	ok	7.3
+aff__pdb_00001nca	contaminated_positive	binder	8.300e-09			0.446308	-0.955598	-1.185162	-1.070380	-1.142627	221	214	389	ok	9.9
+aff__pdb_00001nl0	contaminated_positive	binder	1.600e-09			0.837295	-1.148038	-0.970662	-1.059350	-2.748989	216	213	33	ok	6.4
+aff__pdb_00001nsn	contaminated_positive	binder	1.000e-10			0.686165	-1.495434	-1.257578	-1.376506	-2.179116	210	217	138	ok	7.2
+aff__pdb_00001p2c	contaminated_positive	binder	9.800e-11			0.671536	-1.115920	-1.041083	-1.078502	-0.852425	210	212	129	ok	7.2
+aff__pdb_00001qfu	contaminated_positive	binder	3.000e-09			0.755507	-1.051291	-1.117670	-1.084481	-1.054545	223	217	318	ok	9.2
+aff__pdb_00001vfb	contaminated_positive	binder	3.700e-09			0.713901	-0.895566	-0.957836	-0.926701	-0.855161	116	107	129	ok	5.7
+aff__pdb_00001wej	contaminated_positive	binder	1.580e-08			0.937445	-0.893744	-1.076839	-0.985292	-1.469930	223	214	104	ok	7.3
+aff__pdb_00001yyl	contaminated_positive	binder	4.000e-09			0.805159	-1.049249	-0.964813	-1.007031	-1.306062	229	214	301	ok	9.1
+aff__pdb_00001yym	contaminated_positive	binder	9.480e-06			0.784845	-1.077564	-0.991352	-1.034458	-1.271641	229	214	301	ok	9.1
+aff__pdb_00001za3	contaminated_positive	binder	3.400e-08			0.863374	-0.997033	-1.028662	-1.012848	-1.210316	224	213	106	ok	7.1
+aff__pdb_00002i5y	contaminated_positive	binder	2.700e-09			0.765089	-1.047989	-0.929016	-0.988502	-1.267476	224	214	302	ok	9.0
+aff__pdb_00002j4w	contaminated_positive	binder	6.000e-10			0.953624	-1.088079	-1.110665	-1.099372	-2.272340	225	212	34	ok	6.5
+aff__pdb_00002j5l	contaminated_positive	binder	7.700e-08			0.966659	-1.145952	-1.153975	-1.149964	-2.119840	225	212	34	ok	6.5
+aff__pdb_00002vir	contaminated_positive	binder	1.000e-09			0.572345	-1.205112	-1.114415	-1.159764	-1.097720	221	210	267	ok	8.6
+aff__pdb_00002vis	contaminated_positive	binder	4.000e-06			0.882220	-1.170703	-1.185831	-1.178267	-1.162234	221	210	267	ok	8.6
+aff__pdb_00002vxq	contaminated_positive	binder	1.100e-10			0.857269	-1.018993	-0.902278	-0.960636	-2.062918	213	213	92	ok	6.9
+aff__pdb_00002wuc	contaminated_positive	binder	1.610e-07			0.874778	-1.001548	-1.054086	-1.027817	-0.870833	219	214	240	ok	8.3
+aff__pdb_00002ybr	contaminated_positive	binder	2.100e-10			0.964808	-0.697096	-0.878475	-0.787786	-1.166590	116	112	65	ok	5.0
+aff__pdb_00003a67	contaminated_positive	binder	5.620e-09			0.879507	-1.215779	-1.122312	-1.169045	-0.775298	114	107	129	ok	5.4
+aff__pdb_00003a6c	contaminated_positive	binder	7.140e-09			0.881121	-1.149692	-1.090774	-1.120233	-0.755395	114	107	129	ok	5.4
+aff__pdb_00003b2v	contaminated_positive	binder	3.300e-09			0.860542	-1.057537	-0.984549	-1.021043	-1.100514	217	213	375	ok	9.5
+aff__pdb_00003bgf	contaminated_positive	binder	2.600e-08			0.887266	-1.044500	-1.087171	-1.065835	-1.043473	216	210	178	ok	7.8
+aff__pdb_00003eob	contaminated_positive	binder	2.200e-09			0.668143	-1.189001	-0.981028	-1.085015	-1.413374	215	214	179	ok	7.7
+aff__pdb_00003k2u	contaminated_positive	binder	1.600e-10			0.890364	-0.985253	-1.085131	-1.035192	-0.988930	215	208	233	ok	8.2
+aff__pdb_00003l5w	contaminated_positive	binder	5.400e-11			0.786312	-0.888462	-0.916727	-0.902594	-2.266279	221	213	86	ok	6.9
+aff__pdb_00003mac	contaminated_positive	binder	2.000e-07			0.790735	-1.104996	-1.022082	-1.063539	-1.348362	218	210	194	ok	7.8
+aff__pdb_00003mxw	contaminated_positive	binder	7.000e-10			0.816915	-1.064166	-1.019735	-1.041951	-1.472405	220	212	153	ok	7.4
+aff__pdb_00003nfp	contaminated_positive	binder	2.700e-10			0.950682	-1.057995	-1.093597	-1.075796	-2.447387	213	212	111	ok	7.1
+aff__pdb_00003nh7	contaminated_positive	binder	2.000e-08			0.779892	-1.131542	-0.982465	-1.057003	-1.550350	207	210	85	ok	7.0
+aff__pdb_00003p0y	contaminated_positive	binder	1.920e-09			0.762432	-0.866923	-0.918265	-0.892594	-1.108756	218	213	194	ok	7.9
+aff__pdb_00003p11	contaminated_positive	binder	2.550e-09			0.410992	-0.994885	-1.031054	-1.012970	-1.219611	218	211	506	ok	10.9
+aff__pdb_00003r1g	contaminated_positive	binder	1.300e-09			0.479031	-0.884459	-0.959001	-0.921730	-1.145836	217	214	381	ok	9.7
+aff__pdb_00003rkd	contaminated_positive	binder	5.890e-09			0.723243	-1.033558	-1.112346	-1.072952	-1.432878	218	213	145	ok	7.3
+aff__pdb_00003sqo	contaminated_positive	binder	5.000e-12			0.480352	-1.271121	-1.120598	-1.195860	-1.299482	211	213	491	ok	10.7
+aff__pdb_00003uaj	contaminated_positive	binder	2.900e-09			0.465633	-1.006333	-1.053262	-1.029797	-2.093703	220	214	371	ok	9.7
+aff__pdb_00003ux9	contaminated_positive	binder	7.470e-10			0.784239	-0.855330	-0.977972	-0.916651	-1.905660	120	109	132	ok	5.6
+aff__pdb_00003vg9	contaminated_positive	binder	4.400e-09			0.923217	-0.972205	-1.095554	-1.033880	-1.363643	224	212	297	ok	8.9
+aff__pdb_00004al8	contaminated_positive	binder	4.500e-10			0.725684	-1.144817	-1.140089	-1.142453	-1.439019	212	213	98	ok	7.1
+aff__pdb_00004cmh	contaminated_positive	binder	2.000e-10			0.514929	-1.078799	-0.981572	-1.030185	-1.891159	216	213	240	ok	8.4
+aff__pdb_00004dgi	contaminated_positive	binder	4.500e-07			0.858650	-0.917392	-0.989361	-0.953377	-1.617860	218	213	97	ok	7.0
+aff__pdb_00004dn4	contaminated_positive	binder	3.800e-11			0.804389	-1.096737	-1.067494	-1.082115	-2.412485	214	213	61	ok	6.7
+aff__pdb_00004hj0	contaminated_positive	binder	2.300e-08			0.929711	-1.228191	-1.181020	-1.204606	-1.355589	205	211	91	ok	6.8
+aff__pdb_00004hkx	contaminated_positive	binder	3.600e-07			0.527657	-1.250031	-1.100760	-1.175396	-1.143841	226	201	212	ok	8.1
+aff__pdb_00004i2x	contaminated_positive	binder	1.200e-06			0.862802	-0.953772	-0.990683	-0.972228	-1.311565	229	214	314	ok	9.2
+aff__pdb_00004i3r	contaminated_positive	binder	1.190e-08			0.896834	-1.017646	-1.123469	-1.070558	-1.441464	228	208	190	ok	7.8
+aff__pdb_00004idj	contaminated_positive	binder	1.700e-12			0.558039	-1.137816	-1.035441	-1.086629	-2.200752	224	214	276	ok	8.7
+aff__pdb_00004jlr	contaminated_positive	binder	2.990e-11			0.905311	-0.902508	-0.867418	-0.884963	-1.954107	215	210	100	ok	7.1
+aff__pdb_00004jpk	contaminated_positive	binder	4.400e-08			0.911349	-0.957666	-0.966863	-0.962264	-1.329157	221	208	169	ok	7.4
+aff__pdb_00004k24	contaminated_positive	binder	5.400e-07			0.584468	-1.166430	-1.076985	-1.121708	-1.647409	212	218	273	ok	8.6
+aff__pdb_00004lmq	contaminated_positive	binder	9.230e-10			0.847468	-1.243152	-1.034805	-1.138978	-1.634031	195	214	58	ok	6.4
+aff__pdb_00004m5z	contaminated_positive	binder	5.000e-09			0.762511	-1.134772	-0.993965	-1.064369	-1.236737	220	212	210	ok	8.0
+aff__pdb_00004mhh	contaminated_positive	binder	9.000e-10			0.603785	-1.037599	-1.091931	-1.064765	-1.254841	222	217	324	ok	9.3
+aff__pdb_00004mhj	contaminated_positive	binder	1.000e-09			0.657679	-1.067876	-1.047062	-1.057469	-1.259410	221	216	321	ok	9.2
+aff__pdb_00004np4	contaminated_positive	binder	1.900e-11			0.709829	-1.113529	-0.988284	-1.050907	-1.012666	215	213	271	ok	8.5
+aff__pdb_00004p59	contaminated_positive	binder	3.200e-11			0.648736	-0.978282	-1.042052	-1.010167	-1.833515	210	211	592	ok	11.5
+aff__pdb_00004qti	contaminated_positive	binder	1.720e-08			0.583491	-1.140496	-0.992391	-1.066443	-1.503005	218	212	260	ok	8.3
+aff__pdb_00004wv1	contaminated_positive	binder	2.600e-09			0.944102	-0.988118	-0.950827	-0.969472	-1.275623	224	214	98	ok	7.0
+aff__pdb_00004zs6	contaminated_positive	binder	3.120e-07			0.718775	-0.953522	-0.928524	-0.941023	-1.116110	221	210	207	ok	7.8
+aff__pdb_00004zs7	contaminated_positive	binder	2.100e-11			0.608056	-1.101162	-0.953086	-1.027124	-2.106263	222	210	139	ok	7.2
+aff__pdb_00005aam	contaminated_positive	binder	3.800e-09			0.884762	-1.146371	-1.088162	-1.117267	-1.644999	115	113	95	ok	5.1
+aff__pdb_00005aaw	contaminated_positive	binder	4.320e-09			0.666269	-1.148708	-1.066122	-1.107415	-1.937764	116	112	96	ok	5.2
+aff__pdb_00005c0s	contaminated_positive	binder	7.700e-09			0.711608	-1.085488	-0.943862	-1.014675	-1.600938	221	212	242	ok	8.2
+aff__pdb_00005czv	contaminated_positive	binder	3.000e-10			0.536404	-1.033889	-1.042966	-1.038428	-1.902652	206	211	225	ok	7.8
+aff__pdb_00005d1q	contaminated_positive	binder	1.300e-11			0.875748	-0.990128	-0.934695	-0.962411	-1.367774	216	214	118	ok	7.0
+aff__pdb_00005d72	contaminated_positive	binder	6.000e-12			0.848907	-1.011671	-1.025791	-1.018731	-1.642455	213	206	115	ok	7.0
+aff__pdb_00005dfw	contaminated_positive	binder	5.000e-10			0.969572	-1.088015	-1.110558	-1.099286	-1.912590	115	107	90	ok	5.1
+aff__pdb_00005e8d	contaminated_positive	binder	6.500e-09			0.959901	-0.873328	-1.007873	-0.940600	-1.467543	216	210	43	ok	6.4
+aff__pdb_00005f3b	contaminated_positive	binder	3.000e-12			0.821798	-0.916294	-1.072412	-0.994353	-1.762280	218	213	106	ok	6.9
+aff__pdb_00005hdq	contaminated_positive	binder	1.200e-09			0.572030	-1.006172	-0.930904	-0.968538	-1.696626	213	218	273	ok	8.5
+aff__pdb_00005hhx	contaminated_positive	binder	6.160e-09			0.737151	-0.922907	-0.936642	-0.929775	-1.319333	215	213	90	ok	6.9
+aff__pdb_00005jq6	contaminated_positive	binder	7.900e-10			0.513905	-1.219691	-1.231031	-1.225361	-2.095853	204	212	320	ok	8.8
+aff__pdb_00005mev	contaminated_positive	binder	1.000e-07			0.902668	-0.904923	-0.891907	-0.898415	-1.034322	207	213	151	ok	7.3
+aff__pdb_00005mi0	contaminated_positive	binder	4.100e-07			0.817571	-0.926221	-0.998100	-0.962160	-1.768834	221	217	281	ok	8.7
+aff__pdb_00005otj	contaminated_positive	binder	1.700e-10			0.968593	-1.188785	-0.991639	-1.090212	-1.244585	222	213	69	ok	6.7
+aff__pdb_00005t5f	contaminated_positive	binder	1.900e-10			0.540474	-1.220707	-1.143826	-1.182266	-1.980484	212	216	226	ok	8.0
+aff__pdb_00005tru	contaminated_positive	binder	1.060e-08			0.937773	-1.076518	-0.928065	-1.002291	-1.371005	215	213	114	ok	7.1
+aff__pdb_00005usl	contaminated_positive	binder	1.600e-11			0.572756	-1.221589	-1.132636	-1.177113	-1.945436	211	210	226	ok	8.0
+aff__pdb_00005w06	contaminated_positive	binder	1.400e-10			0.859009	-1.027909	-0.900651	-0.964280	-1.258317	216	219	198	ok	7.9
+aff__pdb_00005wi9	contaminated_positive	binder	8.600e-11			0.514500	-1.107590	-0.968704	-1.038147	-1.311431	213	212	425	ok	10.0
+aff__pdb_00005wux	contaminated_positive	binder	2.740e-11			0.734651	-0.971912	-0.936769	-0.954340	-1.635853	210	212	141	ok	7.1
+aff__pdb_00005xmh	contaminated_positive	binder	1.600e-04			0.556775	-1.210133	-0.988306	-1.099219	-1.166319	123	107	207	ok	6.3
+aff__pdb_00005xxy	contaminated_positive	binder	9.960e-09			0.793183	-0.996675	-0.969506	-0.983090	-1.260247	208	211	99	ok	6.8
+aff__pdb_00005yoy	contaminated_positive	binder	1.800e-11			0.552266	-1.097328	-1.009537	-1.053433	-1.610237	126	108	154	ok	5.8
+aff__pdb_00005zxv	contaminated_positive	binder	5.760e-08			0.811141	-1.249048	-1.077679	-1.163364	-1.216251	213	206	208	ok	7.6
+aff__pdb_00006b0e	contaminated_positive	binder	4.100e-08			0.636788	-1.174762	-1.037382	-1.106072	-1.648135	216	217	157	ok	7.4
+aff__pdb_00006b9j	contaminated_positive	binder	3.500e-10			0.570536	-1.105749	-1.005889	-1.055819	-2.267639	212	213	228	ok	8.0
+aff__pdb_00006bkd	contaminated_positive	binder	1.130e-07			0.652324	-1.087406	-0.870366	-0.978886	-1.669785	223	207	150	ok	7.3
+aff__pdb_00006blh	contaminated_positive	binder	4.100e-09			0.840337	-1.159726	-1.088591	-1.124159	-2.167340	220	211	35	ok	6.5
+aff__pdb_00006cwt	contaminated_positive	binder	2.000e-12			0.956862	-1.241712	-1.098532	-1.170122	-1.877061	214	214	124	ok	7.1
+aff__pdb_00006d6t	contaminated_positive	binder	6.100e-09			0.838513	-1.226744	-1.212611	-1.219678	-1.738204	116	106	333	ok	7.0
+aff__pdb_00006ddm	contaminated_positive	binder	4.200e-10			0.788810	-1.007135	-0.972940	-0.990037	-1.511630	216	215	88	ok	6.9
+aff__pdb_00006ejm	contaminated_positive	binder	8.600e-10			0.881716	-0.988806	-0.897766	-0.943286	-2.062391	117	112	88	ok	5.0
+aff__pdb_00006ii4	contaminated_positive	binder	1.660e-08			0.606322	-1.111013	-1.144929	-1.127971	-1.417007	220	212	317	ok	9.0
+aff__pdb_00006ii9	contaminated_positive	binder	1.940e-08			0.683997	-1.170573	-0.932668	-1.051621	-1.318266	216	212	317	ok	8.9
+aff__pdb_00006mlk	contaminated_positive	binder	1.300e-08			0.788162	-1.108921	-1.005270	-1.057095	-1.331839	213	217	257	ok	8.5
+mut__1BJ1__H:W108R__26	hard_negative	binding_destroyed			0.0308	0.705848	-1.052636	-0.957176	-1.004906	-1.674690	218	213	94	ok	6.9
+mut__1BJ1__H:W108T__41	hard_negative	binding_destroyed			0.0976	0.824483	-1.050781	-0.888898	-0.969839	-1.531135	218	213	94	ok	6.9
+mut__1BVK__H:D100G__89	hard_negative	binding_destroyed			0.0186	0.653801	-0.999123	-0.879283	-0.939203	-0.844098	116	108	129	ok	5.4
+mut__1BVK__H:D100K__71	hard_negative	binding_destroyed			0.0312	0.592081	-1.103355	-0.866213	-0.984784	-0.801359	116	108	129	ok	5.5
+mut__1BVK__H:D100L__61	hard_negative	binding_destroyed			0.0147	0.711645	-1.213673	-0.949071	-1.081372	-0.961707	116	108	129	ok	5.4
+mut__1BVK__H:D100P__81	hard_negative	binding_destroyed			0.0182	0.689185	-1.162296	-0.914166	-1.038231	-0.822105	116	108	129	ok	5.3
+mut__1BVK__H:D100T__79	hard_negative	binding_destroyed			0.0177	0.665496	-1.172736	-0.946809	-1.059773	-0.862524	116	108	129	ok	5.5
+mut__1BVK__H:Y101E__76	hard_negative	binding_destroyed			0.0168	0.615208	-1.003118	-0.924868	-0.963993	-0.847795	116	108	129	ok	5.5
+mut__1BVK__H:Y101M__93	hard_negative	binding_destroyed			0.0182	0.705461	-1.118724	-0.879684	-0.999204	-0.881544	116	108	129	ok	5.4
+mut__1BVK__H:Y101P__67	hard_negative	binding_destroyed			0.0159	0.672020	-1.039774	-0.935280	-0.987527	-0.860018	116	108	129	ok	5.5
+mut__1BVK__H:Y101W__83	hard_negative	binding_destroyed			0.0179	0.689369	-1.006529	-0.969144	-0.987837	-0.859064	116	108	129	ok	5.4
+mut__1DQJ__H:W98A__1036	hard_negative	binding_destroyed		4.900		0.743454	-0.973537	-1.128897	-1.051217	-0.844896	210	214	129	ok	7.2
+mut__1DQJ__H:Y33A__707	hard_negative	binding_destroyed		5.524		0.790778	-0.988258	-1.113711	-1.050985	-0.826282	210	214	129	ok	7.0
+mut__1DQJ__H:Y50A__1038	hard_negative	binding_destroyed		6.900		0.741189	-0.996249	-1.175669	-1.085959	-0.765665	210	214	129	ok	7.0
+mut__1DQJ__H:Y50A__708	hard_negative	binding_destroyed		6.888		0.784924	-1.018053	-1.109236	-1.063645	-0.833354	210	214	129	ok	7.1
+mut__1DQJ__L:N31A__701	hard_negative	binding_destroyed		2.013		0.801321	-1.020084	-1.202068	-1.111076	-0.809538	210	214	129	ok	7.0
+mut__1DQJ__L:N32A__1041	hard_negative	binding_destroyed		4.100		0.755253	-0.941282	-1.138486	-1.039884	-0.820007	210	214	129	ok	7.1
+mut__1DQJ__L:Y50A__1043	hard_negative	binding_destroyed		2.700		0.767976	-1.006924	-1.156941	-1.081933	-0.824805	210	214	129	ok	7.1
+mut__1JRH__H:W54A__720	hard_negative	binding_destroyed		2.686		0.924174	-1.464926	-1.513961	-1.489443	-1.692021	180	167	95	ok	6.2
+mut__1JRH__H:W55A__721	hard_negative	binding_destroyed		2.421		0.923680	-1.462241	-1.499029	-1.480635	-1.493346	180	167	95	ok	6.3
+mut__1MHP__H:G54M__1060	hard_negative	binding_destroyed		8.000		0.626406	-1.043340	-1.066520	-1.054930	-1.668869	219	212	184	ok	7.8
+mut__1MHP__H:H56Y__1064	hard_negative	binding_destroyed		8.000		0.650512	-1.044980	-1.136825	-1.090902	-1.708172	219	212	184	ok	7.6
+mut__1MHP__H:S35Q__854	hard_negative	binding_destroyed		2.727		0.640825	-1.072575	-1.187851	-1.130213	-1.801747	219	212	184	ok	7.7
+mut__1MHP__H:S35V__1073	hard_negative	binding_destroyed		8.000		0.630255	-1.063647	-1.152279	-1.107963	-1.680872	219	212	184	ok	7.5
+mut__1MHP__H:S52M__862	hard_negative	binding_destroyed		2.076		0.608822	-1.020030	-1.086296	-1.053163	-1.808162	219	212	184	ok	7.6
+mut__1MHP__H:S52T__1075	hard_negative	binding_destroyed		8.000		0.654115	-1.014067	-1.099088	-1.056577	-1.845356	219	212	184	ok	7.6
+mut__1MHP__H:T33N__876	hard_negative	binding_destroyed		2.727		0.673032	-1.021376	-1.090434	-1.055905	-1.661887	219	212	184	ok	7.7
+mut__1MHP__H:T50Q__1080	hard_negative	binding_destroyed		8.000		0.672862	-1.009698	-1.124931	-1.067314	-1.755118	219	212	184	ok	7.6
+mut__1MHP__H:Y58Q__1083	hard_negative	binding_destroyed		2.080		0.609296	-1.012000	-1.152321	-1.082161	-1.738736	219	212	184	ok	7.5
+mut__1MHP__H:Y58Q__867	hard_negative	binding_destroyed		2.076		0.607241	-1.008485	-1.110616	-1.059551	-1.778308	219	212	184	ok	7.7
+mut__1MHP__L:N92D__1104	hard_negative	binding_destroyed		8.000		0.699881	-0.987261	-1.072689	-1.029975	-1.886649	219	212	184	ok	7.6
+mut__1MHP__L:S90R__1109	hard_negative	binding_destroyed		2.730		0.672088	-0.972367	-1.123186	-1.047777	-1.878298	219	212	184	ok	7.7
+mut__1MHP__L:S90T__858	hard_negative	binding_destroyed		2.317		0.625193	-1.012016	-1.147382	-1.079699	-1.741326	219	212	184	ok	7.5
+mut__1N8Z__H:R50A__908	hard_negative	binding_destroyed		2.975		0.398325	-1.038328	-1.000467	-1.019397	-1.624246	220	214	581	ok	11.4
+mut__1N8Z__H:Y105A__1134	hard_negative	binding_destroyed		8.000		0.447326	-0.994133	-1.038430	-1.016282	-1.631499	220	214	581	ok	11.4
+mut__1N8Z__L:H91A__1142	hard_negative	binding_destroyed		8.000		0.541981	-1.041168	-1.042551	-1.041860	-1.542167	220	214	581	ok	11.4
+mut__1NMB__H:D57N__730	hard_negative	binding_destroyed		2.954		0.511324	-1.061790	-1.036142	-1.048966	-1.135124	122	109	388	ok	7.7
+mut__1VFB__H:D100A__1156	hard_negative	binding_destroyed		2.900		0.914136	-0.975308	-0.986228	-0.980768	-0.914952	116	107	129	ok	5.4
+mut__1VFB__H:D100A__672	hard_negative	binding_destroyed		3.070		0.704397	-1.002630	-0.952980	-0.977805	-0.867844	116	107	129	ok	5.5
+mut__1VFB__L:L46E__689	hard_negative	binding_destroyed		5.629		0.641266	-0.931187	-0.911271	-0.921229	-0.855177	116	107	129	ok	5.5
+mut__1VFB__L:W92A__1179	hard_negative	binding_destroyed		3.300		0.593860	-0.933660	-0.874881	-0.904271	-0.914238	116	107	129	ok	5.3
+mut__1VFB__L:Y32W__1181	hard_negative	binding_destroyed		8.000		0.669873	-0.971325	-0.946554	-0.958939	-0.984183	116	107	129	ok	5.3
+mut__1XGT__H:L33A__799	hard_negative	binding_destroyed		2.199		0.840541	-0.938793	-1.149339	-1.044066	-0.803080	210	215	129	ok	7.0
+mut__1XGU__H:F33V__782	hard_negative	binding_destroyed		2.908		0.780473	-0.986716	-1.138470	-1.062593	-0.829546	210	214	129	ok	7.1
+mut__1YY9__L:T96P__777	hard_negative	binding_destroyed		4.003		0.834511	-1.105018	-1.106249	-1.105633	-1.984819	220	211	613	ok	11.6
+mut__2BDN__L:N31K__940	hard_negative	binding_destroyed		3.490		0.821349	-1.058157	-1.236645	-1.147401	-2.160353	217	214	68	ok	6.9
+mut__2YSS__H:W98C__116	hard_negative	binding_destroyed			0.0584	0.626789	-1.022782	-1.045353	-1.034067	-0.838617	113	107	129	ok	5.4
+mut__2YSS__H:W98E__129	hard_negative	binding_destroyed			0.0692	0.682087	-0.993740	-1.052056	-1.022898	-0.843393	113	107	129	ok	5.4
+mut__2YSS__H:W98P__117	hard_negative	binding_destroyed			0.0201	0.601605	-0.987345	-1.201853	-1.094599	-0.895561	113	107	129	ok	5.3
+mut__3BDY__H:W100A__1211	hard_negative	binding_destroyed		2.000		0.860270	-0.909514	-0.947985	-0.928750	-1.463742	216	217	95	ok	7.0
+mut__3BE1__H:R50A__1241	hard_negative	binding_destroyed		2.400		0.423574	-0.998385	-1.084538	-1.041462	-1.728090	213	216	583	ok	11.3
+mut__3BE1__H:R59A__1242	hard_negative	binding_destroyed		2.500		0.660352	-1.113279	-1.042404	-1.077841	-1.766267	213	216	583	ok	11.4
+mut__3BN9__H:P104H__1267	hard_negative	binding_destroyed		8.000		0.845063	-0.946906	-0.948340	-0.947623	-0.797950	224	211	241	ok	8.3
+mut__3HFM__H:Y33A__1280	hard_negative	binding_destroyed		6.000		0.891799	-1.037031	-1.077156	-1.057093	-0.808941	215	214	129	ok	7.1
+mut__3HFM__H:Y33L__761	hard_negative	binding_destroyed		2.007		0.876621	-1.059054	-1.057840	-1.058447	-0.833471	215	214	129	ok	7.1
+mut__3HFM__H:Y50A__1281	hard_negative	binding_destroyed		8.000		0.794607	-1.059330	-0.993623	-1.026476	-0.816537	215	214	129	ok	7.2
+mut__3HFM__L:N31E__1284	hard_negative	binding_destroyed		5.670		0.863630	-1.072187	-1.040669	-1.056428	-0.877134	215	214	129	ok	7.0
+mut__3HFM__L:N31E__741	hard_negative	binding_destroyed		5.707		0.859015	-1.036835	-1.054815	-1.045825	-0.835878	215	214	129	ok	7.2
+mut__3HFM__L:N32A__1285	hard_negative	binding_destroyed		5.110		0.882831	-1.119916	-1.091304	-1.105610	-0.885887	215	214	129	ok	7.1
+mut__3HFM__L:Y50A__1287	hard_negative	binding_destroyed		4.570		0.891114	-1.066138	-1.058620	-1.062379	-0.899800	215	214	129	ok	7.2
+mut__3HFM__L:Y50A__742	hard_negative	binding_destroyed		4.558		0.881957	-1.058654	-1.016792	-1.037723	-0.890238	215	214	129	ok	7.2
+mut__3HFM__L:Y50L__1289	hard_negative	binding_destroyed		4.400		0.872882	-1.081212	-1.094210	-1.087711	-0.806264	215	214	129	ok	7.1
+mut__3HFM__L:Y96A__1290	hard_negative	binding_destroyed		2.710		0.870761	-1.065052	-1.011265	-1.038159	-0.882431	215	214	129	ok	7.1
+mut__4I77__H:D54A__815	hard_negative	binding_destroyed		2.124		0.956133	-1.039987	-0.930612	-0.985299	-1.668726	219	218	97	ok	7.1
+mut__4I77__H:W52A__817	hard_negative	binding_destroyed		2.114		0.953308	-0.966463	-0.926282	-0.946373	-1.712331	219	218	97	ok	7.1
+mut__4I77__H:W52F__816	hard_negative	binding_destroyed		2.099		0.824720	-1.006192	-0.923809	-0.965000	-1.766122	219	218	97	ok	7.1
+mut__5F9W__H:L106D__205	hard_negative	binding_destroyed			0.0272	0.855979	-1.224757	-1.113673	-1.169215	-1.255616	219	210	343	ok	9.1
+mut__5F9W__H:L106E__206	hard_negative	binding_destroyed			0.0256	0.818941	-1.230516	-1.121549	-1.176032	-1.218941	219	210	343	ok	9.1
+mut__5F9W__H:L106G__163	hard_negative	binding_destroyed			0.0248	0.616972	-1.211568	-1.075549	-1.143559	-1.232314	219	210	343	ok	9.1
+mut__5F9W__H:L106K__189	hard_negative	binding_destroyed			0.0260	0.806320	-1.269344	-1.135071	-1.202208	-1.257416	219	210	343	ok	9.2
+mut__5F9W__H:L106T__191	hard_negative	binding_destroyed			0.0552	0.623124	-1.234532	-1.176395	-1.205464	-1.288086	219	210	343	ok	9.2
+mut__5F9W__H:L107A__208	hard_negative	binding_destroyed			0.0415	0.665120	-1.178492	-1.141653	-1.160072	-1.265146	219	210	343	ok	9.3
+mut__5F9W__H:L107D__209	hard_negative	binding_destroyed			0.0241	0.467316	-1.186478	-1.120087	-1.153282	-1.249648	219	210	343	ok	9.1
+mut__5F9W__H:S105E__202	hard_negative	binding_destroyed			0.0253	0.514735	-1.216890	-1.162350	-1.189620	-1.196839	219	210	343	ok	9.2
+mut__5F9W__H:S105I__160	hard_negative	binding_destroyed			0.0747	0.517810	-1.206678	-1.057620	-1.132149	-1.208995	219	210	343	ok	9.1
+mut__5F9W__H:S105K__186	hard_negative	binding_destroyed			0.0984	0.792464	-1.238047	-1.153023	-1.195535	-1.252506	219	210	343	ok	9.1
+mut__6MFP__H:R108E__360	hard_negative	binding_destroyed			0.0252	0.542998	-1.213749	-0.972049	-1.092899	-1.230776	220	213	341	ok	9.2
+mut__6MFP__H:R108G__362	hard_negative	binding_destroyed			0.0224	0.570216	-1.232022	-0.996631	-1.114326	-1.262062	220	213	341	ok	9.2
+mut__6MFP__H:R108V__361	hard_negative	binding_destroyed			0.0467	0.703826	-1.263967	-0.987905	-1.125936	-1.256110	220	213	341	ok	9.2
+mut__6MFP__H:R108W__334	hard_negative	binding_destroyed			0.0654	0.754549	-1.198634	-1.007908	-1.103271	-1.287398	220	213	341	ok	9.1
+mut__6MFP__H:V105K__338	hard_negative	binding_destroyed			0.0246	0.865590	-1.257918	-0.968489	-1.113203	-1.221502	220	213	341	ok	9.3
+mut__6NMS__H:R104E__407	hard_negative	binding_destroyed			0.0310	0.715979	-0.939356	-0.887277	-0.913316	-1.052251	217	214	116	ok	7.1
+mut__6NMU__H:W102K__429	hard_negative	binding_destroyed			0.0230	0.880891	-1.053326	-1.002023	-1.027675	-1.161044	215	213	114	ok	7.1
+mut__7JMO__H:D106H__591	hard_negative	binding_destroyed			0.0410	0.757155	-1.090751	-0.978040	-1.034395	-0.960643	216	213	193	ok	7.7
+mut__7JMO__H:D106R__604	hard_negative	binding_destroyed			0.0580	0.688074	-1.138790	-0.959467	-1.049129	-1.011289	216	213	193	ok	7.8
+mut__7JMO__H:D106S__606	hard_negative	binding_destroyed			0.0856	0.611790	-1.120306	-1.081854	-1.101080	-1.121222	216	213	193	ok	7.7
+mut__7JMO__H:E100K__569	hard_negative	binding_destroyed			0.0273	0.620706	-1.018831	-0.991248	-1.005040	-1.033911	216	213	193	ok	7.8
+mut__7JMO__H:E100R__568	hard_negative	binding_destroyed			0.0703	0.617461	-1.056012	-0.957411	-1.006712	-1.074671	216	213	193	ok	7.8
+mut__7JMO__H:E100V__598	hard_negative	binding_destroyed			0.0923	0.797382	-1.032904	-0.984446	-1.008675	-1.129059	216	213	193	ok	7.7
+mut__7JMO__H:L99H__565	hard_negative	binding_destroyed			0.0176	0.619283	-1.089294	-0.963424	-1.026359	-1.109041	216	213	193	ok	7.8
+mut__7JMO__H:L99K__567	hard_negative	binding_destroyed			0.0683	0.611683	-1.087600	-1.054249	-1.070925	-1.074701	216	213	193	ok	7.7
+mut__7JMO__H:L99R__566	hard_negative	binding_destroyed			0.0193	0.709832	-1.101351	-1.009558	-1.055455	-1.115009	216	213	193	ok	7.8
+mut__7JMO__H:L99S__580	hard_negative	binding_destroyed			0.0244	0.602201	-1.144562	-1.031452	-1.088007	-1.081077	216	213	193	ok	7.7
+mut__7JMO__H:L99Y__608	hard_negative	binding_destroyed			0.0190	0.674785	-1.113600	-1.023899	-1.068750	-1.049497	216	213	193	ok	7.7
+mut__7JMO__H:R97D__593	hard_negative	binding_destroyed			0.0194	0.658529	-1.157702	-0.974903	-1.066302	-0.995006	216	213	193	ok	7.7
+mut__7JMO__H:R97E__594	hard_negative	binding_destroyed			0.0179	0.566652	-1.093454	-1.016231	-1.054843	-0.999235	216	213	193	ok	7.7
+mut__7JMO__H:R97S__578	hard_negative	binding_destroyed			0.0369	0.744540	-1.132375	-1.013938	-1.073157	-0.993801	216	213	193	ok	7.6
+mut__7JMO__H:R97W__563	hard_negative	binding_destroyed			0.0987	0.665735	-1.135916	-1.000855	-1.068386	-1.082646	216	213	193	ok	7.7
+mut__7KF0__H:Y104H__627	hard_negative	binding_destroyed			0.0977	0.847397	-0.875335	-0.965651	-0.920493	-1.577047	215	216	95	ok	7.0
+mut__7KF0__H:Y104V__652	hard_negative	binding_destroyed			0.0545	0.857475	-0.918093	-0.991995	-0.955044	-1.592414	215	216	95	ok	6.9
+mut__1BJ1__H:H101G__1	matched_positive	binding_retained			0.9465	0.826848	-1.044887	-0.959233	-1.002060	-1.545433	218	213	94	ok	6.8
+mut__1BJ1__H:H101S__28	matched_positive	binding_retained			1.0719	0.746893	-1.097873	-0.900529	-0.999201	-1.599340	218	213	94	ok	6.9
+mut__1BJ1__H:S106G__10	matched_positive	binding_retained			1.1564	0.789048	-1.073518	-0.905013	-0.989265	-1.592422	218	213	94	ok	6.9
+mut__1BJ1__H:Y102G__4	matched_positive	binding_retained			1.1243	0.837076	-1.011156	-0.900706	-0.955931	-1.601622	218	213	94	ok	6.9
+mut__1BJ1__H:Y102H__16	matched_positive	binding_retained			1.3606	0.778289	-1.049173	-0.926165	-0.987669	-1.491163	218	213	94	ok	7.0
+mut__1BJ1__H:Y102T__32	matched_positive	binding_retained			1.1979	0.831328	-1.068885	-0.966593	-1.017739	-1.397904	218	213	94	ok	6.9
+mut__1BJ1__H:Y103G__7	matched_positive	binding_retained			1.1349	0.759540	-1.006842	-0.886529	-0.946685	-1.701253	218	213	94	ok	7.0
+mut__1BJ1__H:Y103V__51	matched_positive	binding_retained			0.8969	0.852774	-1.076999	-0.929983	-1.003491	-1.605655	218	213	94	ok	6.8
+mut__1BJ1__H:Y54W__827	matched_positive	binding_retained		-0.137		0.786016	-1.092038	-0.948089	-1.020063	-1.629565	218	213	94	ok	6.9
+mut__1MHP__H:G54Y__1063	matched_positive	binding_retained		0.000		0.667666	-1.061122	-1.096064	-1.078593	-1.654182	219	212	184	ok	7.5
+mut__1MHP__H:L60D__1069	matched_positive	binding_retained		-0.120		0.730096	-0.987971	-1.123299	-1.055635	-1.715915	219	212	184	ok	7.7
+mut__1MHP__H:T33V__1078	matched_positive	binding_retained		0.430		0.726529	-0.991856	-1.124991	-1.058423	-1.828038	219	212	184	ok	7.8
+mut__1MHP__H:T50V__1081	matched_positive	binding_retained		-0.260		0.737891	-1.004151	-1.079716	-1.041934	-1.717056	219	212	184	ok	7.6
+mut__1MHP__L:N51E__1100	matched_positive	binding_retained		-0.180		0.686364	-0.941194	-1.136922	-1.039058	-1.805140	219	212	184	ok	7.6
+mut__1MHP__L:N51Y__1103	matched_positive	binding_retained		-0.100		0.651313	-0.973606	-1.100742	-1.037174	-1.628478	219	212	184	ok	7.7
+mut__1MHP__L:S23R__843	matched_positive	binding_retained		-0.067		0.689361	-0.932745	-1.113760	-1.023253	-1.670775	219	212	184	ok	7.6
+mut__1MLC__H:S57V__892	matched_positive	binding_retained		-0.494		0.781389	-1.015419	-0.998098	-1.006759	-0.947946	218	214	129	ok	7.1
+mut__1N8Z__L:D28N__1140	matched_positive	binding_retained		-0.280		0.688770	-1.024374	-1.057968	-1.041171	-1.596895	220	214	581	ok	11.4
+mut__1N8Z__L:R66G__1146	matched_positive	binding_retained		0.220		0.356496	-1.003305	-1.002391	-1.002848	-1.735877	220	214	581	ok	11.4
+mut__1N8Z__L:T94A__1151	matched_positive	binding_retained		-0.120		0.525668	-1.003772	-0.993249	-0.998510	-1.674009	220	214	581	ok	11.3
+mut__1NMB__L:Y32F__734	matched_positive	binding_retained		0.466		0.579816	-1.115353	-1.058900	-1.087127	-1.126876	122	109	388	ok	7.7
+mut__1VFB__H:D58N__1159	matched_positive	binding_retained		-0.130		0.812731	-0.985082	-0.996371	-0.990726	-0.878534	116	107	129	ok	5.6
+mut__1VFB__H:G31W__1162	matched_positive	binding_retained		0.010		0.648903	-0.982768	-0.898460	-0.940614	-0.962616	116	107	129	ok	5.3
+mut__1VFB__H:R99A__671	matched_positive	binding_retained		-0.100		0.627036	-1.036081	-0.925343	-0.980712	-0.971492	116	107	129	ok	5.4
+mut__1VFB__L:S93A__663	matched_positive	binding_retained		0.343		0.641910	-0.973719	-0.966429	-0.970074	-0.807742	116	107	129	ok	5.5
+mut__1YY9__H:G54P__770	matched_positive	binding_retained		0.268		0.809514	-1.098245	-1.144444	-1.121345	-1.883812	220	211	613	ok	11.6
+mut__1YY9__H:T61E__1186	matched_positive	binding_retained		-0.060		0.806094	-1.120436	-1.099417	-1.109926	-1.831401	220	211	613	ok	11.6
+mut__1YY9__L:S54P__776	matched_positive	binding_retained		-0.018		0.787850	-1.084998	-1.092830	-1.088914	-1.854583	220	211	613	ok	11.6
+mut__2BDN__H:N28D__935	matched_positive	binding_retained		0.132		0.966936	-1.030099	-1.245046	-1.137573	-1.623691	217	214	68	ok	6.7
+mut__2BDN__L:S53D__941	matched_positive	binding_retained		-0.161		0.970185	-1.057458	-1.181520	-1.119489	-1.893538	217	214	68	ok	6.6
+mut__2YSS__H:D99A__106	matched_positive	binding_retained			0.9570	0.660396	-0.962058	-1.078252	-1.020155	-0.862273	113	107	129	ok	5.4
+mut__2YSS__H:D99H__133	matched_positive	binding_retained			0.9461	0.635443	-1.091376	-1.095897	-1.093637	-0.865669	113	107	129	ok	5.5
+mut__2YSS__H:D99M__135	matched_positive	binding_retained			0.9161	0.791004	-1.042757	-1.172548	-1.107653	-0.805700	113	107	129	ok	5.4
+mut__2YSS__H:D99W__132	matched_positive	binding_retained			0.9767	0.812148	-0.996747	-1.086171	-1.041459	-0.798232	113	107	129	ok	5.4
+mut__2YSS__H:R97E__96	matched_positive	binding_retained			0.9758	0.665584	-1.036646	-1.094050	-1.065348	-0.780985	113	107	129	ok	5.4
+mut__2YSS__H:R97G__98	matched_positive	binding_retained			0.9823	0.612732	-1.059877	-1.066654	-1.063266	-0.760045	113	107	129	ok	5.3
+mut__2YSS__H:R97S__124	matched_positive	binding_retained			0.9658	0.627339	-1.063729	-1.052996	-1.058362	-0.810191	113	107	129	ok	5.3
+mut__2YSS__H:R97V__97	matched_positive	binding_retained			0.9416	0.615720	-1.120070	-1.140535	-1.130302	-0.888604	113	107	129	ok	5.5
+mut__2YSS__H:W98H__99	matched_positive	binding_retained			1.2646	0.670502	-1.008108	-1.117605	-1.062856	-0.755645	113	107	129	ok	5.4
+mut__3BDY__H:K31A__1205	matched_positive	binding_retained		0.200		0.834809	-0.967767	-0.964274	-0.966021	-1.581924	216	217	95	ok	6.8
+mut__3BDY__H:R51A__1207	matched_positive	binding_retained		-0.300		0.738328	-1.042443	-1.058917	-1.050680	-1.537993	216	217	95	ok	7.0
+mut__3BDY__H:Y34A__1213	matched_positive	binding_retained		0.300		0.728001	-1.000117	-0.968429	-0.984273	-1.481824	216	217	95	ok	6.9
+mut__3BDY__L:P30A__1222	matched_positive	binding_retained		0.200		0.781763	-0.946598	-1.008505	-0.977551	-1.571385	216	217	95	ok	7.0
+mut__3BE1__H:G101A__1237	matched_positive	binding_retained		0.300		0.678085	-1.052691	-1.078407	-1.065549	-1.779619	213	216	583	ok	11.3
+mut__3BN9__H:T28R__1271	matched_positive	binding_retained		0.300		0.871060	-0.913307	-0.946013	-0.929660	-0.759283	224	211	241	ok	8.1
+mut__3HFM__H:D32N__749	matched_positive	binding_retained		0.170		0.853784	-1.130061	-1.081557	-1.105809	-0.848279	215	214	129	ok	7.1
+mut__3HFM__H:S31A__1279	matched_positive	binding_retained		0.170		0.854698	-1.108045	-1.059539	-1.083792	-0.838948	215	214	129	ok	7.2
+mut__3NGB__H:I30A__953	matched_positive	binding_retained		-0.003		0.847015	-1.199895	-1.132195	-1.166045	-1.218254	224	208	347	ok	9.3
+mut__3NGB__H:K52N__1295	matched_positive	binding_retained		0.180		0.778511	-1.179744	-1.062248	-1.120996	-1.268623	224	208	347	ok	9.3
+mut__3NGB__H:V74T__926	matched_positive	binding_retained		0.165		0.847444	-1.121584	-1.123380	-1.122482	-1.252869	224	208	347	ok	9.4
+mut__3NGB__H:Y75S__927	matched_positive	binding_retained		0.333		0.869406	-1.168884	-1.165439	-1.167161	-1.291959	224	208	347	ok	9.2
+mut__3SE8__H:G56A__988	matched_positive	binding_retained		0.357		0.709534	-1.171589	-0.969832	-1.070710	-1.222013	227	208	344	ok	9.2
+mut__3SE9__H:G62A__1018	matched_positive	binding_retained		0.046		0.599574	-1.164233	-1.111340	-1.137786	-1.184295	225	208	344	ok	9.3
+mut__3SE9__L:G29A__1031	matched_positive	binding_retained		0.464		0.779283	-1.091655	-1.146948	-1.119301	-1.291958	225	208	344	ok	9.2
+mut__5C6T__H:R31S__945	matched_positive	binding_retained		0.312		0.842715	-1.713290	-1.172888	-1.443089	-2.106386	113	104	566	ok	9.3
+mut__5GGS__H:F102W__243	matched_positive	binding_retained			0.9957	0.947934	-0.980381	-0.917645	-0.949013	-1.372888	219	217	113	ok	7.1
+mut__5GGS__H:M104T__260	matched_positive	binding_retained			0.9194	0.938386	-0.985676	-0.901398	-0.943537	-1.443850	219	217	113	ok	7.0
+mut__5GGS__H:M104V__228	matched_positive	binding_retained			0.9968	0.932749	-0.957046	-0.908898	-0.932972	-1.216138	219	217	113	ok	7.0
+mut__5GGS__H:R101A__221	matched_positive	binding_retained			0.9005	0.935914	-0.962800	-0.919163	-0.940982	-1.385279	219	217	113	ok	6.9
+mut__5GGS__H:R101D__226	matched_positive	binding_retained			0.9529	0.939947	-0.969923	-0.892472	-0.931197	-1.348436	219	217	113	ok	7.1
+mut__5GGS__H:R101K__258	matched_positive	binding_retained			0.9577	0.927598	-0.972231	-0.888692	-0.930461	-1.354115	219	217	113	ok	6.9
+mut__5GGS__H:R101S__213	matched_positive	binding_retained			0.8663	0.928265	-0.969827	-0.928528	-0.949177	-1.545672	219	217	113	ok	6.9
+mut__5GGS__H:R101T__217	matched_positive	binding_retained			0.9204	0.937856	-0.928255	-0.903208	-0.915732	-1.506783	219	217	113	ok	7.1
+mut__5GGS__H:Y100H__212	matched_positive	binding_retained			1.0183	0.935937	-0.939684	-0.927892	-0.933788	-1.328336	219	217	113	ok	6.9
+mut__5GGS__H:Y100K__220	matched_positive	binding_retained			0.9635	0.934337	-0.922939	-0.908916	-0.915927	-1.349292	219	217	113	ok	7.2
+mut__5GGS__H:Y100S__225	matched_positive	binding_retained			1.1544	0.925891	-0.958329	-0.930124	-0.944226	-1.384352	219	217	113	ok	7.0
+mut__5GGV__H:L105V__296	matched_positive	binding_retained			0.9750	0.892062	-0.927855	-0.835692	-0.881774	-1.264416	225	213	119	ok	7.2
+mut__5GGV__H:Y107I__321	matched_positive	binding_retained			0.8637	0.898589	-1.047551	-0.927731	-0.987641	-1.291712	225	213	119	ok	7.0
+mut__5GGV__H:Y107W__270	matched_positive	binding_retained			0.9740	0.828179	-1.087886	-0.912733	-1.000310	-1.306761	225	213	119	ok	7.1
+mut__5GGV__H:Y110V__326	matched_positive	binding_retained			0.9873	0.839791	-1.025606	-0.933448	-0.979527	-1.453267	225	213	119	ok	7.2
+mut__6MFP__H:V105S__345	matched_positive	binding_retained			0.8132	0.591624	-1.219656	-0.992648	-1.106152	-1.277463	220	213	341	ok	9.1
+mut__6NMS__H:R102Y__366	matched_positive	binding_retained			0.9831	0.856926	-0.943385	-0.885211	-0.914298	-1.088116	217	214	116	ok	7.0
+mut__6NMU__H:D101A__447	matched_positive	binding_retained			0.9959	0.864272	-1.074392	-1.059515	-1.066954	-1.164547	215	213	114	ok	7.0
+mut__6NMU__H:D101H__425	matched_positive	binding_retained			1.1932	0.749612	-1.118210	-1.000779	-1.059495	-1.321892	215	213	114	ok	7.2
+mut__6NMU__H:D101I__416	matched_positive	binding_retained			1.0133	0.883770	-1.103890	-1.023026	-1.063458	-1.236161	215	213	114	ok	7.0
+mut__6NMU__H:D101R__426	matched_positive	binding_retained			1.0503	0.909072	-1.050533	-0.995766	-1.023150	-1.184340	215	213	114	ok	7.0
+mut__6NMU__H:N103R__432	matched_positive	binding_retained			0.9829	0.794539	-1.049083	-0.924892	-0.986987	-1.064283	215	213	114	ok	7.1
+mut__6NMU__H:N103T__443	matched_positive	binding_retained			0.9481	0.900035	-1.000069	-1.015992	-1.008031	-1.106597	215	213	114	ok	7.1
+mut__6NMU__H:Y100V__446	matched_positive	binding_retained			0.9469	0.767236	-1.071556	-0.959560	-1.015558	-1.156389	215	213	114	ok	7.0
+mut__6RP8__H:W101H__458	matched_positive	binding_retained			1.0024	0.926549	-0.999261	-0.930534	-0.964898	-1.276547	212	212	116	ok	7.0
+mut__6RP8__H:W101K__466	matched_positive	binding_retained			1.0690	0.930978	-1.034955	-0.941539	-0.988247	-1.238577	212	212	116	ok	7.2
+mut__6XKR__H:F104A__522	matched_positive	binding_retained			0.8654	0.850178	-1.114621	-1.043674	-1.079147	-1.446503	215	220	113	ok	7.1
+mut__6XKR__H:F104D__526	matched_positive	binding_retained			0.8316	0.916338	-1.038247	-1.049046	-1.043647	-1.397940	215	220	113	ok	7.1
+mut__6XKR__H:T101D__485	matched_positive	binding_retained			0.8682	0.858158	-1.066168	-1.034097	-1.050132	-1.590544	215	220	113	ok	7.0
+mut__6XKR__H:T103A__521	matched_positive	binding_retained			1.0444	0.853707	-1.075245	-1.062986	-1.069115	-1.508289	215	220	113	ok	7.1
+mut__6XKR__H:T103S__517	matched_positive	binding_retained			1.0953	0.849847	-1.067432	-1.018068	-1.042750	-1.535728	215	220	113	ok	6.9
+mut__6XKR__H:Y106E__527	matched_positive	binding_retained			1.0001	0.898031	-1.130180	-1.007032	-1.068606	-1.576270	215	220	113	ok	7.0
+mut__7BEJ__H:D105H__535	matched_positive	binding_retained			0.9456	0.583127	-0.928956	-0.943587	-0.936271	-1.074399	215	213	195	ok	7.6
+mut__7BEJ__H:L99E__557	matched_positive	binding_retained			0.9818	0.599774	-1.024900	-0.939704	-0.982302	-0.985848	215	213	195	ok	7.6
+mut__7BEJ__H:L99R__539	matched_positive	binding_retained			0.9694	0.596357	-0.984290	-0.990755	-0.987522	-1.004994	215	213	195	ok	7.7
+mut__7BEJ__H:L99T__548	matched_positive	binding_retained			0.9832	0.573045	-0.971598	-0.944038	-0.957818	-1.055796	215	213	195	ok	7.6
+mut__7BEJ__H:R97E__554	matched_positive	binding_retained			0.9610	0.568180	-1.046076	-1.013437	-1.029756	-1.019049	215	213	195	ok	7.8
+mut__7BEJ__H:R97K__537	matched_positive	binding_retained			0.9384	0.600323	-0.998987	-0.957747	-0.978367	-0.997283	215	213	195	ok	7.8
+mut__7JMO__H:A102S__617	matched_positive	binding_retained			1.0913	0.679420	-1.109660	-1.010670	-1.060165	-1.050967	216	213	193	ok	7.6
+mut__7JMO__H:R101S__615	matched_positive	binding_retained			0.9735	0.624416	-0.976630	-0.953388	-0.965009	-1.075919	216	213	193	ok	7.7
+mut__7JMO__H:R101V__587	matched_positive	binding_retained			1.1354	0.594564	-1.072340	-1.003675	-1.038008	-1.132129	216	213	193	ok	7.7
+mut__7KF0__H:Y102R__629	matched_positive	binding_retained			1.0334	0.684891	-0.905793	-0.989540	-0.947667	-1.404597	215	216	95	ok	7.0
+mut__7KF0__H:Y102T__637	matched_positive	binding_retained			0.8844	0.769336	-0.827139	-0.949637	-0.888388	-1.549136	215	216	95	ok	7.0
+mut__7KF0__H:Y103V__649	matched_positive	binding_retained			0.8977	0.807916	-0.983411	-0.991243	-0.987327	-1.640513	215	216	95	ok	7.0
+mut__7KF0__H:Y104W__626	matched_positive	binding_retained			0.9391	0.856215	-0.903642	-0.939928	-0.921785	-1.605897	215	216	95	ok	6.9

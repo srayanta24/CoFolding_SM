@@ -104,3 +104,5 @@ experiments/scoring_calibration/.scores/
 # and reproducible. results/scores.tsv (the actual data) stays tracked.
 experiments/scoring_calibration/results/*.log
 experiments/scoring_calibration/results/rosetta_run.log
+experiments/scoring_calibration/results/esmif_run.log
+weights/esm/
