@@ -1,0 +1,167 @@
+{
+  "n_joined": 332,
+  "n_by_set": {
+    "clean_positive": 32,
+    "contaminated_positive": 100,
+    "hard_negative": 100,
+    "matched_positive": 100
+  },
+  "metrics": [
+    {
+      "metric": "ipTM (baseline)",
+      "null_control": false,
+      "cross_complex_spearman": 0.134,
+      "unpaired_auc": 0.6344,
+      "paired_wins": 9,
+      "paired_n": 17,
+      "paired_binomial_p": 0.5
+    },
+    {
+      "metric": "ipSAE_min",
+      "null_control": false,
+      "cross_complex_spearman": 0.1975,
+      "unpaired_auc": 0.626,
+      "paired_wins": 8,
+      "paired_n": 17,
+      "paired_binomial_p": 0.6855
+    },
+    {
+      "metric": "-dG/dSASA (Rosetta)",
+      "null_control": false,
+      "cross_complex_spearman": 0.1792,
+      "unpaired_auc": 0.6341,
+      "paired_wins": 12,
+      "paired_n": 17,
+      "paired_binomial_p": 0.0717
+    },
+    {
+      "metric": "-dG_separated",
+      "null_control": false,
+      "cross_complex_spearman": 0.1453,
+      "unpaired_auc": 0.6438,
+      "paired_wins": 12,
+      "paired_n": 17,
+      "paired_binomial_p": 0.0717
+    },
+    {
+      "metric": "shape complementarity",
+      "null_control": false,
+      "cross_complex_spearman": 0.0542,
+      "unpaired_auc": 0.541,
+      "paired_wins": 13,
+      "paired_n": 17,
+      "paired_binomial_p": 0.0245
+    },
+    {
+      "metric": "packstat",
+      "null_control": false,
+      "cross_complex_spearman": 0.0028,
+      "unpaired_auc": 0.6237,
+      "paired_wins": 14,
+      "paired_n": 17,
+      "paired_binomial_p": 0.0064
+    },
+    {
+      "metric": "buried SASA",
+      "null_control": false,
+      "cross_complex_spearman": 0.0483,
+      "unpaired_auc": 0.5872,
+      "paired_wins": 13,
+      "paired_n": 17,
+      "paired_binomial_p": 0.0245
+    },
+    {
+      "metric": "interface H-bonds",
+      "null_control": false,
+      "cross_complex_spearman": 0.0492,
+      "unpaired_auc": 0.5252,
+      "paired_wins": 10,
+      "paired_n": 17,
+      "paired_binomial_p": 0.3145
+    },
+    {
+      "metric": "-unsat H-bonds",
+      "null_control": false,
+      "cross_complex_spearman": 0.1305,
+      "unpaired_auc": 0.4466,
+      "paired_wins": 6,
+      "paired_n": 17,
+      "paired_binomial_p": 0.9283
+    },
+    {
+      "metric": "ESM-IF1 ll_antibody",
+      "null_control": false,
+      "cross_complex_spearman": -0.0368,
+      "unpaired_auc": 0.6338,
+      "paired_wins": 8,
+      "paired_n": 17,
+      "paired_binomial_p": 0.6855
+    },
+    {
+      "metric": "ESM-IF1 ll_heavy",
+      "null_control": false,
+      "cross_complex_spearman": -0.014,
+      "unpaired_auc": 0.6021,
+      "paired_wins": 8,
+      "paired_n": 17,
+      "paired_binomial_p": 0.6855
+    },
+    {
+      "metric": "ESM-IF1 ll_light",
+      "null_control": false,
+      "cross_complex_spearman": -0.0608,
+      "unpaired_auc": 0.6055,
+      "paired_wins": 9,
+      "paired_n": 17,
+      "paired_binomial_p": 0.5
+    },
+    {
+      "metric": "ESM-IF1 ll_antigen",
+      "null_control": true,
+      "cross_complex_spearman": 0.341,
+      "unpaired_auc": 0.3964,
+      "paired_wins": 9,
+      "paired_n": 17,
+      "paired_binomial_p": 0.5
+    }
+  ],
+  "diagnostics": {
+    "unpaired_arm_composition": {
+      "matched_positive_parents": 27,
+      "hard_negative_parents": 24,
+      "shared_parents": 17,
+      "parents_in_only_one_arm": 17,
+      "verdict": "unpaired AUC partly measures which complexes are in which arm"
+    },
+    "antigen_identity": {
+      "n_entries": 100,
+      "n_distinct_antigens": 89,
+      "n_antigens_repeated": 7,
+      "mean_within_antigen_log10kd_spread": 1.731,
+      "total_log10kd_spread": 7.974,
+      "fraction_variance_between_antigens": 0.783,
+      "verdict": "most affinity variance is between antigens, so any antigen-only feature correlates with Kd spuriously"
+    },
+    "size": {
+      "spearman_logkd_vs_total_residues": 0.0737,
+      "spearman_logkd_vs_antigen_residues": 0.0973,
+      "spearman_logkd_vs_buried_sasa": 0.0483,
+      "verdict": "all negligible - complex size is NOT the confound; antigen identity is"
+    }
+  },
+  "cost": {
+    "rosetta": {
+      "n": 332,
+      "mean_s": 1361.1,
+      "median_s": 980.4,
+      "total_h": 125.53
+    },
+    "esmif": {
+      "n": 332,
+      "mean_s": 7.6,
+      "median_s": 7.2,
+      "total_h": 0.7
+    },
+    "ipsae": "negligible - re-reads saved PAE matrices"
+  }
+}
