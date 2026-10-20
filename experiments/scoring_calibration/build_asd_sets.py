@@ -73,6 +73,24 @@ OUT_DIR = HERE / "sets"
 MAX_TOTAL_RESIDUES = 1200
 MIN_ANTIGEN_RESIDUES = 25
 
+# Affinity-plausibility gate, added 2026-10-20 after a real failure.
+#
+# ASD labels every abbd row `affinity_type == "-log KD"`, but that is a blanket label
+# over heterogeneous source datasets and it is WRONG for some targets. Checked across
+# the full subset: 2fjg spans -3.01..0.50 with 46% negative values and a median of
+# 0.03, and 1mlc spans -4.10..10.18 with 8% negative. A -log KD of -3 implies
+# Kd = 10^3 M, which is not a binding constant -- those columns are almost certainly
+# a ddG-like or log-fold-change quantity centred on the wild type, where the SIGN
+# CONVENTION IS INVERTED relative to -log KD.
+#
+# This mattered: the first build sorted candidates cheapest-first and took three, and
+# the three cheapest targets are exactly the mislabelled ones. Selecting on cost
+# without validating the label silently produced a benchmark whose ground truth
+# pointed the wrong way for two of three targets. Any target whose values cannot be
+# -log KD is now rejected rather than ranked.
+MIN_PLAUSIBLE_NEG_LOG_KD = 0.0   # Kd <= 1 M; anything negative is not a -log KD
+MAX_PLAUSIBLE_NEG_LOG_KD = 14.0  # Kd >= 10 fM; tighter than any measured antibody
+
 FIELDS = ["entry_id", "set", "source", "target_pdb", "neg_log_kd", "affinity_decile",
           "n_res_heavy", "n_res_light", "n_res_antigen", "n_res_total",
           "heavy_seq", "light_seq", "antigen_seq", "note"]
@@ -139,23 +157,47 @@ def main() -> None:
         info = {"target_pdb": pdb, "n": len(v), "antigen_res": agl,
                 "approx_total_res": size, "spread": round(max(aff) - min(aff), 2),
                 "min": round(min(aff), 2), "max": round(max(aff), 2)}
+        n_neg = sum(1 for x in aff if x < MIN_PLAUSIBLE_NEG_LOG_KD)
+        info["frac_implausible"] = round(n_neg / len(aff), 3)
         if agl < MIN_ANTIGEN_RESIDUES:
             info["rejected"] = f"antigen < {MIN_ANTIGEN_RESIDUES} res (peptide target)"
             rejected.append(info)
         elif size > MAX_TOTAL_RESIDUES:
             info["rejected"] = f"complex > {MAX_TOTAL_RESIDUES} res (cost guard)"
             rejected.append(info)
+        elif n_neg or max(aff) > MAX_PLAUSIBLE_NEG_LOG_KD:
+            info["rejected"] = (
+                f"affinity not plausible as -log KD ({info['min']}..{info['max']}, "
+                f"{info['frac_implausible']:.0%} negative) - label is unreliable, "
+                "sign convention unknown")
+            rejected.append(info)
         else:
             cand.append(info)
 
-    # Cheapest first: cost scales superlinearly with residues, and a cheap target
-    # buys more sampled antibodies per GPU-hour, which is what powers the ranking test.
-    cand.sort(key=lambda c: c["approx_total_res"])
+    # Among targets that survive the plausibility gate, prefer the ones with the most
+    # antibodies (deeper sampling across the affinity range) rather than the cheapest.
+    # Cost-first selection is what produced the mislabelled first build; a target that
+    # is cheap but whose ground truth points the wrong way is worth nothing.
+    cand.sort(key=lambda c: -c["n"])
     chosen = cand[: args.max_targets]
 
     entries = []
     for c in chosen:
-        pool = by_t[c["target_pdb"]]
+        # Aggregate repeated measurements of the SAME heavy chain before sampling.
+        # A heavy can appear many times (4fqi has 130,629 rows over 65,536 distinct
+        # heavies), and treating replicates as independent both inflates n and, once
+        # deduplicated after stratifying, silently shrinks the sample. Median is used
+        # rather than mean so a single outlying replicate cannot move the label.
+        agg = defaultdict(list)
+        for r in by_t[c["target_pdb"]]:
+            agg[r["heavy"]].append(r)
+        pool = []
+        for h, g in agg.items():
+            vals = sorted(x["neg_log_kd"] for x in g)
+            med = vals[len(vals) // 2] if len(vals) % 2 else \
+                (vals[len(vals) // 2 - 1] + vals[len(vals) // 2]) / 2
+            r0 = dict(g[0]); r0["neg_log_kd"] = med; r0["n_replicates"] = len(g)
+            pool.append(r0)
         pool_sorted = sorted(pool, key=lambda r: r["neg_log_kd"])
         n = len(pool_sorted)
         per_decile = max(1, args.per_target // 10)
@@ -179,7 +221,8 @@ def main() -> None:
                     "n_res_antigen": len(r["antigen"]), "n_res_total": total,
                     "heavy_seq": r["heavy"], "light_seq": r["light"],
                     "antigen_seq": r["antigen"],
-                    "note": "higher neg_log_kd = tighter binder",
+                    "note": f"higher neg_log_kd = tighter binder; "
+                            f"{r.get('n_replicates',1)} replicate(s) aggregated",
                 })
 
     # dedupe (the same heavy can recur across deciles only if affinities tie)

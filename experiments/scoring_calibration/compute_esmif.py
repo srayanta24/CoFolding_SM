@@ -76,7 +76,9 @@ SCORES_DIR = HERE / ".scores"
 RESULTS = HERE / "results" / "scores.tsv"
 OUT = HERE / "results" / "esmif.tsv"
 
-CARRY = ["entry_id", "set", "label", "kd_molar", "ddg_kcal", "elisa_ratio", "iptm"]
+# Superset across both benchmarks; absent columns come through blank.
+CARRY = ["entry_id", "set", "label", "kd_molar", "ddg_kcal", "elisa_ratio", "iptm",
+         "target_pdb", "neg_log_kd", "affinity_decile"]
 METRICS = ["ll_heavy", "ll_light", "ll_antibody_mean", "ll_antigen",
            "n_heavy", "n_light", "n_antigen"]
 FIELDS = CARRY + METRICS + ["status", "seconds"]
@@ -134,6 +136,10 @@ def backbone_coords_by_chain(cif_path: Path) -> dict[str, np.ndarray]:
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("--limit", type=int, default=None)
+    ap.add_argument("--manifest", default=str(HERE / "sets" / "manifest.tsv"))
+    ap.add_argument("--results", default=str(RESULTS),
+                    help="scored table whose entries to re-score")
+    ap.add_argument("--out", default=str(OUT))
     ap.add_argument("--device", default="cuda" if torch.cuda.is_available() else "cpu")
     args = ap.parse_args()
 
@@ -145,14 +151,14 @@ def main() -> None:
     model = model.eval().to(args.device)
 
     man = {r["entry_id"]: r for r in
-           csv.DictReader((HERE / "sets" / "manifest.tsv").open(encoding="utf-8"),
-                          delimiter="\t")}
-    scored = [r for r in csv.DictReader(RESULTS.open(encoding="utf-8"), delimiter="\t")
-              if r["status"] == "ok"]
+           csv.DictReader(Path(args.manifest).open(encoding="utf-8"), delimiter="\t")}
+    scored = [r for r in csv.DictReader(Path(args.results).open(encoding="utf-8"),
+                                        delimiter="\t") if r["status"] == "ok"]
+    out_path = Path(args.out)
     done = set()
-    if OUT.exists():
+    if out_path.exists():
         done = {r["entry_id"] for r in
-                csv.DictReader(OUT.open(encoding="utf-8"), delimiter="\t")
+                csv.DictReader(out_path.open(encoding="utf-8"), delimiter="\t")
                 if r.get("entry_id")}
     todo = [r for r in scored if r["entry_id"] not in done]
     if args.limit:
@@ -160,10 +166,10 @@ def main() -> None:
     print(f"[esmif] {len(scored)} entries, {len(done)} done, {len(todo)} to score",
           flush=True)
 
-    OUT.parent.mkdir(parents=True, exist_ok=True)
-    new_file = not OUT.exists()
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    new_file = not out_path.exists()
     t0 = time.time()
-    with OUT.open("a", newline="", encoding="utf-8") as fh:
+    with out_path.open("a", newline="", encoding="utf-8") as fh:
         w = csv.DictWriter(fh, fieldnames=FIELDS, delimiter="\t",
                            extrasaction="ignore", lineterminator="\n")
         if new_file:
@@ -214,7 +220,7 @@ def main() -> None:
                   f"ll_ab={out['ll_antibody_mean'] or '-':>10} {out['seconds']:>6}s "
                   f"| ETA {(len(todo)-i)*el/i/60:.0f}m", flush=True)
 
-    print(f"[esmif] done in {(time.time()-t0)/60:.1f}m -> {OUT}")
+    print(f"[esmif] done in {(time.time()-t0)/60:.1f}m -> {out_path}")
 
 
 if __name__ == "__main__":
