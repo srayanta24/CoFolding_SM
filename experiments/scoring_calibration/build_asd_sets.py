@@ -140,7 +140,12 @@ def main() -> None:
     ap.add_argument("--per-target", type=int, default=150,
                     help="antibodies sampled per target (default 150)")
     ap.add_argument("--max-targets", type=int, default=3,
-                    help="how many targets to include, cheapest-first (default 3)")
+                    help="how many targets to include (default 3)")
+    ap.add_argument("--deepen", default=None,
+                    help="comma-separated target:n overrides, e.g. '3gbn:300,4fqi:300'. "
+                         "Deterministic hash ordering means a larger n is a SUPERSET of "
+                         "a smaller one, so already-scored entries are reused, not "
+                         "resampled.")
     args = ap.parse_args()
 
     rows = load_abbd()
@@ -181,8 +186,15 @@ def main() -> None:
     cand.sort(key=lambda c: -c["n"])
     chosen = cand[: args.max_targets]
 
+    deepen = {}
+    if args.deepen:
+        for part in args.deepen.split(","):
+            k, v = part.split(":")
+            deepen[k.strip()] = int(v)
+
     entries = []
     for c in chosen:
+        per_target = deepen.get(c["target_pdb"], args.per_target)
         # Aggregate repeated measurements of the SAME heavy chain before sampling.
         # A heavy can appear many times (4fqi has 130,629 rows over 65,536 distinct
         # heavies), and treating replicates as independent both inflates n and, once
@@ -200,7 +212,7 @@ def main() -> None:
             pool.append(r0)
         pool_sorted = sorted(pool, key=lambda r: r["neg_log_kd"])
         n = len(pool_sorted)
-        per_decile = max(1, args.per_target // 10)
+        per_decile = max(1, per_target // 10)
         for dec in range(10):
             lo, hi = dec * n // 10, (dec + 1) * n // 10
             band = pool_sorted[lo:hi]

@@ -94,13 +94,13 @@
     "3gbn",
     "1n8z"
   ],
-  "entries": 330,
+  "entries": 710,
   "entries_by_target": {
     "1n8z": 110,
-    "3gbn": 110,
-    "4fqi": 110
+    "3gbn": 300,
+    "4fqi": 300
   },
-  "total_residues": 292380,
+  "total_residues": 618420,
   "scope": {
     "max_total_residues": 1200,
     "min_antigen_residues": 25
