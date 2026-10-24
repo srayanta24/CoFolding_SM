@@ -10,7 +10,30 @@
       "spread": 3.83,
       "min": 6.0,
       "max": 9.83,
-      "frac_implausible": 0.0
+      "frac_implausible": 0.0,
+      "antigen_class": "protein"
+    },
+    {
+      "target_pdb": "aayl49",
+      "n": 13265,
+      "antigen_res": 14,
+      "approx_total_res": 245,
+      "spread": 4.19,
+      "min": 8.24,
+      "max": 12.43,
+      "frac_implausible": 0.0,
+      "antigen_class": "peptide"
+    },
+    {
+      "target_pdb": "aayl51",
+      "n": 4320,
+      "antigen_res": 14,
+      "approx_total_res": 248,
+      "spread": 3.13,
+      "min": 8.18,
+      "max": 11.31,
+      "frac_implausible": 0.0,
+      "antigen_class": "peptide"
     },
     {
       "target_pdb": "3gbn",
@@ -20,7 +43,8 @@
       "spread": 3.15,
       "min": 7.0,
       "max": 10.15,
-      "frac_implausible": 0.0
+      "frac_implausible": 0.0,
+      "antigen_class": "protein"
     },
     {
       "target_pdb": "1n8z",
@@ -30,7 +54,8 @@
       "spread": 3.65,
       "min": 5.6,
       "max": 9.25,
-      "frac_implausible": 0.0
+      "frac_implausible": 0.0,
+      "antigen_class": "protein"
     },
     {
       "target_pdb": "1mhp",
@@ -40,7 +65,8 @@
       "spread": 2.16,
       "min": 7.99,
       "max": 10.15,
-      "frac_implausible": 0.0
+      "frac_implausible": 0.0,
+      "antigen_class": "protein"
     }
   ],
   "targets_rejected": [
@@ -53,6 +79,7 @@
       "min": -4.1,
       "max": 10.18,
       "frac_implausible": 0.084,
+      "antigen_class": "protein",
       "rejected": "affinity not plausible as -log KD (-4.1..10.18, 8% negative) - label is unreliable, sign convention unknown"
     },
     {
@@ -64,43 +91,28 @@
       "min": -3.01,
       "max": 0.5,
       "frac_implausible": 0.46,
+      "antigen_class": "protein",
       "rejected": "affinity not plausible as -log KD (-3.01..0.5, 46% negative) - label is unreliable, sign convention unknown"
-    },
-    {
-      "target_pdb": "aayl49",
-      "n": 13265,
-      "antigen_res": 14,
-      "approx_total_res": 245,
-      "spread": 4.19,
-      "min": 8.24,
-      "max": 12.43,
-      "frac_implausible": 0.0,
-      "rejected": "antigen < 25 res (peptide target)"
-    },
-    {
-      "target_pdb": "aayl51",
-      "n": 4320,
-      "antigen_res": 14,
-      "approx_total_res": 248,
-      "spread": 3.13,
-      "min": 8.18,
-      "max": 11.31,
-      "frac_implausible": 0.0,
-      "rejected": "antigen < 25 res (peptide target)"
     }
   ],
   "targets_chosen": [
     "4fqi",
+    "aayl49",
+    "aayl51",
     "3gbn",
-    "1n8z"
+    "1n8z",
+    "1mhp"
   ],
-  "entries": 710,
+  "entries": 1530,
   "entries_by_target": {
-    "1n8z": 110,
+    "1mhp": 30,
+    "1n8z": 300,
     "3gbn": 300,
-    "4fqi": 300
+    "4fqi": 300,
+    "aayl49": 300,
+    "aayl51": 300
   },
-  "total_residues": 618420,
+  "total_residues": 960960,
   "scope": {
     "max_total_residues": 1200,
     "min_antigen_residues": 25

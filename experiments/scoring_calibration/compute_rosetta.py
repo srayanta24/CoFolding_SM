@@ -58,7 +58,8 @@ SCORES_DIR = HERE / ".scores"
 RESULTS = HERE / "results" / "scores.tsv"
 OUT = HERE / "results" / "rosetta.tsv"
 
-CARRY = ["entry_id", "set", "label", "kd_molar", "ddg_kcal", "elisa_ratio", "iptm"]
+CARRY = ["entry_id", "set", "label", "kd_molar", "ddg_kcal", "elisa_ratio", "iptm",
+         "target_pdb", "neg_log_kd"]
 METRICS = ["dG_separated", "dSASA_int", "dG_dSASA_x100", "sc_value",
            "interface_hbonds", "delta_unsat_hbonds", "packstat",
            "total_score_relaxed", "total_score_raw", "nres"]
@@ -145,17 +146,20 @@ def main() -> None:
                     help="worker processes (default: cores - 4, leaving headroom)")
     ap.add_argument("--limit", type=int, default=None)
     ap.add_argument("--sets", default=None, help="comma-separated set names")
+    ap.add_argument("--results", default=str(RESULTS))
+    ap.add_argument("--out", default=str(OUT))
     args = ap.parse_args()
 
-    scored = list(csv.DictReader(RESULTS.open(encoding="utf-8"), delimiter="\t"))
+    results_path, out_path = Path(args.results), Path(args.out)
+    scored = list(csv.DictReader(results_path.open(encoding="utf-8"), delimiter="\t"))
     if args.sets:
         want = {s.strip() for s in args.sets.split(",")}
         scored = [r for r in scored if r["set"] in want]
 
     done = set()
-    if OUT.exists():
+    if out_path.exists():
         done = {r["entry_id"] for r in
-                csv.DictReader(OUT.open(encoding="utf-8"), delimiter="\t")
+                csv.DictReader(out_path.open(encoding="utf-8"), delimiter="\t")
                 if r.get("entry_id")}
     todo = [r for r in scored if r["entry_id"] not in done and r["status"] == "ok"]
     if args.limit:
@@ -167,11 +171,11 @@ def main() -> None:
         return
 
     jobs = [(r["entry_id"], {k: r.get(k, "") for k in CARRY}) for r in todo]
-    OUT.parent.mkdir(parents=True, exist_ok=True)
-    new_file = not OUT.exists()
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    new_file = not out_path.exists()
     t_start = time.time()
 
-    with OUT.open("a", newline="", encoding="utf-8") as fh:
+    with out_path.open("a", newline="", encoding="utf-8") as fh:
         w = csv.DictWriter(fh, fieldnames=FIELDS, delimiter="\t",
                            extrasaction="ignore", lineterminator="\n")
         if new_file:
@@ -187,7 +191,7 @@ def main() -> None:
                       f"sc={res.get('sc_value') or '-':>7} {res['seconds']:>7}s "
                       f"| ETA {(len(jobs)-i)*el/i/3600:.1f}h", flush=True)
 
-    print(f"[rosetta] done in {(time.time()-t_start)/3600:.2f}h -> {OUT}")
+    print(f"[rosetta] done in {(time.time()-t_start)/3600:.2f}h -> {out_path}")
 
 
 if __name__ == "__main__":

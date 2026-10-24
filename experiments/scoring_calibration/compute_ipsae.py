@@ -76,6 +76,7 @@ PAE_CUTOFF = 10.0  # Dunbrack's stated operating point: interchain PAE < 10 A
 
 FIELDS = [
     "entry_id", "set", "label", "kd_molar", "ddg_kcal", "elisa_ratio", "iptm",
+    "target_pdb", "neg_log_kd",
     "ipsae_min", "ipsae_d0chn_min", "ipsae_d0dom_min",
     "ipsae_ab_to_ag", "ipsae_ag_to_ab",
     "ipsae_heavy_only", "ipsae_light_only", "n_pae", "status",
@@ -135,11 +136,16 @@ def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("--pae-cutoff", type=float, default=PAE_CUTOFF)
     ap.add_argument("--limit", type=int, default=None)
+    ap.add_argument("--manifest", default=str(MANIFEST))
+    ap.add_argument("--results", default=str(RESULTS))
+    ap.add_argument("--out", default=str(OUT))
     args = ap.parse_args()
 
     man = {r["entry_id"]: r for r in
-           csv.DictReader(MANIFEST.open(encoding="utf-8"), delimiter="\t")}
-    scored = list(csv.DictReader(RESULTS.open(encoding="utf-8"), delimiter="\t"))
+           csv.DictReader(Path(args.manifest).open(encoding="utf-8"), delimiter="\t")}
+    scored = [r for r in csv.DictReader(Path(args.results).open(encoding="utf-8"),
+                                        delimiter="\t") if r.get("status") == "ok"]
+    out_path = Path(args.out)
     if args.limit:
         scored = scored[: args.limit]
 
@@ -150,7 +156,7 @@ def main() -> None:
         out = {k: "" for k in FIELDS}
         out.update({k: rec.get(k, "") for k in
                     ("entry_id", "set", "label", "kd_molar", "ddg_kcal",
-                     "elisa_ratio", "iptm")})
+                     "elisa_ratio", "iptm", "target_pdb", "neg_log_kd")})
         pae_path = find_pae(eid)
         if m is None or pae_path is None:
             out["status"] = "no_pae"
@@ -188,13 +194,13 @@ def main() -> None:
         out["status"] = "ok"
         rows.append(out)
 
-    OUT.parent.mkdir(parents=True, exist_ok=True)
-    with OUT.open("w", newline="", encoding="utf-8") as fh:
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    with out_path.open("w", newline="", encoding="utf-8") as fh:
         w = csv.DictWriter(fh, fieldnames=FIELDS, delimiter="\t",
                            extrasaction="ignore", lineterminator="\n")
         w.writeheader()
         w.writerows(rows)
-    print(f"wrote {OUT}  ({len(rows)} rows, {skipped} without usable PAE, "
+    print(f"wrote {out_path}  ({len(rows)} rows, {skipped} without usable PAE, "
           f"pae_cutoff={args.pae_cutoff})")
 
 

@@ -141,6 +141,16 @@ def main() -> None:
                     help="antibodies sampled per target (default 150)")
     ap.add_argument("--max-targets", type=int, default=3,
                     help="how many targets to include (default 3)")
+    ap.add_argument("--allow-peptide-antigens", action="store_true",
+                    help="include targets whose antigen is below the protein-size floor "
+                         "(AbBiBench's aayl49/aayl51 have 14-residue peptide antigens). "
+                         "They are a DIFFERENT antigen class and are tagged as such in "
+                         "the manifest -- report them as their own arm, do not pool them "
+                         "with protein targets. Included because reaching enough "
+                         "independent targets to distinguish signal from noise matters "
+                         "more here than matching build_sets.py's protein-only scope, "
+                         "and because two of the protein targets (4fqi, 3gbn) are the "
+                         "same antigen class (influenza HA) and so are not independent.")
     ap.add_argument("--deepen", default=None,
                     help="comma-separated target:n overrides, e.g. '3gbn:300,4fqi:300'. "
                          "Deterministic hash ordering means a larger n is a SUPERSET of "
@@ -164,7 +174,8 @@ def main() -> None:
                 "min": round(min(aff), 2), "max": round(max(aff), 2)}
         n_neg = sum(1 for x in aff if x < MIN_PLAUSIBLE_NEG_LOG_KD)
         info["frac_implausible"] = round(n_neg / len(aff), 3)
-        if agl < MIN_ANTIGEN_RESIDUES:
+        info["antigen_class"] = "peptide" if agl < MIN_ANTIGEN_RESIDUES else "protein"
+        if agl < MIN_ANTIGEN_RESIDUES and not args.allow_peptide_antigens:
             info["rejected"] = f"antigen < {MIN_ANTIGEN_RESIDUES} res (peptide target)"
             rejected.append(info)
         elif size > MAX_TOTAL_RESIDUES:
@@ -234,7 +245,8 @@ def main() -> None:
                     "heavy_seq": r["heavy"], "light_seq": r["light"],
                     "antigen_seq": r["antigen"],
                     "note": f"higher neg_log_kd = tighter binder; "
-                            f"{r.get('n_replicates',1)} replicate(s) aggregated",
+                            f"{r.get('n_replicates',1)} replicate(s) aggregated; "
+                            f"antigen_class={c.get('antigen_class','protein')}",
                 })
 
     # dedupe (the same heavy can recur across deciles only if affinities tie)
