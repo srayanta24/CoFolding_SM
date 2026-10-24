@@ -7,6 +7,16 @@ does not track binding affinity. This asks the obvious next question: does anyth
 
 Everything here reuses EXPERIMENT_01's structures. No new structure prediction was run.
 
+> **Follow-up, 2026-10-24.** §6's conclusion that "cross-complex affinity ranking
+> remains **untested**, not disproven" has now been tested directly, on a benchmark
+> built to remove the antigen-identity confound — see
+> [EXPERIMENT_03](EXPERIMENT_03_within_antigen_ranking.md). Short version: ipTM does
+> carry some within-antigen signal (pooled ρ = +0.194), but the same null-control
+> technique used here fires on that benchmark too (+0.105 pooled, +0.284 on one
+> target), so most of it is not interpretable. ESM-IF1 reaches +0.078 against its
+> published ≈0.28 on the same data, leaving this document's backbone-quality
+> hypothesis as the leading explanation but unquantified.
+
 > **Correction, 2026-10-19.** An earlier version of this document (and of
 > IMPROVE_DESIGN.md §4) claimed packstat and shape complementarity are "already computed
 > inside BoltzGen's analysis stage, so adopting them costs a `--metrics_override`." That

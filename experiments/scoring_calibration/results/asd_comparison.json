@@ -1,0 +1,119 @@
+{
+  "n": 330,
+  "targets": {
+    "1n8z": {
+      "n": 110,
+      "neg_log_kd_range": [
+        5.62,
+        9.03
+      ],
+      "spearman": {
+        "ipTM": 0.2081,
+        "pTM": 0.2112,
+        "complex pLDDT": -0.2908,
+        "confidence_score": 0.0921,
+        "ESM-IF1 ll_heavy": -0.0665,
+        "ESM-IF1 ll_light": 0.1975,
+        "ESM-IF1 ll_antibody": 0.0135,
+        "ESM-IF1 ll_antigen": -0.056
+      }
+    },
+    "3gbn": {
+      "n": 110,
+      "neg_log_kd_range": [
+        7.0,
+        9.74
+      ],
+      "spearman": {
+        "ipTM": 0.2734,
+        "pTM": 0.3487,
+        "complex pLDDT": 0.5541,
+        "confidence_score": 0.3917,
+        "ESM-IF1 ll_heavy": 0.1941,
+        "ESM-IF1 ll_light": -0.184,
+        "ESM-IF1 ll_antibody": 0.1412,
+        "ESM-IF1 ll_antigen": 0.2837
+      }
+    },
+    "4fqi": {
+      "n": 110,
+      "neg_log_kd_range": [
+        6.0,
+        8.72
+      ],
+      "spearman": {
+        "ipTM": -0.009,
+        "pTM": 0.0002,
+        "complex pLDDT": -0.1172,
+        "confidence_score": -0.0314,
+        "ESM-IF1 ll_heavy": 0.1136,
+        "ESM-IF1 ll_light": 0.0962,
+        "ESM-IF1 ll_antibody": 0.1316,
+        "ESM-IF1 ll_antigen": 0.0791
+      }
+    }
+  },
+  "pooled": {
+    "ipTM": {
+      "spearman": 0.1941,
+      "n": 330,
+      "null_control": false
+    },
+    "pTM": {
+      "spearman": 0.2044,
+      "n": 330,
+      "null_control": false
+    },
+    "complex pLDDT": {
+      "spearman": 0.0605,
+      "n": 330,
+      "null_control": false
+    },
+    "confidence_score": {
+      "spearman": 0.168,
+      "n": 330,
+      "null_control": false
+    },
+    "ESM-IF1 ll_heavy": {
+      "spearman": 0.0779,
+      "n": 330,
+      "null_control": false
+    },
+    "ESM-IF1 ll_light": {
+      "spearman": 0.0175,
+      "n": 330,
+      "null_control": false
+    },
+    "ESM-IF1 ll_antibody": {
+      "spearman": 0.0834,
+      "n": 330,
+      "null_control": false
+    },
+    "ESM-IF1 ll_antigen": {
+      "spearman": 0.1052,
+      "n": 330,
+      "null_control": true
+    }
+  },
+  "abbibench_baselines": {
+    "ProteinMPNN": 0.3,
+    "ESM-IF1": 0.28
+  },
+  "heavy_chain_diversity": {
+    "1n8z": {
+      "heavy_len": 121,
+      "variable_positions": 21,
+      "mean_pairwise_identity": 0.9307
+    },
+    "3gbn": {
+      "heavy_len": 121,
+      "variable_positions": 11,
+      "mean_pairwise_identity": 0.9563
+    },
+    "4fqi": {
+      "heavy_len": 121,
+      "variable_positions": 16,
+      "mean_pairwise_identity": 0.9335
+    }
+  }
+}

@@ -414,6 +414,20 @@ perturbation than two independently generated designs — whether the advantage 
 to real design diversity is exactly milestone 7's transfer question, now with a concrete
 hypothesis to test rather than an open-ended one.
 
+**Update 2026-10-24, after EXPERIMENT_03.** A third benchmark was built specifically to
+answer the affinity-ranking question EXPERIMENT_02 had to leave open — within-antigen,
+using AbBiBench (which turned out to be sitting unused inside `databases/asd/`). Result:
+ipTM does carry some signal (pooled ρ = +0.194, +0.208 on HER2), correcting an earlier
+report of ρ ≈ 0 that had been computed on a benchmark with inverted ground-truth labels.
+But the antigen-only null control fires again (+0.105 pooled, +0.284 on one target),
+so most of the apparent signal is target-specific leakage rather than affinity.
+
+**The honest position after three experiments: we still do not have a demonstrated
+selection signal.** The two positive results — packstat 14/17, and ipTM +0.208 on a
+single target — are each one thin cell, uncorrected for the number of comparisons made.
+This is the branch that gates everything else, and it is not yet resolved. Identifying
+the source of the null-control leakage is the next step and needs no new GPU time.
+
 ---
 
 ## 6. Status of the original three options (v1)
