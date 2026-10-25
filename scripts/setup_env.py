@@ -58,6 +58,20 @@ REFERENCE_REPOS = {
     "epiformer": "https://github.com/mansoor181/epiformer",
 }
 
+# Isolated pip-installed tools that MUST NOT share a venv with anything else.
+# AntiFold pins torch==2.3.1, which has no aarch64 CUDA wheel. Installing it into an
+# existing venv silently downgraded torch from the sm_121-capable nightly, flipped
+# cuda.is_available() to False, and orphaned the torch_scatter/sparse/cluster
+# extensions built against the nightly ABI -- the identical failure DESIGN.md sec 2
+# records for Protenix's same pin. Recovery was only possible because uv still had the
+# unpacked nightly in its archive cache; the wheel itself had been purged upstream.
+#
+# Always `uv pip install --dry-run` before adding a package to a shared venv.
+ISOLATED_TOOLS = {
+    "antifold": {"package": "antifold", "python": "3.12",
+                 "note": "pins torch==2.3.1 -> CPU-only on aarch64; keep isolated"},
+}
+
 # Protenix's non-torch runtime deps, installed explicitly with --no-deps so the
 # resolver never sees (and can't act on) Protenix's exact torch==2.3.1 pin.
 PROTENIX_DEPS = [

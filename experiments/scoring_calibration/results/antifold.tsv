@@ -1,0 +1,7 @@
+entry_id	set	label	kd_molar	ddg_kcal	elisa_ratio	iptm	target_pdb	neg_log_kd	ll_antifold	ll_antifold_ag	ll_af_heavy	ll_af_light	status	seconds
+clean__pdb_000013bf	clean_positive	binder				0.797423			-0.967585	-0.979327	-0.916293	-1.020310	ok	13.3
+clean__pdb_00008r4q	clean_positive	binder				0.783812			-0.668306	-0.670679	-0.989124	-0.320300	ok	11.0
+clean__pdb_00008tui	clean_positive	binder				0.888314			-0.989528	-0.986945	-0.985725	-0.993565	ok	14.3
+clean__pdb_00008v5v	clean_positive	binder				0.486423			-0.375695	-0.379118	-0.503476	-0.225009	ok	12.4
+clean__pdb_00009dng	clean_positive	binder				0.581507			-0.230722	-0.242422	-0.373413	-0.065571	ok	12.3
+clean__pdb_00009e6k	clean_positive	binder				0.700950			-1.000659	-1.011259	-1.000555	-1.000764	ok	13.8
