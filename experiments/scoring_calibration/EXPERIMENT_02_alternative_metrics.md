@@ -7,6 +7,27 @@ does not track binding affinity. This asks the obvious next question: does anyth
 
 Everything here reuses EXPERIMENT_01's structures. No new structure prediction was run.
 
+> **Correction, 2026-10-25 — the paired benchmark was underpowered by a sampling bug,
+> and two of this document's three positive findings do not survive fixing it.**
+> The mutant arms were sampled 100-of-each by hash with no parent stratification, so of
+> 28 parents holding both mutant classes only 17 landed with both in the sample. A
+> targeted top-up brought all 28 in. Re-running the paired test:
+>
+> | metric | here (17) | **all 28** | p | new 11 alone |
+> |---|---|---|---|---|
+> | **packstat** | 14/17 | **23/28** | **0.0004** | 8/11 |
+> | shape complementarity | 13/17 | 16/28 | 0.286 | 5/11 |
+> | buried SASA | 13/17 | 16/28 | 0.286 | 4/11 |
+> | −dG/dSASA | 12/17 | 18/28 | 0.092 | 6/11 |
+> | ipTM | 9/17 | 14/28 | 0.575 | 5/11 |
+>
+> **packstat strengthened and now survives Bonferroni over seven metrics** (α=0.007),
+> with the 11 genuinely new parents agreeing in direction (8/11, p=0.113 — what an
+> underpowered replication of a real effect looks like). **Shape complementarity and
+> buried SASA collapsed to chance** on the new parents (5/11, 4/11). §6's "three
+> significant geometric metrics" should be read as **one**. ipTM and ipSAE are
+> unchanged: chance and anti-correlated respectively.
+
 > **Follow-up, 2026-10-24.** §6's conclusion that "cross-complex affinity ranking
 > remains **untested**, not disproven" has now been tested directly, on a benchmark
 > built to remove the antigen-identity confound — see

@@ -422,11 +422,18 @@ report of ρ ≈ 0 that had been computed on a benchmark with inverted ground-tr
 But the antigen-only null control fires again (+0.105 pooled, +0.284 on one target),
 so most of the apparent signal is target-specific leakage rather than affinity.
 
-**The honest position after three experiments: we still do not have a demonstrated
-selection signal.** The two positive results — packstat 14/17, and ipTM +0.208 on a
-single target — are each one thin cell, uncorrected for the number of comparisons made.
-This is the branch that gates everything else, and it is not yet resolved. Identifying
-the source of the null-control leakage is the next step and needs no new GPU time.
+**Update 2026-10-25.** The paired benchmark turned out to be underpowered by a
+sampling bug (parents were not stratified, so 17 of 28 available parents were used). At
+the full 28, **packstat reaches 23/28, p=0.0004 — surviving Bonferroni over seven
+metrics**, with the 11 new parents agreeing in direction (8/11). Shape complementarity
+and buried SASA, which had looked significant at 17, **collapsed to chance**. ipTM stays
+at chance (14/28) and ipSAE is anti-correlated (7/28).
+
+**So there is now one metric with a defensible claim to beating ipTM on the comparison
+a design campaign actually makes.** That is a real change from "no demonstrated
+selection signal," though it rests on point mutants rather than independently generated
+designs, and the transfer question (milestone 7) is untouched. The within-antigen
+ranking question remains open pending the 6-target expansion.
 
 ---
 

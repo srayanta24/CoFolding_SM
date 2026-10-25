@@ -166,6 +166,24 @@ def main() -> None:
     SCORES_DIR.mkdir(parents=True, exist_ok=True)
     new_file = not results_tsv.exists()
 
+    # Guard against appending rows whose field list differs from the existing
+    # header. This happened for real: CARRY was later extended with the ASD label
+    # columns, and appending the wider rows to a file written with the narrower
+    # header silently shifted every column after the 10th by three. The data was
+    # intact but unparseable, so `status` read blank and every downstream scorer
+    # correctly concluded there was nothing to do -- a failure that looks exactly
+    # like success in the logs. Fail loudly instead.
+    if not new_file:
+        with results_tsv.open(encoding="utf-8") as fh:
+            existing = fh.readline().rstrip("\n").split("\t")
+        if existing != OUT_FIELDS:
+            raise SystemExit(
+                f"[score_sets] REFUSING TO APPEND: {results_tsv} has a {len(existing)}-"
+                f"column header but this build writes {len(OUT_FIELDS)} columns.\n"
+                f"  missing from file: {[c for c in OUT_FIELDS if c not in existing]}\n"
+                f"  extra in file:     {[c for c in existing if c not in OUT_FIELDS]}\n"
+                f"  Rewrite the file with the current schema, or write to a new --out.")
+
     print(f"[score_sets] manifest {args.manifest}: {len(rows)} entries, "
           f"{len(done)} already done, {len(todo)} to score", flush=True)
 

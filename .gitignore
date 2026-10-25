@@ -107,3 +107,8 @@ experiments/scoring_calibration/results/rosetta_run.log
 experiments/scoring_calibration/results/esmif_run.log
 weights/esm/
 experiments/scoring_calibration/results/asd_run.log
+
+# Pre-repair backups from the 2026-10-25 schema-misalignment incident. Kept on disk
+# for auditability but not tracked: they hold the same data as the repaired files,
+# just mis-aligned, so committing them would only invite someone reading the wrong one.
+experiments/scoring_calibration/results/*.tsv.bak

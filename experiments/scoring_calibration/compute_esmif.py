@@ -168,6 +168,18 @@ def main() -> None:
 
     out_path.parent.mkdir(parents=True, exist_ok=True)
     new_file = not out_path.exists()
+    # Same schema guard as score_sets.py. Extending the carried label columns while
+    # an output file already existed silently shifted every later column; the rows
+    # stayed parseable as text but `status` read blank, so downstream steps reported
+    # "nothing to do" and exited successfully. Fail loudly instead.
+    if not new_file:
+        with out_path.open(encoding="utf-8") as _fh:
+            _existing = _fh.readline().rstrip("\n").split("\t")
+        if _existing != FIELDS:
+            raise SystemExit(
+                f"[{__file__}] REFUSING TO APPEND: {out_path} has "
+                f"{len(_existing)} columns, this build writes {len(FIELDS)}. "
+                "Rewrite the file with the current schema or use a new --out.")
     t0 = time.time()
     with out_path.open("a", newline="", encoding="utf-8") as fh:
         w = csv.DictWriter(fh, fieldnames=FIELDS, delimiter="\t",
