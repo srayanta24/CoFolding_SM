@@ -22,7 +22,7 @@ Three subfolders hold the active design-improvement work from
 | `epitope_prediction/` | Done through milestone 7 ([`PLAN.md`](epitope_prediction/PLAN.md) §8-10) — Model A selected, wired into steering, downstream-validated on 8 targets; v2 (gradient-guided steering) reaffirmed no-go. Follow-up pass in progress: expanded training data, calibration, two EpiFormer-inspired architectures — see [`README.md`](epitope_prediction/README.md). |
 | `scoring_calibration/` | **Active** ([`PLAN.md`](scoring_calibration/PLAN.md)) — building a labelled benchmark of real antibody-antigen complexes scored through this pipeline's own metric path, to replace the imported ipTM threshold with a measured one and to give filter-rule work something to be validated against. Data inventory + contamination audit done; pilot next. |
 | `germinal_comparison/` | Paused after milestone 1 ([`PLAN.md`](germinal_comparison/PLAN.md)) — PyRosetta venv done; JAX/ColabDesign setup deprioritized. |
-| `finetuning/` | Not started — see `IMPROVE_DESIGN.md` §6.3 for scope. |
+| `finetuning/` | **Active** ([`PLAN.md`](finetuning/PLAN.md)) — Option 3, the first attempt to put *binding* supervision into weights. AntiFold (antibody-tuned ESM-IF1) beat generic ESM-IF1 13/28 → 16/28 on the paired benchmark but stayed below the null control, reframing the target from antibody-specialisation to binding supervision. A cluster-scale variant needing ~21,000 GPU-hours is specced separately in [`FULL_SCALE_BOOL.md`](finetuning/FULL_SCALE_BOOL.md). |
 
 ## What's here
 

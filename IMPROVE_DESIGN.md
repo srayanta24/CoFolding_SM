@@ -494,6 +494,29 @@ feeding `databases/sabdab/structures/` in requires a real data adapter
 only one of the three that would put antibody knowledge into the weights. Its cost
 profile has not improved, but its *relevance* has. Reassess in §5.
 
+**Started 2026-10-25** → [experiments/finetuning/PLAN.md](experiments/finetuning/PLAN.md).
+First result already in, and it reframes the objective. AntiFold (ESM-IF1 *plus*
+antibody fine-tuning, same 142M architecture) scores **16/28** on the paired benchmark
+against generic ESM-IF1's 13/28 — the right direction, but still **below the 17/28 null
+control**. So the cheapest version of the §1 fix produces a gain inside the noise, and
+model size is not the constraint (142M is the same as ESM-IF1 and comparable to this
+project's Model D).
+
+The reframe: **the missing ingredient may not be antibody-ness but *binding*.** Every
+metric evaluated across four experiments — ipTM, ipSAE, Rosetta, ESM-IF1, AntiFold — is
+unsupervised with respect to binding. None has ever seen a binding label. The plan now
+targets that, via the one diverse supervised signal in `databases/`: ASD's `bool`
+subset, 106,197 rows over 832 antigens carrying both classes.
+
+Three data traps were found and are recorded there, each of which would have produced a
+confidently wrong result: ASD's `-log KD` is mislabelled on some targets; graded
+affinity exists for only 3-5 antigens; and **every structure-bearing `bool` row is a
+positive**, so no structural negatives exist anywhere in our data. That last one killed
+the originally chosen approach. The full-scale version that would fix it needs ~21,000
+GPU-hours and is written up separately in
+[FULL_SCALE_BOOL.md](experiments/finetuning/FULL_SCALE_BOOL.md) against future cluster
+access.
+
 ---
 
 ## 7. Shared prerequisite: leak-free train/test splits
