@@ -1,0 +1,235 @@
+{
+  "n_entries": 247,
+  "parents": {
+    "all": 28,
+    "pre_topup": 17,
+    "added_by_topup": 11,
+    "new_parent_ids": [
+      "1JRH",
+      "1XGR",
+      "1XGT",
+      "3NGB",
+      "3SE8",
+      "3SE9",
+      "4I77",
+      "5F9W",
+      "5GGS",
+      "5GGV",
+      "7BEJ"
+    ]
+  },
+  "n_metrics_tested": 9,
+  "bonferroni_alpha": 0.00556,
+  "metrics": [
+    {
+      "metric": "packstat",
+      "null_control": false,
+      "all": {
+        "wins": 23,
+        "n": 28,
+        "p": 0.00046
+      },
+      "pre_topup": {
+        "wins": 14,
+        "n": 17,
+        "p": 0.00636
+      },
+      "new_only": {
+        "wins": 8,
+        "n": 11,
+        "p": 0.11328
+      },
+      "survives_bonferroni": true,
+      "same_direction_in_new": true
+    },
+    {
+      "metric": "-dG/dSASA",
+      "null_control": false,
+      "all": {
+        "wins": 18,
+        "n": 28,
+        "p": 0.09247
+      },
+      "pre_topup": {
+        "wins": 12,
+        "n": 17,
+        "p": 0.07173
+      },
+      "new_only": {
+        "wins": 6,
+        "n": 11,
+        "p": 0.5
+      },
+      "survives_bonferroni": false,
+      "same_direction_in_new": true
+    },
+    {
+      "metric": "-dG_separated",
+      "null_control": false,
+      "all": {
+        "wins": 18,
+        "n": 28,
+        "p": 0.09247
+      },
+      "pre_topup": {
+        "wins": 12,
+        "n": 17,
+        "p": 0.07173
+      },
+      "new_only": {
+        "wins": 6,
+        "n": 11,
+        "p": 0.5
+      },
+      "survives_bonferroni": false,
+      "same_direction_in_new": true
+    },
+    {
+      "metric": "shape complementarity",
+      "null_control": false,
+      "all": {
+        "wins": 16,
+        "n": 28,
+        "p": 0.28579
+      },
+      "pre_topup": {
+        "wins": 13,
+        "n": 17,
+        "p": 0.02452
+      },
+      "new_only": {
+        "wins": 5,
+        "n": 11,
+        "p": 0.72559
+      },
+      "survives_bonferroni": false,
+      "same_direction_in_new": false
+    },
+    {
+      "metric": "buried SASA",
+      "null_control": false,
+      "all": {
+        "wins": 16,
+        "n": 28,
+        "p": 0.28579
+      },
+      "pre_topup": {
+        "wins": 13,
+        "n": 17,
+        "p": 0.02452
+      },
+      "new_only": {
+        "wins": 4,
+        "n": 11,
+        "p": 0.88672
+      },
+      "survives_bonferroni": false,
+      "same_direction_in_new": false
+    },
+    {
+      "metric": "interface H-bonds",
+      "null_control": false,
+      "all": {
+        "wins": 13,
+        "n": 28,
+        "p": 0.71421
+      },
+      "pre_topup": {
+        "wins": 10,
+        "n": 17,
+        "p": 0.31453
+      },
+      "new_only": {
+        "wins": 5,
+        "n": 11,
+        "p": 0.72559
+      },
+      "survives_bonferroni": false,
+      "same_direction_in_new": false
+    },
+    {
+      "metric": "ipTM",
+      "null_control": false,
+      "all": {
+        "wins": 14,
+        "n": 28,
+        "p": 0.57472
+      },
+      "pre_topup": {
+        "wins": 9,
+        "n": 17,
+        "p": 0.5
+      },
+      "new_only": {
+        "wins": 5,
+        "n": 11,
+        "p": 0.72559
+      },
+      "survives_bonferroni": false,
+      "same_direction_in_new": false
+    },
+    {
+      "metric": "ipSAE_min",
+      "null_control": false,
+      "all": {
+        "wins": 7,
+        "n": 28,
+        "p": 0.99814
+      },
+      "pre_topup": {
+        "wins": 4,
+        "n": 17,
+        "p": 0.99364
+      },
+      "new_only": {
+        "wins": 3,
+        "n": 11,
+        "p": 0.96729
+      },
+      "survives_bonferroni": false,
+      "same_direction_in_new": false
+    },
+    {
+      "metric": "ESM-IF1 ll_antibody",
+      "null_control": false,
+      "all": {
+        "wins": 13,
+        "n": 28,
+        "p": 0.71421
+      },
+      "pre_topup": {
+        "wins": 8,
+        "n": 17,
+        "p": 0.68547
+      },
+      "new_only": {
+        "wins": 4,
+        "n": 11,
+        "p": 0.88672
+      },
+      "survives_bonferroni": false,
+      "same_direction_in_new": false
+    },
+    {
+      "metric": "ESM-IF1 ll_antigen",
+      "null_control": true,
+      "all": {
+        "wins": 17,
+        "n": 28,
+        "p": 0.17246
+      },
+      "pre_topup": {
+        "wins": 9,
+        "n": 17,
+        "p": 0.5
+      },
+      "new_only": {
+        "wins": 7,
+        "n": 11,
+        "p": 0.27441
+      },
+      "survives_bonferroni": false,
+      "same_direction_in_new": true
+    }
+  ]
+}
