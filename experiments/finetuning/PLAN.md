@@ -83,7 +83,13 @@ structure-bearing `bool` rows). It does not exist as a dataset.
 Negatives come only from covid-19 (27,696), hiv (22,708) and met (2,484). Everything
 else — patents, literature, genbank, structures — is binders-only.
 
-## 3. The plan: a sequence-only binding classifier (branch A)
+## 3. The plan: a sequence-only binding classifier (branch A) — **BLOCKED 2026-10-28**
+
+> Milestone 1 invalidated this section's premise before any training. The "832 antigens
+> of genuine diversity" are 6 MMseqs2 clusters, and the dominant label is neutralization
+> rather than binding. Kept below as written for the record; see
+> [MILESTONE_01_label_validation.md](MILESTONE_01_label_validation.md) for what replaces
+> it and §5 for the remaining options, now reordered.
 
 **Chosen because it is the only diverse supervised signal available, not because it is
 the ideal architecture.** 832 antigens with both classes is two orders of magnitude
@@ -128,9 +134,14 @@ comparable to AbBiBench's published baselines (ProteinMPNN ρ≈0.30, ESM-IF1 �
 
 ## 4. Milestones
 
-1. ⬜ **Label validation** (no GPU). Spot-check `bool` labels against primary sources;
-   determine what "non-binder" means per source; quantify antigen-cluster diversity
-   among the 832 via MMseqs2, reusing `databases/src/build_splits.py`'s machinery.
+1. ✅ **Label validation** (no GPU) →
+   [MILESTONE_01_label_validation.md](MILESTONE_01_label_validation.md).
+   **Result: branch A is blocked.** The 832 both-class antigens collapse to **6
+   clusters** at the 40%-identity threshold `databases/splits/` uses (800 of them are
+   HIV Env strain variants), and the largest negative source is labelled for
+   **neutralization, not binding** — DeepAAI's "non-neutralizing" includes antibodies
+   that do bind. The second-largest cites a method paper with no documented
+   negative-generation methodology. Both halves of branch A's premise fail.
 2. ⬜ **Leak-free splits by antigen cluster**, holding out whole clusters. Must also
    exclude anything overlapping the scoring-calibration benchmarks, or the evaluation
    is circular.

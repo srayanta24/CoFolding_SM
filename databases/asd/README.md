@@ -55,3 +55,30 @@ directly rather than retrying `--folder` mode.
 ```bash
 python3 databases/src/asd.py
 ```
+
+---
+
+## ⚠️ Verify labels, provenance and diversity before every use
+
+Four separate traps have been found in this source while using it (see
+`experiments/finetuning/MILESTONE_01_label_validation.md` and
+`experiments/scoring_calibration/EXPERIMENT_03_within_antigen_ranking.md`). Each would
+have produced a confidently wrong result; each was caught by a cheap check.
+
+1. **`affinity_type == "-log KD"` is unreliable per target.** Targets `2fjg` and `1mlc`
+   carry values down to −4.1, which cannot be a −log KD (that implies Kd = 10³ M). They
+   are ΔΔG-like quantities with an inverted sign convention, blanket-labelled.
+2. **Graded affinity covers almost no antigens.** `-log KD` has **5** distinct antigens
+   across 152,401 rows; `alphaseq` has **3** across 198,703.
+3. **Every structure-bearing `bool` row is a positive.** Only 4,040 of 257,656 carry a
+   `target_pdb`, and all 4,040 are label 1 — they come from
+   `structures-antibodies`/`structures-nanobodies`, i.e. solved complexes. There are
+   **no structural negatives** anywhere in this dataset.
+4. **`bool` negatives are mostly neutralization, and its diversity collapses.** The
+   22,708 HIV negatives come from a *neutralization* predictor (DeepAAI), not binding.
+   The 832 antigens carrying both classes cluster to **6 groups** at 40% identity.
+
+The aggregation is genuinely useful — it is how we found AbBiBench already sitting on
+disk — but `affinity_type` is a blanket label over heterogeneous primary sources and
+should never be taken at face value. Check `metadata.source_url` and read the primary
+paper before training on or benchmarking against any subset.
