@@ -4,7 +4,7 @@
 
 For each parent holding both a binding-retained and a binding-destroyed point mutant, does the metric score the retained one higher? Sign test over parents, exact one-sided binomial p. This controls for complex identity completely and is the only column EXPERIMENT_02 found trustworthy.
 
-Bonferroni α over 9 metrics = **0.0056**.
+Bonferroni α over 11 metrics = **0.0045**.
 
 | metric | all | p | original 17 | **new 11 only** | p |
 |---|---|---|---|---|---|
@@ -17,6 +17,8 @@ Bonferroni α over 9 metrics = **0.0056**.
 | ipTM | 14/28 | 0.5747 | 9/17 | 5/11 | 0.726 |
 | ipSAE_min | 7/28 | 0.9981 | 4/17 | 3/11 | 0.967 |
 | ESM-IF1 ll_antibody | 13/28 | 0.7142 | 8/17 | 4/11 | 0.887 |
+| AntiFold ll (H+L) | 16/28 | 0.2858 | 8/17 | 8/11 | 0.113 |
+| AntiFold ll (+antigen) | 16/28 | 0.2858 | 9/17 | 7/11 | 0.274 |
 | *ESM-IF1 ll_antigen* (null control) | 17/28 | 0.1725 | 9/17 | 7/11 | 0.274 |
 
 **Survives Bonferroni: packstat.**

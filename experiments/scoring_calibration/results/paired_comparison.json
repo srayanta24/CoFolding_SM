@@ -18,8 +18,8 @@
       "7BEJ"
     ]
   },
-  "n_metrics_tested": 9,
-  "bonferroni_alpha": 0.00556,
+  "n_metrics_tested": 11,
+  "bonferroni_alpha": 0.00455,
   "metrics": [
     {
       "metric": "packstat",
@@ -209,6 +209,48 @@
       },
       "survives_bonferroni": false,
       "same_direction_in_new": false
+    },
+    {
+      "metric": "AntiFold ll (H+L)",
+      "null_control": false,
+      "all": {
+        "wins": 16,
+        "n": 28,
+        "p": 0.28579
+      },
+      "pre_topup": {
+        "wins": 8,
+        "n": 17,
+        "p": 0.68547
+      },
+      "new_only": {
+        "wins": 8,
+        "n": 11,
+        "p": 0.11328
+      },
+      "survives_bonferroni": false,
+      "same_direction_in_new": true
+    },
+    {
+      "metric": "AntiFold ll (+antigen)",
+      "null_control": false,
+      "all": {
+        "wins": 16,
+        "n": 28,
+        "p": 0.28579
+      },
+      "pre_topup": {
+        "wins": 9,
+        "n": 17,
+        "p": 0.5
+      },
+      "new_only": {
+        "wins": 7,
+        "n": 11,
+        "p": 0.27441
+      },
+      "survives_bonferroni": false,
+      "same_direction_in_new": true
     },
     {
       "metric": "ESM-IF1 ll_antigen",

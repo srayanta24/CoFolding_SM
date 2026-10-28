@@ -1,97 +1,148 @@
 {
-  "n": 330,
+  "n": 1530,
   "targets": {
-    "1n8z": {
-      "n": 110,
+    "1mhp": {
+      "n": 30,
       "neg_log_kd_range": [
-        5.62,
-        9.03
+        7.99,
+        10.15
       ],
       "spearman": {
-        "ipTM": 0.2081,
-        "pTM": 0.2112,
-        "complex pLDDT": -0.2908,
-        "confidence_score": 0.0921,
-        "ESM-IF1 ll_heavy": -0.0665,
-        "ESM-IF1 ll_light": 0.1975,
-        "ESM-IF1 ll_antibody": 0.0135,
-        "ESM-IF1 ll_antigen": -0.056
+        "ipTM": -0.1096,
+        "pTM": -0.1063,
+        "complex pLDDT": -0.0832,
+        "confidence_score": -0.1128,
+        "ESM-IF1 ll_heavy": -0.2251,
+        "ESM-IF1 ll_light": -0.0125,
+        "ESM-IF1 ll_antibody": -0.1364,
+        "ESM-IF1 ll_antigen": 0.2885
+      }
+    },
+    "1n8z": {
+      "n": 300,
+      "neg_log_kd_range": [
+        5.6,
+        9.25
+      ],
+      "spearman": {
+        "ipTM": 0.2092,
+        "pTM": 0.1553,
+        "complex pLDDT": -0.2079,
+        "confidence_score": 0.1115,
+        "ESM-IF1 ll_heavy": -0.1023,
+        "ESM-IF1 ll_light": 0.0725,
+        "ESM-IF1 ll_antibody": -0.0676,
+        "ESM-IF1 ll_antigen": -0.0944
       }
     },
     "3gbn": {
-      "n": 110,
+      "n": 300,
       "neg_log_kd_range": [
         7.0,
-        9.74
+        9.79
       ],
       "spearman": {
-        "ipTM": 0.2734,
-        "pTM": 0.3487,
-        "complex pLDDT": 0.5541,
-        "confidence_score": 0.3917,
-        "ESM-IF1 ll_heavy": 0.1941,
-        "ESM-IF1 ll_light": -0.184,
-        "ESM-IF1 ll_antibody": 0.1412,
-        "ESM-IF1 ll_antigen": 0.2837
+        "ipTM": 0.2891,
+        "pTM": 0.3674,
+        "complex pLDDT": 0.5538,
+        "confidence_score": 0.3985,
+        "ESM-IF1 ll_heavy": 0.2068,
+        "ESM-IF1 ll_light": -0.2006,
+        "ESM-IF1 ll_antibody": 0.144,
+        "ESM-IF1 ll_antigen": 0.2406
       }
     },
     "4fqi": {
-      "n": 110,
+      "n": 300,
       "neg_log_kd_range": [
         6.0,
         8.72
       ],
       "spearman": {
-        "ipTM": -0.009,
-        "pTM": 0.0002,
-        "complex pLDDT": -0.1172,
-        "confidence_score": -0.0314,
-        "ESM-IF1 ll_heavy": 0.1136,
-        "ESM-IF1 ll_light": 0.0962,
-        "ESM-IF1 ll_antibody": 0.1316,
-        "ESM-IF1 ll_antigen": 0.0791
+        "ipTM": 0.0235,
+        "pTM": 0.0376,
+        "complex pLDDT": -0.0533,
+        "confidence_score": 0.0112,
+        "ESM-IF1 ll_heavy": -0.0136,
+        "ESM-IF1 ll_light": 0.0615,
+        "ESM-IF1 ll_antibody": 0.0099,
+        "ESM-IF1 ll_antigen": 0.0505
+      }
+    },
+    "aayl49": {
+      "n": 300,
+      "neg_log_kd_range": [
+        8.26,
+        11.25
+      ],
+      "spearman": {
+        "ipTM": 0.0827,
+        "pTM": 0.0781,
+        "complex pLDDT": 0.0512,
+        "confidence_score": 0.0535,
+        "ESM-IF1 ll_heavy": 0.3395,
+        "ESM-IF1 ll_light": -0.1624,
+        "ESM-IF1 ll_antibody": 0.2132,
+        "ESM-IF1 ll_antigen": 0.0519
+      }
+    },
+    "aayl51": {
+      "n": 300,
+      "neg_log_kd_range": [
+        8.24,
+        10.58
+      ],
+      "spearman": {
+        "ipTM": 0.0415,
+        "pTM": 0.0549,
+        "complex pLDDT": 0.0451,
+        "confidence_score": 0.0529,
+        "ESM-IF1 ll_heavy": 0.2101,
+        "ESM-IF1 ll_light": 0.0844,
+        "ESM-IF1 ll_antibody": 0.2059,
+        "ESM-IF1 ll_antigen": 0.0997
       }
     }
   },
   "pooled": {
     "ipTM": {
-      "spearman": 0.1941,
-      "n": 330,
+      "spearman": 0.1331,
+      "n": 1530,
       "null_control": false
     },
     "pTM": {
-      "spearman": 0.2044,
-      "n": 330,
+      "spearman": 0.1405,
+      "n": 1530,
       "null_control": false
     },
     "complex pLDDT": {
-      "spearman": 0.0605,
-      "n": 330,
+      "spearman": 0.0636,
+      "n": 1530,
       "null_control": false
     },
     "confidence_score": {
-      "spearman": 0.168,
-      "n": 330,
+      "spearman": 0.1133,
+      "n": 1530,
       "null_control": false
     },
     "ESM-IF1 ll_heavy": {
-      "spearman": 0.0779,
-      "n": 330,
+      "spearman": 0.111,
+      "n": 1530,
       "null_control": false
     },
     "ESM-IF1 ll_light": {
-      "spearman": 0.0175,
-      "n": 330,
+      "spearman": -0.0349,
+      "n": 1530,
       "null_control": false
     },
     "ESM-IF1 ll_antibody": {
-      "spearman": 0.0834,
-      "n": 330,
+      "spearman": 0.0823,
+      "n": 1530,
       "null_control": false
     },
     "ESM-IF1 ll_antigen": {
-      "spearman": 0.1052,
-      "n": 330,
+      "spearman": 0.0696,
+      "n": 1530,
       "null_control": true
     }
   },
@@ -100,20 +151,35 @@
     "ESM-IF1": 0.28
   },
   "heavy_chain_diversity": {
+    "1mhp": {
+      "heavy_len": 118,
+      "variable_positions": 14,
+      "mean_pairwise_identity": 0.9793
+    },
     "1n8z": {
       "heavy_len": 121,
-      "variable_positions": 21,
-      "mean_pairwise_identity": 0.9307
+      "variable_positions": 23,
+      "mean_pairwise_identity": 0.9336
     },
     "3gbn": {
       "heavy_len": 121,
       "variable_positions": 11,
-      "mean_pairwise_identity": 0.9563
+      "mean_pairwise_identity": 0.9556
     },
     "4fqi": {
       "heavy_len": 121,
       "variable_positions": 16,
-      "mean_pairwise_identity": 0.9335
+      "mean_pairwise_identity": 0.9348
+    },
+    "aayl49": {
+      "heavy_len": 118,
+      "variable_positions": 33,
+      "mean_pairwise_identity": 0.9402
+    },
+    "aayl51": {
+      "heavy_len": 119,
+      "variable_positions": 36,
+      "mean_pairwise_identity": 0.9562
     }
   }
 }

@@ -73,6 +73,12 @@ METRICS = [
     ("ipTM", lambda r: float(r["b"]["iptm"]), False),
     ("ipSAE_min", lambda r: float(r["i"]["ipsae_min"]), False),
     ("ESM-IF1 ll_antibody", lambda r: float(r["e"]["ll_antibody_mean"]), False),
+    # AntiFold is ESM-IF1 fine-tuned on antibodies -- same 142M architecture, same
+    # task, same API. Reported directly beneath generic ESM-IF1 because the pair is a
+    # controlled A/B on antibody-specific training (IMPROVE_DESIGN.md sec 1,
+    # experiments/finetuning/PLAN.md sec 1).
+    ("AntiFold ll (H+L)", lambda r: float(r["a"]["ll_antifold"]), False),
+    ("AntiFold ll (+antigen)", lambda r: float(r["a"]["ll_antifold_ag"]), False),
     ("ESM-IF1 ll_antigen", lambda r: float(r["e"]["ll_antigen"]), True),
 ]
 
@@ -104,16 +110,20 @@ def sign_test(rows: list[dict], fn) -> tuple[int, int, list[str]]:
 
 def main() -> None:
     ros, ips, esm = load_ok("rosetta.tsv"), load_ok("ipsae.tsv"), load_ok("esmif.tsv")
+    # AntiFold is optional: the table still renders without it, so a rerun before
+    # AntiFold has been scored does not fail.
+    af = load_ok("antifold.tsv") if (RES / "antifold.tsv").exists() else {}
     with (RES / "scores.tsv").open(encoding="utf-8") as fh:
         base = [r for r in csv.DictReader(fh, delimiter="\t") if r["status"] == "ok"]
     with (SETS / "paired_topup.tsv").open(encoding="utf-8") as fh:
         topup = {r["entry_id"] for r in csv.DictReader(fh, delimiter="\t")}
 
     rows = [{"b": b, "r": ros[b["entry_id"]], "i": ips[b["entry_id"]],
-             "e": esm[b["entry_id"]], "set": b["set"], "pdb": b["pdb"],
-             "eid": b["entry_id"]}
+             "e": esm[b["entry_id"]], "a": af.get(b["entry_id"], {}),
+             "set": b["set"], "pdb": b["pdb"], "eid": b["entry_id"]}
             for b in base
             if b["entry_id"] in ros and b["entry_id"] in ips and b["entry_id"] in esm
+            and (not af or b["entry_id"] in af)
             and b["set"] in ("matched_positive", "hard_negative")]
 
     pre = [r for r in rows if r["eid"] not in topup]
@@ -134,6 +144,10 @@ def main() -> None:
            "metrics": []}
 
     for lab, fn, ctl in METRICS:
+        try:
+            fn(rows[0])
+        except (KeyError, ValueError, TypeError):
+            continue  # source table not present in this run
         wa, na, _ = sign_test(rows, fn)
         wp, np_, _ = sign_test(pre, fn)
         wn, nn, _ = sign_test(new_rows, fn)
