@@ -114,3 +114,4 @@ experiments/scoring_calibration/results/asd_run.log
 experiments/scoring_calibration/results/*.tsv.bak
 experiments/scoring_calibration/.antifold_stage/
 experiments/scoring_calibration/results/antifold_run.log
+experiments/scoring_calibration/results/packstat_raw.log

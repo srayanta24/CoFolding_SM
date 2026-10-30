@@ -157,6 +157,54 @@ comparable to AbBiBench's published baselines (ProteinMPNN ρ≈0.30, ESM-IF1 �
 7. ⬜ **Decide**: is a sequence-only filter worth wiring into the funnel, given it
    cannot see structure and the funnel's other metrics can?
 
+## 4b. Milestone 2 — distilling packstat (scoped 2026-10-30)
+
+**The problem.** packstat is the only metric that has beaten ipTM on a valid test
+(23/28, p=0.0005, clears its null). It is also unusable at funnel scale: Rosetta
+scoring costs 22 min/complex on the paired set and ~90 min on larger ASD ones, against
+BoltzGen's protocol of 60,000 designs. Having a metric that works and cannot be
+afforded is its own kind of failure.
+
+**The cheap escape, tested and closed.** The cost is not packstat — `InterfaceAnalyzer`
+takes 2.4 s and `FastRelax` 571 s, so relaxation is 99.6% of it. Since packstat is a
+*geometric* measure of surface fit rather than an energy, it seemed plausible it would
+survive skipping relaxation. Tested across all 379 paired complexes
+(`packstat_relax_test.py`, 2.2 s each, reusing the relaxed values already in
+`rosetta.tsv` rather than recomputing them):
+
+| | relaxed (22-90 min) | raw (2.2 s) |
+|---|---|---|
+| paired sign test | **23/28, p=0.0005** | **15/28, p=0.425** |
+
+**The signal is entirely destroyed.** Rank correlation between raw and relaxed packstat
+is only **+0.507** (sc +0.537, dG +0.326).
+
+Worth recording *why* the hypothesis was wrong, because the trap is subtle: mean
+|Δ| is only 0.038 on a 0.41-0.80 range, so the absolute values look close. But every
+use of packstat here is a **ranking**, and a small offset with a rank correlation of
+0.51 destroys ranking. A six-complex smoke test showed small deltas and would have led
+to the wrong conclusion; the pre-registered criterion ("does it reproduce 23/28?")
+caught it. Mechanistically it makes sense: packstat measures atomic packing, and
+unrelaxed predicted structures have exactly the clashes and poor side-chain placement
+that FastRelax fixes.
+
+**So distillation is the right answer, with a well-posed target**: predict *relaxed*
+packstat from the *unrelaxed* structure. Better posed than the original framing — no
+cheap scalar predicts relaxed packstat (best `complex_plddt` at +0.203), but raw
+packstat reaches **+0.507** and costs 2.2 s, so a model consuming the unrelaxed
+structure plus raw packstat has real signal to start from.
+
+Why this sidesteps milestone 1's blocker: **it needs no binding labels at all.** The
+target is a deterministic function of structure that we are already computing as a
+by-product.
+
+Bar for success: the distilled score must reproduce something near 23/28 on the paired
+test. Anything near 15/28 is no better than the raw value already available free.
+
+Training data: 379 paired complexes now, **~1,900 once the ASD Rosetta run completes**.
+Scoped but deliberately not started — there is no point training on 379 when 1,900 are
+days away.
+
 ## 5. Branches not taken (recorded, not closed)
 
 **Branch B — structure-conditioned on whatever has structures.** Usable set is SAbDab
