@@ -350,11 +350,21 @@ Why each tier failed to beat ipTM at the headline task, since the reasons differ
   good as the backbone it conditions on. Cheap to test by re-running on deposited
   structures; not done.
 
-**Cost, measured.** Rosetta ran ~15 min/structure against ~3 min of GPU to *generate* a
-design: rescoring is **5× more expensive than generation**, which rules it out as a
-funnel-wide filter at 60,000-design scale regardless of accuracy. ESM-IF1 (7 s) and
-ipSAE (~0) are funnel-viable but do not work. packstat/sc are the fortunate case —
-effective *and* already free.
+**Cost, measured.** Rosetta averaged 22.7 min/structure (125.5 CPU-hours for 332)
+against ~3 min of GPU to *generate* a design, so rescoring consumes roughly an order of
+magnitude more compute than generation — ruling it out as a funnel-wide filter at
+60,000-design scale regardless of accuracy. ESM-IF1 (7.6 s) and ipSAE (~0) are
+funnel-viable but do not work.
+
+**The cheap escape was tested and closed (2026-10-30).** Within Rosetta the cost is not
+packstat — `InterfaceAnalyzer` takes 2.4 s and `FastRelax` 571 s, so relaxation is 99.6%
+of it. Since packstat is geometric rather than energetic it seemed it might survive
+skipping relaxation, which would have given the one working metric at ~2 s. Across all
+379 paired complexes it does not: **23/28 relaxed → 15/28 raw**, rank correlation only
++0.507. Mean |Δ| is a reassuring 0.038 on a 0.41–0.80 range, which is exactly the trap —
+a small offset with poor rank correlation destroys *ranking*, and ranking is the only
+thing packstat is used for here. Full write-up and the redirect to distillation:
+[experiments/finetuning/PLAN.md](experiments/finetuning/PLAN.md) §4b.
 
 **Correction to this section's earlier Tier 2 claim.** It said BoltzGen "already runs an
 inverse-folding model and discards the likelihood," implying a one-line extraction. The

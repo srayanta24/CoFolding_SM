@@ -37,7 +37,7 @@ Claude Code skills (`.claude/skills/design/SKILL.md` for A/B,
 |---|---|---|---|
 | **A. Cofolding** | "If protein X and Y/this small molecule/this nucleic acid are put together, what structure do they form, and how confident is that prediction?" | Boltz-2, OpenFold3 | 1–3 min |
 | **B. Binder design** | "Generate novel antibody candidates that might bind target X" | BoltzGen | tens of minutes to hours |
-| **C. Epitope-guided binder design** | "Generate novel antibody candidates that bind target X **at a specific, model-predicted epitope**, not wherever BoltzGen's own sampling happens to land" | BoltzGen + Model A epitope predictor (`experiments/epitope_prediction/`) | epitope prediction: seconds; design: same as B |
+| **C. Epitope-guided binder design** | "Generate novel antibody candidates that bind target X **at a specific, model-predicted epitope**, not wherever BoltzGen's own sampling happens to land" | BoltzGen + an epitope predictor (`experiments/epitope_prediction/`; whether Model A or Model D is the production default is an open question — see that folder's README §2.7) | epitope prediction: seconds; design: same as B |
 
 These are genuinely different problems. (A) evaluates a *given* pair — you
 supply both sides. (B) *generates* something new — you supply only the
@@ -51,6 +51,36 @@ count and results). A prior session
 in this project initially conflated A and B ("design an antibody against
 lysozyme" could mean either), so this README keeps all three clearly
 separate throughout.
+
+### What this project has learned about its own pipeline
+
+Everything above runs. Whether the *output* can be trusted is a separate question, and
+most of the recent work has gone into answering it. The headline results, each with a
+reproducible script and a null control:
+
+- **ipTM — the metric the whole funnel is gated on — performs at chance on the
+  comparison a design campaign actually makes.** Ranking candidates against *one*
+  target, it scores 14/28 on a paired benchmark of binding-retained vs binding-destroyed
+  mutants. [EXPERIMENT_01](experiments/scoring_calibration/EXPERIMENT_01_iptm_calibration.md),
+  [_02](experiments/scoring_calibration/EXPERIMENT_02_alternative_metrics.md),
+  [_03](experiments/scoring_calibration/EXPERIMENT_03_within_antigen_ranking.md).
+- **One metric does beat it**: Rosetta's `packstat`, at 23/28 (p=0.0005, survives
+  Bonferroni). But it costs 22–90 min/complex against BoltzGen's protocol of 60,000
+  designs, and [the cheap escape was tested and closed](experiments/finetuning/PLAN.md)
+  — skipping FastRelax drops it to 15/28.
+- **Nothing in this stack was ever trained on antibodies.** `antibody-anything` and
+  `nanobody-anything` are byte-identical config dicts, no checkpoint differs by
+  modality, and no BoltzGen training config mentions antibodies — while the same configs
+  *do* upweight nucleotides and ligands. See [IMPROVE_DESIGN.md](IMPROVE_DESIGN.md) §1.
+- **Our campaigns are 20–1,000× under-sampled.** BoltzGen's own protocol generates
+  60,000 designs and advances 15; ours run 50–3,000. Measured joint-pass yield here is
+  ~0.2%, which makes their funnel arithmetic work out exactly — and means a 50-design
+  campaign *cannot* produce a passing design. IMPROVE_DESIGN.md §2.
+- **Benchmark data needs checking every time.** Four separate label/provenance traps
+  were found in one source while building these benchmarks; each would have produced a
+  confidently wrong result. See the warning in `databases/asd/README.md`.
+
+Read [IMPROVE_DESIGN.md](IMPROVE_DESIGN.md) for the active plan and what is open.
 
 Two more Claude Code skills support the underlying training data C depends on
 (not a design capability themselves):
@@ -597,12 +627,15 @@ co_folding/
 │   ├── design/SKILL.md               # Skill A/B, cofolding + antibody/binder design
 │   ├── database/SKILL.md              # create/recreate databases/
 │   ├── splits/SKILL.md                 # build databases/splits/
+│   └── epitope_guided_design/SKILL.md   # predict epitope + steer via binding_types
 │   └── epitope_guided_design/SKILL.md   # predict + steer via binding_types conditioning
 ├── src/                        # shallow clones, editable-installed — real source, not opaque pip packages
 │   ├── boltz/  openfold3/  protenix/  boltzgen/
 ├── weights/                    # permanent model weights (not a cache — see above)
 │   ├── boltz2/  openfold3/  protenix/  protenix_root/  boltzgen/
-├── .venvs/                     # one isolated venv per backend (+ data-fetch, epitope-prediction, mmseqs2)
+├── .venvs/                     # one isolated venv per backend (+ data-fetch, epitope-prediction,
+│                                  #   epiformer, germinal, antifold, mmseqs2 — antifold pins torch==2.3.1
+│                                  #   and MUST stay isolated; see scripts/setup_env.py ISOLATED_TOOLS)
 ├── configs/examples/            # minimal example JobSpecs, used by the smoke test
 ├── data/
 │   ├── designs/                 # every run_design.py / boltzgen run output lands here
@@ -612,9 +645,13 @@ co_folding/
 │   ├── splits/                     # leak-free train/dev/test splits (see splits skill)
 │   └── sabdab/  aacdb/  ab_bind/  andd/  abdesign_db/  asd/
 ├── experiments/
-│   └── epitope_prediction/         # epitope model + binding_types steering (see epitope_guided_design skill)
-│       ├── PLAN.md                    # methodology, model comparison, downstream steering results
-│       ├── data/  model/  eval/  steering/
+│   ├── epitope_prediction/         # epitope model + binding_types steering (see epitope_guided_design skill)
+│   │   ├── PLAN.md                    # methodology, model comparison, downstream steering results
+│   │   ├── data/  model/  eval/  steering/
+│   ├── scoring_calibration/        # can any metric rank designs? EXPERIMENT_01-03 + analysis scripts
+│   ├── finetuning/                 # putting binding knowledge into weights (IMPROVE_DESIGN §6.3)
+│   ├── germinal_comparison/        # paused at milestone 1 of 7
+│   └── reports/                    # benchmark reports, JSON sidecars
 └── scripts/
     ├── _common.py                # shared paths/helpers (REPO_ROOT, WEIGHTS_DIR, venv_bin(), ...)
     ├── setup_env.py                # one-time environment setup for all four backends
@@ -647,7 +684,7 @@ one modality shape each, without a general agent-callable tool wrapper.
 |---|---|---|---|
 | **OpenFold3** | Cofolding (primary) | ✅ Works cleanly, no workarounds | Apache 2.0 |
 | **Boltz-2** | Cofolding (fast/secondary) | ✅ Works with 2 documented flags (`--num_workers 0`, `--no_kernels`) | MIT |
-| **Protenix** | Cofolding (would-be tertiary) | ❌ **Blocked** — sm_121 has no compatible kernel for at least one op; not usable for anything until an aarch64-Blackwell torch build exists | Apache 2.0 |
+| **Protenix** | Cofolding (would-be tertiary) | ❌ **Blocked**, but a fix is now known — the failure is a plain `F.linear` bf16 GEMM against a torch build shipping sm_120 SASS with no PTX, and a nightly exposing `compute_120` was verified to run the failing ops. Needs the venv-scoped torch upgrade in `experiments/germinal_comparison/PLAN.md` §2a to be applied and re-smoke-tested | Apache 2.0 |
 | **BoltzGen** | De novo antibody/binder design | ✅ Works with 1 documented flag (`--num_workers 0`) | MIT |
 | AlphaFold3 | (reference only, not used) | N/A — not installed | Weights: CC-BY-NC-SA, bars commercial use |
 | RFantibody | (considered, not used) | N/A — assumes CUDA 11.8 + DGL, open aarch64 wheel bugs; BoltzGen chosen instead as lower-risk | MIT (inference); training code exclusively licensed to Xaira Therapeutics |
