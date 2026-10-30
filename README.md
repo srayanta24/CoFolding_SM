@@ -627,8 +627,7 @@ co_folding/
 │   ├── design/SKILL.md               # Skill A/B, cofolding + antibody/binder design
 │   ├── database/SKILL.md              # create/recreate databases/
 │   ├── splits/SKILL.md                 # build databases/splits/
-│   └── epitope_guided_design/SKILL.md   # predict epitope + steer via binding_types
-│   └── epitope_guided_design/SKILL.md   # predict + steer via binding_types conditioning
+│   └── epitope_guided_design/SKILL.md   # predict epitope + steer via binding_types conditioning
 ├── src/                        # shallow clones, editable-installed — real source, not opaque pip packages
 │   ├── boltz/  openfold3/  protenix/  boltzgen/
 ├── weights/                    # permanent model weights (not a cache — see above)
