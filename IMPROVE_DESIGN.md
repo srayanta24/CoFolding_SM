@@ -540,6 +540,32 @@ access.
 
 ---
 
+## 6b. The one cheap check that could redirect the programme
+
+Recorded 2026-10-31, from [`scoring_calibration/PLAN.md`](experiments/scoring_calibration/PLAN.md) §11.5.
+
+Five experiments concluded that no cheap metric ranks antibody designs. That conclusion
+rests on a benchmark whose resolving power we **borrowed rather than demonstrated**:
+AbBiBench publishes **ProteinMPNN ρ ≈ 0.30** and ESM-IF1 ≈ 0.28 on the same affinity
+data where our best column is **+0.141**. Someone else gets double our best, and we
+never tried to reproduce it.
+
+**Score the 1,530 existing ASD structures with ProteinMPNN and compare to the published
+number.** No new cofolding, no GPU campaign — the structures are already on disk.
+
+It discriminates between two very different programme directions:
+
+| outcome | what it means | where the work goes |
+|---|---|---|
+| reproduces at ≈0.30 | our **predicted backbones** are the bottleneck, not the metrics | structure quality — better folding, MSAs, relaxation |
+| lands near +0.14 | published baselines don't transfer to predicted backbones | §11.1 stands; training branch / own labels |
+
+**This should be done before any significant investment in the training branch**, since
+the training branch is premised on no cheap metric existing — and if the real problem is
+structure quality, training a scorer on bad structures inherits the bottleneck.
+
+---
+
 ## 7. Shared prerequisite: leak-free train/test splits
 
 Built and verified at `databases/splits/`: temporal cutoff mirroring BoltzGen's own

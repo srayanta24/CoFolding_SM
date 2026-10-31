@@ -17,6 +17,12 @@ Status: **arc complete · 2026-10-31** (plan text below is draft v1, 2026-10-17)
 > detector, not a selection signal. The best affinity-ranking column anywhere is pTM at
 > +0.141, against published baselines of ≈0.30.
 >
+> **Full conclusions: [§11](#11-conclusions--what-five-experiments-established).** The
+> decisive number is not in any single experiment: the two benchmarks agree about which
+> metrics work at **ρ = +0.087**, and the two metrics beating the null on both are
+> exactly what chance predicts (expected 1.88, observed 2, p=0.71). So the claim is not
+> "the correlations were low" but **no metric survives a change of question**.
+>
 > Write-ups: [EXPERIMENT_01](EXPERIMENT_01_iptm_calibration.md) ·
 > [_02](EXPERIMENT_02_alternative_metrics.md) ·
 > [_03](EXPERIMENT_03_within_antigen_ranking.md) ·
@@ -358,6 +364,7 @@ experiments/scoring_calibration/
   analyze_metrics.py       # EXPERIMENT_02: cross-metric comparison
   analyze_paired.py        # the 28-parent paired sign test (the trustworthy column)
   analyze_asd.py           # EXPERIMENT_03 + _04: within-antigen ranking, partials
+  analyze_crossbench.py    # sec 11: do the two benchmarks agree? (no)
 
   sets/                    # manifests (tracked - small, decision-bearing)
   results/                 # scored TSVs + generated .md/.json (tracked)
@@ -374,3 +381,137 @@ refuse to write on mismatch.
 Tracked/ignored split follows the convention already used in `databases/` and
 `epitope_prediction/`: the manifests and analysis outputs are small and decision-bearing
 so they stay in git; the raw cofold outputs are large and reproducible so they do not.
+
+---
+
+## 11. Conclusions — what five experiments established
+
+Written 2026-10-31, after EXPERIMENT_04 closed the last open metric. Generated numbers:
+[`results/cross_benchmark.md`](results/cross_benchmark.md), regenerable with
+`analyze_crossbench.py`.
+
+### 11.1 The headline
+
+**No metric tested ranks antibody designs in a way that survives a change of question.**
+
+That is a stronger and more useful claim than "the correlations were low", because it
+closes a remedy rather than just reporting a disappointment: the shortlist of cheap
+scalars has been enumerated across four families, and none of it transfers.
+
+The decisive evidence is not any single experiment but the comparison between two:
+
+| metric | paired (retained vs destroyed) | ASD (graded affinity) |
+|---|---|---|
+| `packstat` | **23/28, p=0.0005** | +0.058 — *below null* |
+| −dG_separated | 18/28, p=0.093 | +0.125 |
+| −dG/dSASA | 18/28, p=0.093 | +0.100 |
+| *null control* | *17/28* | *+0.070* |
+| shape complementarity | 16/28 | +0.112 |
+| buried SASA | 16/28 | +0.065 |
+| `ipTM` | 14/28 — chance | +0.133 |
+| ESM-IF1 ll_antibody | 13/28 | +0.082 |
+
+**Rank agreement between the two orderings: ρ = +0.087.** Essentially zero. The best
+metric on one benchmark is near-worst on the other, in both directions.
+
+### 11.2 Why the two survivors are not survivors
+
+Two metrics beat the null on both benchmarks (the Rosetta energies). Counting survivors
+means nothing without knowing how many luck produces, so:
+
+| | |
+|---|---|
+| beat the paired null | 3 of 8 |
+| beat the ASD null | 5 of 8 |
+| **expected overlap by chance** (hypergeometric) | **1.88** |
+| **observed overlap** | **2** |
+| P(overlap ≥ observed) | **0.714** |
+
+The two energy terms surviving both benchmarks is **precisely what a no-signal world
+produces.** Neither is individually significant either (p=0.093 on paired, uncorrected).
+
+This is the null-control discipline applied one level up. Within a benchmark we compare
+a metric against a quantity that cannot carry the signal; across benchmarks we compare a
+*count of survivors* against the count chance produces. Both ask: is this more than
+nothing?
+
+### 11.3 The mechanism, which is the actually interesting result
+
+Two metrics with nothing in common — a learned confidence head and a physics-based
+packing measure — fail in the **identical pattern**:
+
+| | detects abolished binding | ranks affinity |
+|---|---|---|
+| `ipTM` | AUC 0.634 | ρ +0.134, wrong sign |
+| `packstat` | 23/28, p=0.0005 | ρ +0.058, below null |
+
+Both detect **whether a credible interface exists** — a roughly binary property. Neither
+ranks **how good one is**. That convergence across unrelated metric families is the
+arc's real finding, and it is consistent with everything else observed: it explains how
+ipTM can flag a binding-abolishing mutation while being blind to the difference between
+a picomolar and a micromolar binder, and it explains the campaign gap EXPERIMENT_01
+measured (real binders at median ipTM 0.699, our designs at ~0.33, one design in 1,100
+ever reaching typical-binder quality).
+
+**The pipeline has been selecting on interface existence while we believed it was
+selecting on interface quality.** A de novo funnel ranks thousands of candidates that
+*all* clear the existence bar, which is exactly the regime where none of these metrics
+has been shown to work.
+
+### 11.4 What survived as deliverable
+
+Not nothing, and worth stating separately from the negative result:
+
+1. **Recalibrated thresholds**, measured rather than borrowed — 0.8 rejects 78% of real
+   antibodies, 0.6 rejects 28%. In `experiments/thresholds.py` with `measured`
+   provenance and a percentile table. The one unambiguous positive.
+2. **`packstat` as a correctly-scoped interface-integrity filter.** Real, reproducible,
+   and ~2.4 s once relaxation is amortised — which is why
+   [`finetuning/PLAN.md`](../finetuning/PLAN.md) §4b is rescoped rather than cancelled.
+   It belongs *early* in a funnel to discard wrecked designs, not at final ranking.
+3. **Two reusable benchmarks**: 28 parents with paired retained/destroyed mutants, and
+   6 antigens × 1,530 affinity-labelled antibodies, all scored through this pipeline's
+   own metric path with four metric families attached.
+4. **The null-control discipline itself.** It changed the conclusion in EXPERIMENT_02,
+   _03 and _04 — and in _04 it killed a rescue hypothesis that was otherwise about to be
+   accepted. Every future experiment here inherits it.
+
+### 11.5 The one thing that could overturn this
+
+**AbBiBench publishes ProteinMPNN ρ ≈ 0.30 and ESM-IF1 ≈ 0.28 on the same affinity data
+where our best column is +0.141.** Someone else gets roughly double our best, and we
+never attempted to reproduce their baseline ourselves.
+
+So the "nothing ranks affinity" conclusion currently rests on a benchmark whose
+resolving power is **borrowed rather than demonstrated**. Two readings, and they point
+opposite ways:
+
+- If ProteinMPNN reproduces at ≈0.30 here, the problem is **our predicted structures**,
+  not the metrics — and the programme should redirect to structure quality rather than
+  to training a scorer.
+- If it lands near +0.14 like everything else, the published baselines do not transfer
+  to predicted backbones, and §11.1 stands as stated.
+
+**This is the highest-value open check in the arc.** It is cheap — ProteinMPNN scoring
+on 1,530 existing structures, no new cofolding — and it discriminates between two very
+different programme directions. It should be done before any significant investment in
+the training branch.
+
+### 11.6 Where this leaves the programme
+
+The arc was commissioned to replace an imported ipTM threshold with a measured one and
+to give filter-rule work something to validate against. It did the first and found that
+the second is not available: **filter-rule tuning has no trustworthy signal to tune.**
+
+Selection cannot be fixed by choosing a better existing scalar, which pushes the work to
+[`IMPROVE_DESIGN.md`](../../IMPROVE_DESIGN.md) §5's training branch — where
+[`finetuning/MILESTONE_01`](../finetuning/MILESTONE_01_label_validation.md) then
+established that the supervised binding data to train on does not exist in `databases/`
+either (five antigens of graded affinity; `bool` negatives mostly mislabelled
+neutralization; antigen diversity collapsing 832 → 6 clusters).
+
+**Those two findings together are the real constraint on this project**, and they are
+better stated plainly than worked around. The honest options remaining are: reproduce
+the published baseline to find out whether structures are the problem (§11.5), generate
+our own binding labels rather than hunting for existing ones, or accept the funnel as an
+existence filter and compete on generator quality and throughput instead of selection.

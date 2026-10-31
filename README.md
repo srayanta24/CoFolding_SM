@@ -73,6 +73,20 @@ reproducible script and a null control:
   ranks graded affinity at ρ=+0.058, *below* its own null control
   ([EXPERIMENT_04](experiments/scoring_calibration/EXPERIMENT_04_packstat_transfer.md),
   1,201 core-hours). So it is an interface-integrity detector, not a selection signal.
+- **The two benchmarks do not agree about which metrics work** — rank agreement
+  **ρ = +0.087** across eight shared metrics, with the best on one near-worst on the
+  other. Two metrics beat the null on both, which is exactly what chance predicts
+  (expected 1.88, observed 2, p=0.71). So the conclusion is not "the correlations were
+  low" but **no metric survives a change of question**, and the remedy of picking a
+  better existing scalar is closed. Both `ipTM` and `packstat` detect *whether a
+  credible interface exists* and neither ranks *how good one is* — the pipeline has been
+  selecting on interface existence while we believed it was selecting on quality.
+  [Conclusions](experiments/scoring_calibration/PLAN.md#11-conclusions--what-five-experiments-established).
+- **The one open check that could overturn that**: AbBiBench publishes ProteinMPNN
+  ρ≈0.30 on the same affinity data where our best column is +0.141. We never reproduced
+  that baseline locally, so the benchmark's resolving power is borrowed rather than
+  demonstrated. If it reproduces, the problem is our predicted structures, not the
+  metrics — a materially different programme.
 - **Nothing in this stack was ever trained on antibodies.** `antibody-anything` and
   `nanobody-anything` are byte-identical config dicts, no checkpoint differs by
   modality, and no BoltzGen training config mentions antibodies — while the same configs

@@ -1,0 +1,121 @@
+{
+  "n_shared_metrics": 8,
+  "nulls": {
+    "paired_win_rate": 0.6071,
+    "asd_spearman": 0.0696
+  },
+  "metrics": [
+    {
+      "metric": "packstat",
+      "null_control": false,
+      "paired_win_rate": 0.8214,
+      "paired_wins": "23/28",
+      "paired_p": 0.00046,
+      "asd_spearman": 0.0576,
+      "beats_paired_null": true,
+      "beats_asd_null": false
+    },
+    {
+      "metric": "-dG/dSASA",
+      "null_control": false,
+      "paired_win_rate": 0.6429,
+      "paired_wins": "18/28",
+      "paired_p": 0.09247,
+      "asd_spearman": 0.1002,
+      "beats_paired_null": true,
+      "beats_asd_null": true
+    },
+    {
+      "metric": "-dG_separated",
+      "null_control": false,
+      "paired_win_rate": 0.6429,
+      "paired_wins": "18/28",
+      "paired_p": 0.09247,
+      "asd_spearman": 0.1248,
+      "beats_paired_null": true,
+      "beats_asd_null": true
+    },
+    {
+      "metric": "ESM-IF1 ll_antigen",
+      "null_control": true,
+      "paired_win_rate": 0.6071,
+      "paired_wins": "17/28",
+      "paired_p": 0.17246,
+      "asd_spearman": 0.0696,
+      "beats_paired_null": false,
+      "beats_asd_null": false
+    },
+    {
+      "metric": "shape complementarity",
+      "null_control": false,
+      "paired_win_rate": 0.5714,
+      "paired_wins": "16/28",
+      "paired_p": 0.28579,
+      "asd_spearman": 0.1117,
+      "beats_paired_null": false,
+      "beats_asd_null": true
+    },
+    {
+      "metric": "buried SASA",
+      "null_control": false,
+      "paired_win_rate": 0.5714,
+      "paired_wins": "16/28",
+      "paired_p": 0.28579,
+      "asd_spearman": 0.0654,
+      "beats_paired_null": false,
+      "beats_asd_null": false
+    },
+    {
+      "metric": "ipTM",
+      "null_control": false,
+      "paired_win_rate": 0.5,
+      "paired_wins": "14/28",
+      "paired_p": 0.57472,
+      "asd_spearman": 0.1331,
+      "beats_paired_null": false,
+      "beats_asd_null": true
+    },
+    {
+      "metric": "interface H-bonds",
+      "null_control": false,
+      "paired_win_rate": 0.4643,
+      "paired_wins": "13/28",
+      "paired_p": 0.71421,
+      "asd_spearman": 0.0388,
+      "beats_paired_null": false,
+      "beats_asd_null": false
+    },
+    {
+      "metric": "ESM-IF1 ll_antibody",
+      "null_control": false,
+      "paired_win_rate": 0.4643,
+      "paired_wins": "13/28",
+      "paired_p": 0.71421,
+      "asd_spearman": 0.0823,
+      "beats_paired_null": false,
+      "beats_asd_null": true
+    }
+  ],
+  "ordering_agreement_spearman": 0.0866,
+  "beat_null_counts": {
+    "paired": 3,
+    "asd": 5,
+    "both": 2
+  },
+  "metrics_beating_both_nulls": [
+    "-dG/dSASA",
+    "-dG_separated"
+  ],
+  "chance_model": {
+    "test": "hypergeometric overlap under independence",
+    "expected_overlap": 1.875,
+    "observed_overlap": 2,
+    "p_overlap_at_least_observed": 0.7143,
+    "pmf": [
+      0.0179,
+      0.2679,
+      0.5357,
+      0.1786
+    ]
+  }
+}
