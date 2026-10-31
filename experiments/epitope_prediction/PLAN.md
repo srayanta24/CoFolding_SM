@@ -185,7 +185,14 @@ target rather than forcing a low-confidence guess.
   conditioning pathway doesn't respond the way we expect. This is the real go/no-go
   signal for whether to proceed to v2 (true gradient-guided steering) or stop at v1.
 - Discipline: iterate against `dev.txt` only; touch `test.txt` for final reported
-  numbers, same rule established in `databases/splits/README.md`.
+  numbers, same rule established in
+  [`databases/splits/README.md`](../../databases/splits/README.md) §3.
+  **Caveat added 2026-10-31**: `dev` and `test` are not cluster-disjoint from each other
+  (59 shared clusters, 26% of `test`), so a post-tuning number belongs on
+  `test_cluster_disjoint.txt`. This plan's own targets were checked and are clean —
+  0 of its 6 `test` targets share a cluster with any of its 7 `dev` targets — so §9/§10
+  stand as reported. Note though that `pdb_00009cct`, `pdb_00009me5` and `pdb_00009me7`
+  all sit in cluster `pdb_00009ccw`, so they are not three independent targets.
 
 ## 6. Steering integration — reuse existing conditioning first, new sampling code only as fallback
 

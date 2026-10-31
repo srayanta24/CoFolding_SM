@@ -251,6 +251,24 @@ def main() -> None:
 
     cross_ref = cross_reference_sources(buckets)
 
+    # dev/test cluster overlap, and the clean subset that removes it.
+    #
+    # The dev/test split above is per-STRUCTURE (hash of the PDB id), not per-CLUSTER.
+    # Both are cluster-disjoint from train_era by construction -- that is what the
+    # excluded_ambiguous bucket enforces -- but they are NOT cluster-disjoint from each
+    # other: 59 clusters appear in both, covering 70 of 100 dev and 197 of 751 test
+    # structures. Tuning on dev therefore tunes on antigens that reappear in test.
+    #
+    # Fixing the split itself would renumber dev/test and invalidate every result
+    # already reported against them, so the overlap is recorded and a cluster-disjoint
+    # test subset is emitted alongside instead. Use test_cluster_disjoint.txt for any
+    # number that follows dev-based tuning. See README.md.
+    dev_reps = {cluster_of[p] for p in buckets["dev"] if p in cluster_of}
+    test_reps = {cluster_of[p] for p in buckets["test"] if p in cluster_of}
+    disjoint = sorted(p for p in buckets["test"]
+                      if cluster_of.get(p) not in dev_reps)
+    (SPLITS_DIR / "test_cluster_disjoint.txt").write_text("\n".join(disjoint) + "\n")
+
     summary = {
         "cutoff_date": CUTOFF_DATE,
         "min_seq_id": MIN_SEQ_ID,
@@ -260,6 +278,21 @@ def main() -> None:
         "extraction_failures": failures,
         "bucket_counts": {k: len(v) for k, v in buckets.items()},
         "cross_referenced_sources": cross_ref,
+        "cluster_counts": {
+            "total": len(set(cluster_of.values())),
+            "train_era": len({cluster_of[p] for p in buckets["train_era"]
+                              if p in cluster_of}),
+            "dev": len(dev_reps),
+            "test": len(test_reps),
+        },
+        "dev_test_cluster_overlap": {
+            "shared_clusters": len(dev_reps & test_reps),
+            "dev_structures_affected": sum(
+                1 for p in buckets["dev"] if cluster_of.get(p) in test_reps),
+            "test_structures_affected": sum(
+                1 for p in buckets["test"] if cluster_of.get(p) in dev_reps),
+            "test_cluster_disjoint": len(disjoint),
+        },
     }
     (SPLITS_DIR / "splits_summary.json").write_text(json.dumps(summary, indent=2))
     print(json.dumps(summary, indent=2))

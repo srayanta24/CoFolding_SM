@@ -26,6 +26,12 @@ see "Reproducing everything" below.
 | [`abdesign_db/`](abdesign_db/README.md) | Affinity prediction (held-out generalization eval, not training volume) | **CC BY-NC 4.0**, `gdown` | 1,303 mutant rows (658 AbDesign + 377 SKEMPIv2 + 268 AB-Bind, all reprocessed/IMGT-numbered) |
 | [`asd/`](asd/README.md) | Generative design / large-scale pretraining (primary); affinity prediction (secondary, heterogeneous quality) | **Non-commercial research use**, `gdown` | ~1.1M sequence+affinity interactions, 9,575 unique antigens; only ~3,969 have structures |
 
+### Derived, not downloaded
+
+| Folder | What it is |
+|---|---|
+| [`splits/`](splits/README.md) | **The leak-free evaluation splits.** Partitions all 11,458 antigen-bound `sabdab/` structures into `train_era` (8,072 — presumptively inside BoltzGen's training data) vs. `dev` (100) + `test` (751), via a 2023-06-01 temporal cutoff *and* MMseqs2 antigen clustering at 40%. Built from `sabdab/` alone — no external source. **Any number this project reports about a trained or tuned model has to be traceable to one of these files.** |
+
 ## Why these six, not others
 
 Chosen because each is a real, published/citable benchmark rather than something

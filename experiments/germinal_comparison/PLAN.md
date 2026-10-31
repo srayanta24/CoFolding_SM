@@ -265,8 +265,11 @@ comparison (`experiments/epitope_prediction/PLAN.md` §10: 3 `dev.txt` + 5 `test
 single-copy-antigen targets), so Germinal can be benchmarked head-to-head against
 BoltzGen on **identical antigens** — directly matches IMPROVE_DESIGN.md §2's own stated
 intent. Same split discipline already established
-(`databases/splits/README.md`): iterate against `dev.txt` targets only; reserve
-`test.txt` targets for final reported numbers.
+([`databases/splits/README.md`](../../databases/splits/README.md) §3): iterate against
+`dev.txt` targets only; reserve `test.txt` for final reported numbers — and because
+this plan tunes against `dev`, report on **`test_cluster_disjoint.txt`** rather than
+full `test.txt` (§4 there: 59 clusters straddle the dev/test boundary, so 26% of
+`test.txt` is homologous to something already tuned against).
 
 ## 7. Evaluation / comparison harness
 

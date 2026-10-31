@@ -2242,5 +2242,17 @@
       "train_era": 20,
       "unknown": 7
     }
+  },
+  "cluster_counts": {
+    "total": 1826,
+    "train_era": 1409,
+    "dev": 89,
+    "test": 387
+  },
+  "dev_test_cluster_overlap": {
+    "shared_clusters": 59,
+    "dev_structures_affected": 70,
+    "test_structures_affected": 197,
+    "test_cluster_disjoint": 554
   }
 }

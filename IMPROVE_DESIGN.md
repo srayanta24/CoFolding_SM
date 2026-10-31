@@ -552,10 +552,37 @@ Of 11,458 unique antigen-bound structures in `databases/sabdab/`: **8,072 `train
 `excluded_no_sequence`** (post-cutoff, redundancy unverifiable — excluded rather than
 assumed safe).
 
-**Known documentation gap**: `databases/splits/README.md` is referenced from several
-places in this repo but does not exist and was never committed. The verified counts and
-per-source cross-reference currently live only in `databases/splits/splits_summary.json`
-and `.claude/skills/splits/SKILL.md`. Worth writing.
+Written up in full at [`databases/splits/README.md`](databases/splits/README.md)
+(2026-10-31), which closes a documentation gap that had been referenced from six places
+without existing. It carries the bucket table, the per-source cross-reference (**AACDB
+is 3,628/3,674 `train_era`** — which is why AACDB is a training-label source and not an
+evaluation set), the rule for which comparisons are legitimate, and the reconciliation
+of 2,217 extraction failures against only 291 exclusions.
+
+**Writing it surfaced a real flaw.** `dev` and `test` are each cluster-disjoint from
+`train_era` as designed (0 shared clusters, verified) — the guarantee that matters for
+any claim about BoltzGen holds. But they are **not cluster-disjoint from each other**:
+the dev/test split hashes the structure id *after* clustering, so **59 clusters straddle
+the boundary**, covering 70 of 100 `dev` and **197 of 751 `test`** structures. Tuning on
+`dev` and reporting on full `test` therefore leaks into 26% of the test set.
+
+Re-splitting would renumber `dev`/`test` and silently invalidate every number already
+reported against them, so instead `test_cluster_disjoint.txt` is now emitted: the **554**
+test structures sharing no cluster with `dev`, verified disjoint from `dev` and
+`train_era` both. **Any number that follows dev-based tuning must be reported on that
+file.**
+
+**Checked, rather than assumed: nothing reported so far is affected.** The
+scoring-calibration benchmarks draw from `dev`+`test` without dev-based tuning. The
+epitope-prediction work *does* follow a dev-then-test discipline, so its targets were
+checked directly against the cluster table — **0 of its 6 `test` targets share a cluster
+with any of its 7 `dev` targets**, and its model training and calibration use an
+internal hash split that never touches either file. Its milestone 6/7 numbers stand.
+
+(That check did turn up a separate, smaller point: three of those test targets —
+`pdb_00009cct`, `pdb_00009me5`, `pdb_00009me7` — all sit in cluster `pdb_00009ccw`, so
+they are not three independent observations. Relevant to how many targets a downstream
+result is described as spanning, not to leakage.)
 
 ---
 

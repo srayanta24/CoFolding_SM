@@ -80,6 +80,16 @@ needs cross-referencing (see below).
   extend: look up the source's own PDB-id column (documented per-source in each
   `databases/<name>/README.md`), tally against the bucket assignment, add a row to the
   table in `databases/splits/README.md`.
+- **`dev.txt` and `test.txt` are NOT cluster-disjoint from each other** (found
+  2026-10-31). Both are cluster-disjoint from `train_era` by construction — that is what
+  `excluded_ambiguous` enforces, and it is verified — but the dev/test slice hashes the
+  *structure* id after clustering, so **59 clusters straddle the boundary**, covering 70
+  of 100 `dev` and 197 of 751 `test` structures. A number produced by tuning on `dev`
+  and reporting on full `test` is leaking into 26% of the test set. `build_splits.py`
+  now also emits **`test_cluster_disjoint.txt`** (554 structures, verified to share no
+  cluster with `dev` or `train_era`) — report post-tuning numbers on that. Don't "fix"
+  the split by re-slicing per cluster without a deliberate decision: it would renumber
+  `dev`/`test` and silently invalidate every result already reported against them.
 - **Intermediate MMseqs2 working files (`~/.mmseqs_work/`) are deliberately deleted**
   after each run — only the small `antigen_clusters.tsv` (240KB, human-inspectable,
   supports auditing `excluded_ambiguous` entries) is kept. Don't accidentally commit the

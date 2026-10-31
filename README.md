@@ -646,7 +646,7 @@ co_folding/
 │   └── boltzgen_examples/        # sparse clone of BoltzGen's example/ dir — Fab/nanobody scaffolds
 ├── databases/                   # local antibody-design database (see database skill)
 │   ├── src/                       # fetch code for every source, reproducible on a new machine
-│   ├── splits/                     # leak-free train/dev/test splits (see splits skill)
+│   ├── splits/                     # leak-free train/dev/test splits (README.md has the method + the rule)
 │   └── sabdab/  aacdb/  ab_bind/  andd/  abdesign_db/  asd/
 ├── experiments/
 │   ├── epitope_prediction/         # epitope model + binding_types steering (see epitope_guided_design skill)
