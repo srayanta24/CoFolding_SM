@@ -64,10 +64,15 @@ reproducible script and a null control:
   mutants. [EXPERIMENT_01](experiments/scoring_calibration/EXPERIMENT_01_iptm_calibration.md),
   [_02](experiments/scoring_calibration/EXPERIMENT_02_alternative_metrics.md),
   [_03](experiments/scoring_calibration/EXPERIMENT_03_within_antigen_ranking.md).
-- **One metric does beat it**: Rosetta's `packstat`, at 23/28 (p=0.0005, survives
-  Bonferroni). But it costs 22–90 min/complex against BoltzGen's protocol of 60,000
-  designs, and [the cheap escape was tested and closed](experiments/finetuning/PLAN.md)
-  — skipping FastRelax drops it to 15/28.
+- **One metric beats it, on one question only**: Rosetta's `packstat`, at 23/28
+  (p=0.0005, survives Bonferroni) at telling a binding-*retained* point mutant from a
+  binding-*destroyed* one. It costs 22–90 min/complex against BoltzGen's protocol of
+  60,000 designs, and [the cheap escape was tested and
+  closed](experiments/finetuning/PLAN.md) — skipping FastRelax drops it to 15/28.
+  **It does not generalise**: on a six-target, 1,530-complex within-antigen benchmark it
+  ranks graded affinity at ρ=+0.058, *below* its own null control
+  ([EXPERIMENT_04](experiments/scoring_calibration/EXPERIMENT_04_packstat_transfer.md),
+  1,201 core-hours). So it is an interface-integrity detector, not a selection signal.
 - **Nothing in this stack was ever trained on antibodies.** `antibody-anything` and
   `nanobody-anything` are byte-identical config dicts, no checkpoint differs by
   modality, and no BoltzGen training config mentions antibodies — while the same configs

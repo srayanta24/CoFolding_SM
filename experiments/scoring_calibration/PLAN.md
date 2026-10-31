@@ -1,6 +1,33 @@
 # Scoring calibration — what does a real binder score on this pipeline?
 
-Status: draft v1 · 2026-10-17
+Status: **arc complete · 2026-10-31** (plan text below is draft v1, 2026-10-17)
+
+> **Outcome, after five experiments.** The benchmark this plan set out to build exists —
+> two benchmarks, in fact: 28 parent complexes with paired retained/destroyed point
+> mutants, and six antigens with 1,530 affinity-labelled antibodies. Four metric
+> families were scored through them: BoltzGen confidences, ipSAE, Rosetta (FastRelax +
+> InterfaceAnalyzer, 1,201 core-hours), and inverse-folding likelihoods including
+> AntiFold.
+>
+> **The answer is that no cheap unsupervised scalar ranks antibody designs.** ipTM is at
+> chance (14/28) on the within-complex comparison a campaign actually makes. `packstat`
+> beats it there (23/28, p=0.0005, survives Bonferroni) but
+> [does not generalise](EXPERIMENT_04_packstat_transfer.md) — on graded affinity it
+> scores ρ=+0.058, below its own null control — so it is an interface-integrity
+> detector, not a selection signal. The best affinity-ranking column anywhere is pTM at
+> +0.141, against published baselines of ≈0.30.
+>
+> Write-ups: [EXPERIMENT_01](EXPERIMENT_01_iptm_calibration.md) ·
+> [_02](EXPERIMENT_02_alternative_metrics.md) ·
+> [_03](EXPERIMENT_03_within_antigen_ranking.md) ·
+> [_04](EXPERIMENT_04_packstat_transfer.md). Generated numbers in `results/`,
+> regenerable with `analyze.py`, `analyze_metrics.py`, `analyze_paired.py`,
+> `analyze_asd.py`.
+>
+> What the null controls contributed is worth recording separately: they changed the
+> conclusion in EXPERIMENT_02, _03 and _04. Every number in this arc was run against a
+> quantity that provably cannot carry the signal, and that discipline caught three
+> results that would otherwise have been reported.
 
 Implements **step 2** of [IMPROVE_DESIGN.md](../../IMPROVE_DESIGN.md) §4, after step 1
 (threshold recalibration) changed what step 2 could usefully be. This plan replaces the
@@ -311,15 +338,38 @@ metric lost the real downstream comparison).
 
 ## 10. Folder layout
 
+As built (the plan above anticipated three files; the arc needed thirteen):
+
 ```
 experiments/scoring_calibration/
-  PLAN.md          # this file
-  build_sets.py    # assemble A/B/C/D into a labelled manifest (milestone 2)
-  score_sets.py    # drive scripts/run_design.py over the manifest, collect metrics
-  analyze.py       # calibration curves, memorisation gap, dose-response, ROC (sec 7)
-  sets/            # manifests (tracked - small, decision-bearing)
-  .scores/         # per-complex cofold outputs (gitignored, reproducible)
+  PLAN.md                  # this file
+  EXPERIMENT_01..04_*.md   # one write-up per experiment, 6-section format
+
+  build_sets.py            # assemble A/B/C/D into a labelled manifest
+  build_asd_sets.py        # the six-target within-antigen benchmark (EXPERIMENT_03)
+  score_sets.py            # drive scripts/run_design.py, collect BoltzGen metrics
+  compute_ipsae.py         # ipSAE from the predicted-aligned-error matrices
+  compute_rosetta.py       # FastRelax + InterfaceAnalyzer   (the 1,201 core-hours)
+  compute_esmif.py         # ESM-IF1 log-likelihoods, incl. the ll_antigen null control
+  compute_antifold.py      # AntiFold -- the controlled A/B on antibody fine-tuning
+  packstat_relax_test.py   # is FastRelax skippable? (no: 23/28 -> 15/28)
+
+  analyze.py               # EXPERIMENT_01: calibration, memorisation gap, ROC
+  analyze_metrics.py       # EXPERIMENT_02: cross-metric comparison
+  analyze_paired.py        # the 28-parent paired sign test (the trustworthy column)
+  analyze_asd.py           # EXPERIMENT_03 + _04: within-antigen ranking, partials
+
+  sets/                    # manifests (tracked - small, decision-bearing)
+  results/                 # scored TSVs + generated .md/.json (tracked)
+  .scores/                 # per-complex cofold outputs (gitignored, reproducible)
 ```
+
+Every scorer appends to its own TSV keyed on `entry_id` and guards on a header/row
+field-count mismatch. That guard is not decoration: extending the carried-column list
+twice produced scorers that wrote wider rows than their headers, and **both times the
+failure presented as success** (`[47/47] ok`, `0 to score`, exit 0) with silently
+misaligned columns. All three affected tables were repaired and all three scorers now
+refuse to write on mismatch.
 
 Tracked/ignored split follows the convention already used in `databases/` and
 `epitope_prediction/`: the manifests and analysis outputs are small and decision-bearing

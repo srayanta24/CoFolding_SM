@@ -15,6 +15,12 @@
         "ESM-IF1 ll_heavy": -0.2251,
         "ESM-IF1 ll_light": -0.0125,
         "ESM-IF1 ll_antibody": -0.1364,
+        "packstat": -0.0546,
+        "-dG/dSASA": -0.0971,
+        "-dG_separated": -0.0906,
+        "shape complementarity": -0.0972,
+        "buried SASA": 0.0264,
+        "interface H-bonds": 0.0468,
         "ESM-IF1 ll_antigen": 0.2885
       }
     },
@@ -32,6 +38,12 @@
         "ESM-IF1 ll_heavy": -0.1023,
         "ESM-IF1 ll_light": 0.0725,
         "ESM-IF1 ll_antibody": -0.0676,
+        "packstat": -0.0134,
+        "-dG/dSASA": -0.1708,
+        "-dG_separated": 0.009,
+        "shape complementarity": -0.069,
+        "buried SASA": 0.149,
+        "interface H-bonds": 0.069,
         "ESM-IF1 ll_antigen": -0.0944
       }
     },
@@ -49,6 +61,12 @@
         "ESM-IF1 ll_heavy": 0.2068,
         "ESM-IF1 ll_light": -0.2006,
         "ESM-IF1 ll_antibody": 0.144,
+        "packstat": 0.1077,
+        "-dG/dSASA": 0.5215,
+        "-dG_separated": 0.525,
+        "shape complementarity": 0.4013,
+        "buried SASA": 0.3368,
+        "interface H-bonds": 0.2035,
         "ESM-IF1 ll_antigen": 0.2406
       }
     },
@@ -66,6 +84,12 @@
         "ESM-IF1 ll_heavy": -0.0136,
         "ESM-IF1 ll_light": 0.0615,
         "ESM-IF1 ll_antibody": 0.0099,
+        "packstat": 0.1821,
+        "-dG/dSASA": 0.2189,
+        "-dG_separated": 0.1489,
+        "shape complementarity": 0.1171,
+        "buried SASA": 0.0035,
+        "interface H-bonds": -0.1434,
         "ESM-IF1 ll_antigen": 0.0505
       }
     },
@@ -83,6 +107,12 @@
         "ESM-IF1 ll_heavy": 0.3395,
         "ESM-IF1 ll_light": -0.1624,
         "ESM-IF1 ll_antibody": 0.2132,
+        "packstat": -0.0083,
+        "-dG/dSASA": -0.0061,
+        "-dG_separated": -0.0135,
+        "shape complementarity": 0.0848,
+        "buried SASA": -0.0144,
+        "interface H-bonds": 0.0141,
         "ESM-IF1 ll_antigen": 0.0519
       }
     },
@@ -100,6 +130,12 @@
         "ESM-IF1 ll_heavy": 0.2101,
         "ESM-IF1 ll_light": 0.0844,
         "ESM-IF1 ll_antibody": 0.2059,
+        "packstat": 0.05,
+        "-dG/dSASA": 0.0318,
+        "-dG_separated": 0.0015,
+        "shape complementarity": 0.0746,
+        "buried SASA": -0.0491,
+        "interface H-bonds": 0.059,
         "ESM-IF1 ll_antigen": 0.0997
       }
     }
@@ -108,37 +144,80 @@
     "ipTM": {
       "spearman": 0.1331,
       "n": 1530,
-      "null_control": false
+      "null_control": false,
+      "partial_vs_null": 0.1239
     },
     "pTM": {
       "spearman": 0.1405,
       "n": 1530,
-      "null_control": false
+      "null_control": false,
+      "partial_vs_null": 0.1313
     },
     "complex pLDDT": {
       "spearman": 0.0636,
       "n": 1530,
-      "null_control": false
+      "null_control": false,
+      "partial_vs_null": 0.0559
     },
     "confidence_score": {
       "spearman": 0.1133,
       "n": 1530,
-      "null_control": false
+      "null_control": false,
+      "partial_vs_null": 0.1055
     },
     "ESM-IF1 ll_heavy": {
       "spearman": 0.111,
       "n": 1530,
-      "null_control": false
+      "null_control": false,
+      "partial_vs_null": 0.1053
     },
     "ESM-IF1 ll_light": {
       "spearman": -0.0349,
       "n": 1530,
-      "null_control": false
+      "null_control": false,
+      "partial_vs_null": -0.0395
     },
     "ESM-IF1 ll_antibody": {
       "spearman": 0.0823,
       "n": 1530,
-      "null_control": false
+      "null_control": false,
+      "partial_vs_null": 0.0753
+    },
+    "packstat": {
+      "spearman": 0.0576,
+      "n": 1530,
+      "null_control": false,
+      "partial_vs_null": 0.0538
+    },
+    "-dG/dSASA": {
+      "spearman": 0.1002,
+      "n": 1530,
+      "null_control": false,
+      "partial_vs_null": 0.0951
+    },
+    "-dG_separated": {
+      "spearman": 0.1248,
+      "n": 1530,
+      "null_control": false,
+      "partial_vs_null": 0.119
+    },
+    "shape complementarity": {
+      "spearman": 0.1117,
+      "n": 1530,
+      "null_control": false,
+      "partial_vs_null": 0.1044
+    },
+    "buried SASA": {
+      "spearman": 0.0654,
+      "n": 1530,
+      "null_control": false,
+      "partial_vs_null": 0.0623
+    },
+    "interface H-bonds": {
+      "spearman": 0.0388,
+      "n": 1530,
+      "null_control": false,
+      "partial_vs_null": 0.0351
     },
     "ESM-IF1 ll_antigen": {
       "spearman": 0.0696,
@@ -181,5 +260,609 @@
       "variable_positions": 36,
       "mean_pairwise_identity": 0.9562
     }
+  },
+  "extremes": {
+    "top_bottom_10pct": {
+      "ipTM": {
+        "wins": 5,
+        "n_targets": 6,
+        "p": 0.1094,
+        "deltas_sd": [
+          -0.36,
+          0.515,
+          1.054,
+          0.434,
+          0.489,
+          0.099
+        ],
+        "null_control": false
+      },
+      "pTM": {
+        "wins": 5,
+        "n_targets": 6,
+        "p": 0.1094,
+        "deltas_sd": [
+          -0.24,
+          0.41,
+          1.239,
+          0.517,
+          0.514,
+          0.136
+        ],
+        "null_control": false
+      },
+      "complex pLDDT": {
+        "wins": 2,
+        "n_targets": 6,
+        "p": 0.8906,
+        "deltas_sd": [
+          -0.79,
+          -0.415,
+          1.611,
+          -0.184,
+          -0.15,
+          0.122
+        ],
+        "null_control": false
+      },
+      "confidence_score": {
+        "wins": 4,
+        "n_targets": 6,
+        "p": 0.3438,
+        "deltas_sd": [
+          -0.577,
+          0.257,
+          1.266,
+          0.323,
+          -0.082,
+          0.13
+        ],
+        "null_control": false
+      },
+      "ESM-IF1 ll_heavy": {
+        "wins": 5,
+        "n_targets": 6,
+        "p": 0.1094,
+        "deltas_sd": [
+          0.722,
+          -0.374,
+          0.891,
+          0.128,
+          1.078,
+          0.594
+        ],
+        "null_control": false
+      },
+      "ESM-IF1 ll_light": {
+        "wins": 4,
+        "n_targets": 6,
+        "p": 0.3438,
+        "deltas_sd": [
+          0.156,
+          0.157,
+          -0.786,
+          0.221,
+          -0.586,
+          0.176
+        ],
+        "null_control": false
+      },
+      "ESM-IF1 ll_antibody": {
+        "wins": 5,
+        "n_targets": 6,
+        "p": 0.1094,
+        "deltas_sd": [
+          0.639,
+          -0.285,
+          0.457,
+          0.182,
+          0.562,
+          0.545
+        ],
+        "null_control": false
+      },
+      "packstat": {
+        "wins": 5,
+        "n_targets": 6,
+        "p": 0.1094,
+        "deltas_sd": [
+          -0.26,
+          0.039,
+          0.211,
+          0.604,
+          0.173,
+          0.179
+        ],
+        "null_control": false
+      },
+      "-dG/dSASA": {
+        "wins": 5,
+        "n_targets": 6,
+        "p": 0.1094,
+        "deltas_sd": [
+          0.59,
+          -0.359,
+          1.567,
+          0.786,
+          0.061,
+          0.146
+        ],
+        "null_control": false
+      },
+      "-dG_separated": {
+        "wins": 4,
+        "n_targets": 6,
+        "p": 0.3438,
+        "deltas_sd": [
+          0.182,
+          0.151,
+          1.575,
+          0.601,
+          -0.126,
+          -0.11
+        ],
+        "null_control": false
+      },
+      "shape complementarity": {
+        "wins": 6,
+        "n_targets": 6,
+        "p": 0.0156,
+        "deltas_sd": [
+          0.829,
+          0.059,
+          1.168,
+          0.139,
+          0.284,
+          0.211
+        ],
+        "null_control": false
+      },
+      "buried SASA": {
+        "wins": 3,
+        "n_targets": 6,
+        "p": 0.6562,
+        "deltas_sd": [
+          -0.618,
+          0.434,
+          0.152,
+          0.097,
+          -0.284,
+          -0.328
+        ],
+        "null_control": false
+      },
+      "interface H-bonds": {
+        "wins": 4,
+        "n_targets": 6,
+        "p": 0.3438,
+        "deltas_sd": [
+          0.137,
+          0.391,
+          0.339,
+          -0.512,
+          -0.053,
+          0.216
+        ],
+        "null_control": false
+      },
+      "ESM-IF1 ll_antigen": {
+        "wins": 5,
+        "n_targets": 6,
+        "p": 0.1094,
+        "deltas_sd": [
+          0.866,
+          -0.236,
+          0.623,
+          0.332,
+          0.36,
+          0.114
+        ],
+        "null_control": true
+      }
+    },
+    "top_bottom_25pct": {
+      "ipTM": {
+        "wins": 6,
+        "n_targets": 6,
+        "p": 0.0156,
+        "deltas_sd": [
+          0.045,
+          0.482,
+          0.717,
+          0.121,
+          0.249,
+          0.164
+        ],
+        "null_control": false
+      },
+      "pTM": {
+        "wins": 6,
+        "n_targets": 6,
+        "p": 0.0156,
+        "deltas_sd": [
+          0.068,
+          0.393,
+          0.852,
+          0.141,
+          0.261,
+          0.198
+        ],
+        "null_control": false
+      },
+      "complex pLDDT": {
+        "wins": 3,
+        "n_targets": 6,
+        "p": 0.6562,
+        "deltas_sd": [
+          -0.381,
+          -0.429,
+          1.249,
+          -0.114,
+          0.263,
+          0.095
+        ],
+        "null_control": false
+      },
+      "confidence_score": {
+        "wins": 5,
+        "n_targets": 6,
+        "p": 0.1094,
+        "deltas_sd": [
+          -0.138,
+          0.222,
+          0.905,
+          0.076,
+          0.281,
+          0.115
+        ],
+        "null_control": false
+      },
+      "ESM-IF1 ll_heavy": {
+        "wins": 3,
+        "n_targets": 6,
+        "p": 0.6562,
+        "deltas_sd": [
+          -0.046,
+          -0.254,
+          0.553,
+          -0.098,
+          0.953,
+          0.536
+        ],
+        "null_control": false
+      },
+      "ESM-IF1 ll_light": {
+        "wins": 4,
+        "n_targets": 6,
+        "p": 0.3438,
+        "deltas_sd": [
+          0.397,
+          0.313,
+          -0.498,
+          0.16,
+          -0.533,
+          0.182
+        ],
+        "null_control": false
+      },
+      "ESM-IF1 ll_antibody": {
+        "wins": 4,
+        "n_targets": 6,
+        "p": 0.3438,
+        "deltas_sd": [
+          0.144,
+          -0.12,
+          0.279,
+          -0.032,
+          0.488,
+          0.506
+        ],
+        "null_control": false
+      },
+      "packstat": {
+        "wins": 4,
+        "n_targets": 6,
+        "p": 0.3438,
+        "deltas_sd": [
+          -0.531,
+          -0.064,
+          0.269,
+          0.415,
+          0.012,
+          0.161
+        ],
+        "null_control": false
+      },
+      "-dG/dSASA": {
+        "wins": 3,
+        "n_targets": 6,
+        "p": 0.6562,
+        "deltas_sd": [
+          -0.281,
+          -0.381,
+          1.075,
+          0.511,
+          -0.016,
+          0.118
+        ],
+        "null_control": false
+      },
+      "-dG_separated": {
+        "wins": 4,
+        "n_targets": 6,
+        "p": 0.3438,
+        "deltas_sd": [
+          -0.458,
+          0.04,
+          1.203,
+          0.262,
+          -0.097,
+          0.037
+        ],
+        "null_control": false
+      },
+      "shape complementarity": {
+        "wins": 4,
+        "n_targets": 6,
+        "p": 0.3438,
+        "deltas_sd": [
+          -0.651,
+          -0.056,
+          0.968,
+          0.225,
+          0.273,
+          0.283
+        ],
+        "null_control": false
+      },
+      "buried SASA": {
+        "wins": 2,
+        "n_targets": 6,
+        "p": 0.8906,
+        "deltas_sd": [
+          -0.508,
+          0.351,
+          0.4,
+          -0.115,
+          -0.148,
+          -0.062
+        ],
+        "null_control": false
+      },
+      "interface H-bonds": {
+        "wins": 5,
+        "n_targets": 6,
+        "p": 0.1094,
+        "deltas_sd": [
+          0.117,
+          0.251,
+          0.276,
+          -0.463,
+          0.027,
+          0.157
+        ],
+        "null_control": false
+      },
+      "ESM-IF1 ll_antigen": {
+        "wins": 5,
+        "n_targets": 6,
+        "p": 0.1094,
+        "deltas_sd": [
+          0.814,
+          -0.296,
+          0.618,
+          0.195,
+          0.054,
+          0.191
+        ],
+        "null_control": true
+      }
+    },
+    "top_bottom_50pct": {
+      "ipTM": {
+        "wins": 5,
+        "n_targets": 6,
+        "p": 0.1094,
+        "deltas_sd": [
+          -0.495,
+          0.288,
+          0.499,
+          0.171,
+          0.151,
+          0.024
+        ],
+        "null_control": false
+      },
+      "pTM": {
+        "wins": 5,
+        "n_targets": 6,
+        "p": 0.1094,
+        "deltas_sd": [
+          -0.538,
+          0.245,
+          0.582,
+          0.165,
+          0.162,
+          0.049
+        ],
+        "null_control": false
+      },
+      "complex pLDDT": {
+        "wins": 4,
+        "n_targets": 6,
+        "p": 0.3438,
+        "deltas_sd": [
+          -0.374,
+          -0.329,
+          0.816,
+          0.043,
+          0.167,
+          0.137
+        ],
+        "null_control": false
+      },
+      "confidence_score": {
+        "wins": 5,
+        "n_targets": 6,
+        "p": 0.1094,
+        "deltas_sd": [
+          -0.48,
+          0.099,
+          0.615,
+          0.154,
+          0.178,
+          0.133
+        ],
+        "null_control": false
+      },
+      "ESM-IF1 ll_heavy": {
+        "wins": 3,
+        "n_targets": 6,
+        "p": 0.6562,
+        "deltas_sd": [
+          -0.87,
+          -0.024,
+          0.381,
+          -0.026,
+          0.504,
+          0.481
+        ],
+        "null_control": false
+      },
+      "ESM-IF1 ll_light": {
+        "wins": 3,
+        "n_targets": 6,
+        "p": 0.6562,
+        "deltas_sd": [
+          -0.255,
+          0.079,
+          -0.262,
+          0.046,
+          -0.295,
+          0.074
+        ],
+        "null_control": false
+      },
+      "ESM-IF1 ll_antibody": {
+        "wins": 4,
+        "n_targets": 6,
+        "p": 0.3438,
+        "deltas_sd": [
+          -0.801,
+          0.006,
+          0.226,
+          -0.007,
+          0.251,
+          0.398
+        ],
+        "null_control": false
+      },
+      "packstat": {
+        "wins": 4,
+        "n_targets": 6,
+        "p": 0.3438,
+        "deltas_sd": [
+          0.078,
+          -0.013,
+          0.1,
+          0.193,
+          -0.017,
+          0.069
+        ],
+        "null_control": false
+      },
+      "-dG/dSASA": {
+        "wins": 3,
+        "n_targets": 6,
+        "p": 0.6562,
+        "deltas_sd": [
+          -0.404,
+          -0.271,
+          0.626,
+          0.447,
+          -0.133,
+          0.159
+        ],
+        "null_control": false
+      },
+      "-dG_separated": {
+        "wins": 3,
+        "n_targets": 6,
+        "p": 0.6562,
+        "deltas_sd": [
+          -0.171,
+          -0.032,
+          0.779,
+          0.366,
+          -0.186,
+          0.041
+        ],
+        "null_control": false
+      },
+      "shape complementarity": {
+        "wins": 4,
+        "n_targets": 6,
+        "p": 0.3438,
+        "deltas_sd": [
+          -0.244,
+          -0.166,
+          0.588,
+          0.276,
+          0.117,
+          0.057
+        ],
+        "null_control": false
+      },
+      "buried SASA": {
+        "wins": 4,
+        "n_targets": 6,
+        "p": 0.3438,
+        "deltas_sd": [
+          0.322,
+          0.162,
+          0.399,
+          0.071,
+          -0.109,
+          -0.095
+        ],
+        "null_control": false
+      },
+      "interface H-bonds": {
+        "wins": 3,
+        "n_targets": 6,
+        "p": 0.6562,
+        "deltas_sd": [
+          -0.191,
+          0.044,
+          0.331,
+          -0.157,
+          -0.061,
+          0.138
+        ],
+        "null_control": false
+      },
+      "ESM-IF1 ll_antigen": {
+        "wins": 5,
+        "n_targets": 6,
+        "p": 0.1094,
+        "deltas_sd": [
+          0.388,
+          -0.214,
+          0.382,
+          0.18,
+          0.121,
+          0.267
+        ],
+        "null_control": true
+      }
+    }
+  },
+  "per_target_rho_significance": {
+    "1mhp": 0.364,
+    "1n8z": 0.1133,
+    "3gbn": 0.1133,
+    "4fqi": 0.1133,
+    "aayl49": 0.1133,
+    "aayl51": 0.1133
   }
 }

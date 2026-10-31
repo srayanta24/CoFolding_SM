@@ -434,7 +434,7 @@ so most of the apparent signal is target-specific leakage rather than affinity.
 
 **Update 2026-10-25.** The paired benchmark turned out to be underpowered by a
 sampling bug (parents were not stratified, so 17 of 28 available parents were used). At
-the full 28, **packstat reaches 23/28, p=0.0004 — surviving Bonferroni over seven
+the full 28, **packstat reaches 23/28, p=0.0005 — surviving Bonferroni over seven
 metrics**, with the 11 new parents agreeing in direction (8/11). Shape complementarity
 and buried SASA, which had looked significant at 17, **collapsed to chance**. ipTM stays
 at chance (14/28) and ipSAE is anti-correlated (7/28).
@@ -442,7 +442,18 @@ at chance (14/28) and ipSAE is anti-correlated (7/28).
 **So there is now one metric with a defensible claim to beating ipTM on the comparison
 a design campaign actually makes.** That is a real change from "no demonstrated
 selection signal," though it rests on point mutants rather than independently generated
-designs, and the transfer question (milestone 7) is untouched. The within-antigen
+designs.
+
+> **Update 2026-10-31 — the transfer question is now answered, and the answer is no.**
+> packstat was scored on all 1,530 complexes of the six-target within-antigen benchmark
+> (1,201 core-hours of FastRelax). It ranks graded affinity at **ρ = +0.058 pooled,
+> below its own null control (+0.070)**, and reaches significance on one target of six.
+> The pre-registered rescue — that it detects gross damage rather than gradation, so it
+> should recover on the affinity extremes — could not be established either, because at
+> 6 targets the sign test is so underpowered that the null control also wins 5/6.
+> packstat's scope is therefore **binding-retained vs binding-destroyed, and nothing
+> wider**: an interface-integrity detector, not a ranker. See
+> [EXPERIMENT_04](experiments/scoring_calibration/EXPERIMENT_04_packstat_transfer.md). The within-antigen
 ranking question remains open pending the 6-target expansion.
 
 ---

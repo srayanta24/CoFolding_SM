@@ -15,7 +15,7 @@ Everything here reuses EXPERIMENT_01's structures. No new structure prediction w
 >
 > | metric | here (17) | **all 28** | p | new 11 alone |
 > |---|---|---|---|---|
-> | **packstat** | 14/17 | **23/28** | **0.0004** | 8/11 |
+> | **packstat** | 14/17 | **23/28** | **0.0005** | 8/11 |
 > | shape complementarity | 13/17 | 16/28 | 0.286 | 5/11 |
 > | buried SASA | 13/17 | 16/28 | 0.286 | 4/11 |
 > | −dG/dSASA | 12/17 | 18/28 | 0.092 | 6/11 |

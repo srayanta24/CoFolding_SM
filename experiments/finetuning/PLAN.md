@@ -205,6 +205,36 @@ Training data: 379 paired complexes now, **~1,900 once the ASD Rosetta run compl
 Scoped but deliberately not started — there is no point training on 379 when 1,900 are
 days away.
 
+### Rescoped 2026-10-31, after EXPERIMENT_04
+
+The ASD Rosetta run finished (1,530 complexes, 1,201 core-hours) and was used to test
+whether packstat's 23/28 generalises.
+[**It does not**](../scoring_calibration/EXPERIMENT_04_packstat_transfer.md): on graded
+affinity ranking it scores ρ = +0.058, *below its own null control*.
+
+This does not cancel milestone 2 — the distillation target is still deterministic,
+still needs no binding labels, and the training set is now **1,909 complexes** (379
+paired + 1,530 ASD) with relaxed packstat already computed as a by-product. What changes
+is **what it is for**, and the honest claim shrinks:
+
+| | before EXPERIMENT_04 | after |
+|---|---|---|
+| what packstat is | the one metric that beats ipTM | detector of binding-retained vs binding-destroyed |
+| what distilling it buys | a cheap general selection signal | a cheap **interface-integrity filter** |
+| where it belongs in the funnel | final ranking | **early**, to discard wrecked designs before expensive scoring |
+| bar for success | ~23/28 on the paired test | unchanged, but now explicitly a bar on *that question only* |
+
+That is still worth building — discarding wrecked designs cheaply has real value at
+60,000 designs, and it is the only validated signal we have for anything. But it must
+not be described as solving selection, and it should not be evaluated on affinity
+ranking, where the quantity it approximates is itself at chance.
+
+**Open question it raises for the ranking problem:** the best Rosetta term on the
+affinity benchmark was an *energy* (−dG_separated, +0.125), not a packing measure, and
+it was the only Rosetta column to beat ipTM there. Weak in absolute terms, and not
+significant enough to act on, but it points the opposite way from packstat and is worth
+remembering if the energy terms are ever revisited.
+
 ## 5. Branches not taken (recorded, not closed)
 
 **Branch B — structure-conditioned on whatever has structures.** Usable set is SAbDab

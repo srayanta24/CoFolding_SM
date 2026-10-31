@@ -30,6 +30,7 @@ import json
 import math
 import statistics as st
 from collections import defaultdict
+from math import comb
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
@@ -48,8 +49,26 @@ METRICS = [
     ("ll_heavy", "ESM-IF1 ll_heavy", False),
     ("ll_light", "ESM-IF1 ll_light", False),
     ("ll_antibody_mean", "ESM-IF1 ll_antibody", False),
+    # Rosetta, added 2026-10-31 once the 1,530-complex FastRelax run finished (47
+    # min/complex, ~1,200 core-hours). packstat is here because it is the ONLY metric
+    # that has ever beaten ipTM on a valid test in this project (23/28 on the paired
+    # benchmark, p=0.0005). This is its first independent test on a different
+    # benchmark, a different label and a different question, so it is the whole reason
+    # the run was worth the compute. Energies are negated so higher = tighter.
+    ("packstat", "packstat", False),
+    ("neg_dG_dSASA", "-dG/dSASA", False),
+    ("neg_dG_separated", "-dG_separated", False),
+    ("sc_value", "shape complementarity", False),
+    ("dSASA_int", "buried SASA", False),
+    ("interface_hbonds", "interface H-bonds", False),
     ("ll_antigen", "ESM-IF1 ll_antigen", True),
 ]
+
+# Columns copied in from the side tables, and the negations derived from them.
+ESM_COLS = ("ll_heavy", "ll_light", "ll_antibody_mean", "ll_antigen")
+ROSETTA_COLS = ("packstat", "dG_dSASA_x100", "dG_separated", "sc_value",
+                "dSASA_int", "interface_hbonds")
+NULL_LABEL = "ESM-IF1 ll_antigen"
 
 ABBIBENCH_BASELINES = {"ProteinMPNN": 0.30, "ESM-IF1": 0.28}
 
@@ -64,10 +83,43 @@ def spearman(a: list[float], b: list[float]) -> float:
     return num / den if den else float("nan")
 
 
+def binom_p(k: int, n: int) -> float:
+    """Exact one-sided binomial tail, P(X >= k | p = 0.5). Same test as the paired
+    benchmark uses, so the extremes table below is directly comparable to its 23/28."""
+    if n == 0:
+        return float("nan")
+    return sum(comb(n, i) for i in range(k, n + 1)) / 2 ** n
+
+
+def partial_spearman(y: list[float], x: list[float], z: list[float]) -> float:
+    """Spearman of x vs y with the null control z partialled out of both.
+
+    Why this is here: on this benchmark the null control fires, so a raw correlation
+    cannot distinguish "the metric reads affinity" from "the metric reads the same
+    target-specific quality channel the null reads". The standard first-order partial
+    on ranks answers that directly, and when it was applied in EXPERIMENT_03 it changed
+    the conclusion -- the signal largely survived, after I had already written that
+    "most of it is not interpretable".
+
+    Computed on ranks, so this is the partial *Spearman*: rho(xy) minus the part
+    explained by z, normalised.
+    """
+    r_xy, r_xz, r_yz = spearman(y, x), spearman(x, z), spearman(y, z)
+    den = math.sqrt((1 - r_xz ** 2) * (1 - r_yz ** 2))
+    return (r_xy - r_xz * r_yz) / den if den else float("nan")
+
+
 def main() -> None:
     with (RES / "asd_esmif.tsv").open(encoding="utf-8") as fh:
         esm = {r["entry_id"]: r for r in csv.DictReader(fh, delimiter="\t")
                if r["status"] == "ok"}
+    # Rosetta is optional so the script still runs if it is ever regenerated from
+    # scratch before the (very expensive) FastRelax pass has been repeated.
+    ros = {}
+    if (RES / "asd_rosetta.tsv").exists():
+        with (RES / "asd_rosetta.tsv").open(encoding="utf-8") as fh:
+            ros = {r["entry_id"]: r for r in csv.DictReader(fh, delimiter="\t")
+                   if r["status"] == "ok"}
     with (RES / "asd_scores.tsv").open(encoding="utf-8") as fh:
         base = [r for r in csv.DictReader(fh, delimiter="\t") if r["status"] == "ok"]
     with MANIFEST.open(encoding="utf-8") as fh:
@@ -78,8 +130,16 @@ def main() -> None:
         e = esm.get(r["entry_id"])
         if not e:
             continue
-        rows.append({**r, **{k: e[k] for k in
-                             ("ll_heavy", "ll_light", "ll_antibody_mean", "ll_antigen")}})
+        row = {**r, **{k: e[k] for k in ESM_COLS}}
+        q = ros.get(r["entry_id"])
+        if q:
+            row.update({k: q[k] for k in ROSETTA_COLS})
+            # Negated so that, like every other column here, higher = tighter binder.
+            row["neg_dG_dSASA"] = str(-float(q["dG_dSASA_x100"]))
+            row["neg_dG_separated"] = str(-float(q["dG_separated"]))
+        rows.append(row)
+    print(f"[asd] {len(rows)} entries, {sum(1 for r in rows if 'packstat' in r)} "
+          f"with Rosetta")
 
     by = defaultdict(list)
     for r in rows:
@@ -103,21 +163,34 @@ def main() -> None:
         }
 
     # Pooled: z-score within each target before combining, so a target with a
-    # different absolute metric scale cannot dominate.
-    for col, lab, ctl in METRICS:
-        zs, ys = [], []
+    # different absolute metric scale cannot dominate. The null is z-scored the same
+    # way and carried along so the partial can be taken on the pooled vectors.
+    def pooled_vectors(col: str):
+        zs, ys, ns = [], [], []
         for t, g in by.items():
             try:
                 v = [float(r[col]) for r in g]
+                nv = [float(r["ll_antigen"]) for r in g]
             except (ValueError, KeyError):
                 continue
             y = [float(r["neg_log_kd"]) for r in g]
-            m, s = st.mean(v), st.pstdev(v) or 1
-            my, sy = st.mean(y), st.pstdev(y) or 1
-            zs += [(x - m) / s for x in v]
-            ys += [(q - my) / sy for q in y]
-        rep["pooled"][lab] = {"spearman": round(spearman(ys, zs), 4),
-                              "n": len(zs), "null_control": ctl}
+            for src, dst in ((v, zs), (y, ys), (nv, ns)):
+                m, s = st.mean(src), st.pstdev(src) or 1
+                dst += [(x - m) / s for x in src]
+        return ys, zs, ns
+
+    for col, lab, ctl in METRICS:
+        ys, zs, ns = pooled_vectors(col)
+        if not zs:
+            continue
+        d = {"spearman": round(spearman(ys, zs), 4), "n": len(zs),
+             "null_control": ctl}
+        if not ctl:
+            # Does the metric still track affinity once the null's target-specific
+            # quality channel is removed? This is the column that decides whether a
+            # raw correlation means anything on this benchmark.
+            d["partial_vs_null"] = round(partial_spearman(ys, zs, ns), 4)
+        rep["pooled"][lab] = d
 
     # Diversity diagnostic: tests (and here refutes) "4fqi's variants are too similar"
     div = {}
@@ -133,6 +206,48 @@ def main() -> None:
         div[t] = {"heavy_len": L, "variable_positions": varpos,
                   "mean_pairwise_identity": round(st.mean(pid), 4) if pid else None}
     rep["heavy_chain_diversity"] = div
+
+    # Extremes test. packstat wins the paired benchmark 23/28 but lands below the null
+    # here, so the obvious rescue is that the two benchmarks differ in effect size: the
+    # paired test contrasts binding-RETAINED against binding-DESTROYED mutants, while
+    # every ASD entry is a functional binder differing only in affinity. If packstat
+    # detects gross interface damage rather than affinity gradation, it should recover
+    # on the extremes. Scored the same way the paired benchmark is -- a sign test over
+    # groups -- at three cut depths, with the null carried through.
+    #
+    # It does NOT rescue it, and the reason is the null: with only 6 targets the sign
+    # test has so little power that the null control passes it too. Recorded because
+    # the rescue is the first thing a reader will reach for.
+    ext = {}
+    for frac in (0.10, 0.25, 0.50):
+        per = {}
+        for col, lab, ctl in METRICS:
+            deltas, wins, n_t = [], 0, 0
+            for t, g in sorted(by.items()):
+                try:
+                    vals = {id(r): float(r[col]) for r in g}
+                except (ValueError, KeyError):
+                    continue
+                s = sorted(g, key=lambda r: float(r["neg_log_kd"]))
+                k = max(1, int(len(s) * frac))
+                lo = st.mean(vals[id(r)] for r in s[:k])
+                hi = st.mean(vals[id(r)] for r in s[-k:])
+                sd = st.pstdev(list(vals.values())) or 1
+                d = (hi - lo) / sd          # in within-target standard deviations
+                deltas.append(round(d, 3))
+                wins += d > 0
+                n_t += 1
+            if n_t:
+                per[lab] = {"wins": wins, "n_targets": n_t,
+                            "p": round(binom_p(wins, n_t), 4),
+                            "deltas_sd": deltas, "null_control": ctl}
+        ext[f"top_bottom_{int(frac*100)}pct"] = per
+    rep["extremes"] = ext
+
+    # Per-target significance threshold, so the per-target table can be read honestly.
+    # Two-sided alpha=0.05 on a Spearman with n entries is |rho| > ~1.96/sqrt(n-1).
+    rep["per_target_rho_significance"] = {
+        t: round(1.96 / math.sqrt(d["n"] - 1), 4) for t, d in rep["targets"].items()}
 
     OUT_JSON.write_text(json.dumps(rep, indent=2) + "\n")
 
@@ -151,10 +266,17 @@ def main() -> None:
                  for _, l, _ in METRICS]
         L.append(f"| {t} | {d['n']} | " + " | ".join(cells) + " |")
     L += ["", "## Pooled (z-scored within target)", "",
-          "| metric | ρ | n |", "|---|---|---|"]
+          "`ρ partial` removes the null control from both sides: it is what remains "
+          "after the target-specific channel the null reads is taken out. A metric "
+          "whose raw ρ is no better than the null's has not been shown to read "
+          "affinity at all.", "",
+          "| metric | ρ | ρ partial (null removed) | n |", "|---|---|---|---|"]
     for lab, d in rep["pooled"].items():
         name = f"*{lab}* **(null control)**" if d["null_control"] else lab
-        L.append(f"| {name} | {d['spearman']:+.3f} | {d['n']} |")
+        if not d["null_control"] and d["spearman"] <= null_pooled:
+            name += " — **below null**"
+        part = (f"{d['partial_vs_null']:+.3f}" if "partial_vs_null" in d else "—")
+        L.append(f"| {name} | {d['spearman']:+.3f} | {part} | {d['n']} |")
     L += ["", f"> **The null control scores {null_pooled:+.3f} pooled.** The antigen is "
           "identical across every entry within a target, so it cannot carry affinity "
           "information. Where it correlates, something target-specific is leaking into "
@@ -162,6 +284,36 @@ def main() -> None:
           "interpreted at face value.", "",
           "AbBiBench's published baselines on this same data: "
           + ", ".join(f"{k} ≈{v}" for k, v in ABBIBENCH_BASELINES.items()) + ".", "",
+          "## Does packstat recover on the extremes?", "",
+          "packstat wins the paired benchmark 23/28 (p=0.0005) but lands **below the "
+          "null control** above. The natural rescue: the paired test contrasts "
+          "binding-*retained* against binding-*destroyed* mutants, whereas every entry "
+          "here is a functional binder differing only in affinity. If packstat detects "
+          "gross interface damage rather than affinity gradation, it should recover when "
+          "only the extremes are compared.", "",
+          "Scored exactly as the paired benchmark is — a sign test over groups — at "
+          "three cut depths. Deltas are in within-target standard deviations.", ""]
+    for key, per in rep["extremes"].items():
+        pct = key.split("_")[-1].replace("pct", "%")
+        L += [f"**Top vs bottom {pct} of affinity**", "",
+              "| metric | " + " | ".join(sorted(rep["targets"])) + " | wins | p |",
+              "|---" * (len(rep["targets"]) + 3) + "|"]
+        for lab, d in per.items():
+            name = f"*{lab}* **(null control)**" if d["null_control"] else lab
+            L.append(f"| {name} | " + " | ".join(f"{x:+.2f}" for x in d["deltas_sd"])
+                     + f" | {d['wins']}/{d['n_targets']} | {d['p']:.3f} |")
+        L.append("")
+    L += ["**It does not rescue packstat, and the reason is the null control.** With "
+          "only 6 targets the sign test has so little power that the null passes it too "
+          "— at the decile and quartile cuts the null wins 5/6, with per-target effect "
+          "sizes as large as the real metrics. No column in this table can be read as "
+          "evidence. This is the same lesson the paired benchmark taught when 13/17 "
+          "collapsed at 28 parents: a sign test over a handful of groups is not a "
+          "finding, and the null control is what reveals it.", "",
+          "The honest statement is therefore **not** \"packstat only detects gross "
+          "damage\" — that remains the most plausible mechanism, but this benchmark "
+          "cannot establish it. What it does establish is the negative: packstat's "
+          "23/28 does not transfer to graded affinity ranking.", "",
           "## Heavy-chain diversity", "",
           "| target | length | variable positions | mean pairwise identity |",
           "|---|---|---|---|"]
