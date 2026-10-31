@@ -1,0 +1,17 @@
+{
+  "rmsd_bar": 2.5,
+  "neg_ratio": 3,
+  "n_strata": 10,
+  "targets": {
+    "ctrop2": {
+      "n": 655,
+      "n_pass": 165,
+      "n_fail": 490,
+      "tracked_in_git": true,
+      "manifest": "experiments/scoring_calibration/sets/designs_ctrop2.tsv"
+    }
+  },
+  "withheld_targets": [
+    "chrna2"
+  ]
+}

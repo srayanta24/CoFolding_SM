@@ -115,3 +115,10 @@ experiments/scoring_calibration/results/*.tsv.bak
 experiments/scoring_calibration/.antifold_stage/
 experiments/scoring_calibration/results/antifold_run.log
 experiments/scoring_calibration/results/packstat_raw.log
+
+# Milestone 7 (scoring_calibration): the CHRNA2 design pool is analysed locally but
+# none of its derived results enter the repo -- same exclusion as the campaign itself
+# (line 89). The committed write-up states that a second target was checked and in
+# which direction, without its numbers. See EXPERIMENT_05.
+experiments/scoring_calibration/results/designs_*_chrna2.tsv
+experiments/scoring_calibration/sets/designs_chrna2.tsv

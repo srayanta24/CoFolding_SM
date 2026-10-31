@@ -133,6 +133,53 @@ def backbone_coords_by_chain(cif_path: Path) -> dict[str, np.ndarray]:
     return out
 
 
+AA3TO1 = {
+    "ALA": "A", "ARG": "R", "ASN": "N", "ASP": "D", "CYS": "C", "GLN": "Q",
+    "GLU": "E", "GLY": "G", "HIS": "H", "ILE": "I", "LEU": "L", "LYS": "K",
+    "MET": "M", "PHE": "F", "PRO": "P", "SER": "S", "THR": "T", "TRP": "W",
+    "TYR": "Y", "VAL": "V",
+}
+
+
+def seqs_by_chain(cif_path: Path) -> dict[str, str]:
+    """auth_asym_id -> one-letter sequence, ordered by label_seq_id.
+
+    For milestone 7 the sequences come from the structure rather than a manifest,
+    because a *design's* sequence is only recorded in the campaign CSV and reading it
+    from the coordinates removes any chance of the two disagreeing — which is exactly
+    the failure `backbone_coords_by_chain`'s caller already guards against with its
+    `len(coords) != len(seq)` check. Same header-driven parsing, and deliberately
+    reading CA only so each residue is counted once.
+    """
+    lines = cif_path.read_text().splitlines()
+    cols: list[str] = []
+    for line in lines:
+        if line.startswith("_atom_site."):
+            cols.append(line.split(".", 1)[1].strip())
+        elif cols:
+            break
+    idx = {n: i for i, n in enumerate(cols)}
+
+    per_chain: dict[str, dict[int, str]] = {}
+    for line in lines:
+        if not line.startswith(("ATOM", "HETATM")):
+            continue
+        f = line.split()
+        if f[idx["label_atom_id"]] != "CA":
+            continue
+        alt = f[idx["label_alt_id"]] if "label_alt_id" in idx else "."
+        if alt not in (".", "?", "A"):
+            continue
+        chain = f[idx.get("auth_asym_id", idx["label_asym_id"])]
+        try:
+            seq = int(f[idx["label_seq_id"]])
+        except (ValueError, KeyError):
+            continue
+        per_chain.setdefault(chain, {})[seq] = AA3TO1.get(
+            f[idx["label_comp_id"]], "X")
+    return {c: "".join(r[k] for k in sorted(r)) for c, r in per_chain.items()}
+
+
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("--limit", type=int, default=None)
@@ -140,7 +187,23 @@ def main() -> None:
     ap.add_argument("--results", default=str(RESULTS),
                     help="scored table whose entries to re-score")
     ap.add_argument("--out", default=str(OUT))
-    ap.add_argument("--device", default="cuda" if torch.cuda.is_available() else "cpu")
+    # CPU, not CUDA, and this is not a performance choice -- ESM-IF1's scoring path is
+    # CPU-only. `inverse_folding.util.get_sequence_loss` calls `batch_converter(batch)`
+    # without a device, so its tensors stay on CPU while the model sits on the GPU, and
+    # the forward dies with "Expected all tensors to be on the same device". It then
+    # calls `loss[0].detach().numpy()`, which would fail on a CUDA tensor anyway.
+    #
+    # The old default was `"cuda" if torch.cuda.is_available() else "cpu"`, which on
+    # this box meant the default could never work -- every earlier run passed
+    # `--device cpu` by hand, so the broken default survived unnoticed until milestone 7
+    # called the script without it. Defaulting to the only value that works; --device
+    # still overrides for a box where that changes.
+    ap.add_argument("--device", default="cpu",
+                    help="ESM-IF1's get_sequence_loss is CPU-only; see comment above")
+    ap.add_argument("--design-manifest", default=None,
+                    help="milestone 7: score a design pool instead. The manifest "
+                         "supplies entry_id and cif_path, sequences are read from the "
+                         "structure, and every manifest column is carried through.")
     args = ap.parse_args()
 
     import esm
@@ -150,10 +213,27 @@ def main() -> None:
     model, alphabet = esm.pretrained.esm_if1_gvp4_t16_142M_UR50()
     model = model.eval().to(args.device)
 
-    man = {r["entry_id"]: r for r in
-           csv.DictReader(Path(args.manifest).open(encoding="utf-8"), delimiter="\t")}
-    scored = [r for r in csv.DictReader(Path(args.results).open(encoding="utf-8"),
-                                        delimiter="\t") if r["status"] == "ok"]
+    if args.design_manifest:
+        with Path(args.design_manifest).open(encoding="utf-8") as fh:
+            scored = list(csv.DictReader(fh, delimiter="\t"))
+        if not scored:
+            raise SystemExit(f"[esmif] {args.design_manifest} is empty")
+        for r in scored:
+            r.setdefault("status", "ok")
+        if "cif_path" not in scored[0]:
+            raise SystemExit("[esmif] design manifest lacks a cif_path column")
+        man = {}
+        carry_cols = [c for c in scored[0] if c != "status"]
+    else:
+        man = {r["entry_id"]: r for r in
+               csv.DictReader(Path(args.manifest).open(encoding="utf-8"),
+                              delimiter="\t")}
+        scored = [r for r in csv.DictReader(Path(args.results).open(encoding="utf-8"),
+                                            delimiter="\t") if r["status"] == "ok"]
+        carry_cols = CARRY
+    fields = carry_cols + METRICS + ["status", "seconds"]
+    if not args.design_manifest:
+        assert fields == FIELDS, "carry/FIELDS drift"
     out_path = Path(args.out)
     done = set()
     if out_path.exists():
@@ -175,31 +255,46 @@ def main() -> None:
     if not new_file:
         with out_path.open(encoding="utf-8") as _fh:
             _existing = _fh.readline().rstrip("\n").split("\t")
-        if _existing != FIELDS:
+        if _existing != fields:
             raise SystemExit(
                 f"[{__file__}] REFUSING TO APPEND: {out_path} has "
-                f"{len(_existing)} columns, this build writes {len(FIELDS)}. "
+                f"{len(_existing)} columns, this build writes {len(fields)}. "
                 "Rewrite the file with the current schema or use a new --out.")
     t0 = time.time()
     with out_path.open("a", newline="", encoding="utf-8") as fh:
-        w = csv.DictWriter(fh, fieldnames=FIELDS, delimiter="\t",
+        w = csv.DictWriter(fh, fieldnames=fields, delimiter="\t",
                            extrasaction="ignore", lineterminator="\n")
         if new_file:
             w.writeheader()
             fh.flush()
         for i, rec in enumerate(todo, 1):
             eid = rec["entry_id"]
-            out = {k: rec.get(k, "") for k in CARRY}
+            out = {k: rec.get(k, "") for k in carry_cols}
             out.update({k: "" for k in METRICS})
             t = time.time()
             try:
-                m = man[eid]
-                hits = glob.glob(str(SCORES_DIR / eid / "**" / "*_model_0.cif"),
-                                 recursive=True)
-                if not hits:
-                    raise FileNotFoundError("no structure")
-                coords = backbone_coords_by_chain(Path(hits[0]))
-                seqs = {"A": m["antigen_seq"], "B": m["heavy_seq"], "C": m["light_seq"]}
+                # Milestone 7 (--design-manifest): structure path and sequences both
+                # come from the design pool rather than this folder's .scores/ tree
+                # and sets/manifest.tsv. Everything downstream is unchanged.
+                explicit = rec.get("cif_path")
+                if explicit:
+                    if not os.path.exists(explicit):
+                        raise FileNotFoundError("no structure")
+                    cif = Path(explicit)
+                    coords = backbone_coords_by_chain(cif)
+                    seqs = seqs_by_chain(cif)
+                    missing = [c for c in ("A", "B", "C") if c not in seqs]
+                    if missing:
+                        raise ValueError(f"chains {missing} absent from {cif.name}")
+                else:
+                    m = man[eid]
+                    hits = glob.glob(str(SCORES_DIR / eid / "**" / "*_model_0.cif"),
+                                     recursive=True)
+                    if not hits:
+                        raise FileNotFoundError("no structure")
+                    coords = backbone_coords_by_chain(Path(hits[0]))
+                    seqs = {"A": m["antigen_seq"], "B": m["heavy_seq"],
+                            "C": m["light_seq"]}
                 for ch in ("A", "B", "C"):
                     if ch not in coords or len(coords[ch]) != len(seqs[ch]):
                         raise ValueError(
