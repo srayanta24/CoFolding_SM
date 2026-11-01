@@ -3,25 +3,27 @@
 Status: **complete · 2026-11-01** · Arm A (per-complex backbone) + native-backbone arm
 stage 1 (shared backbone). Headline below updated after stage 1.
 
-> **Update after the native-backbone arm (stage 1).** Arm A's low +0.097 turned out to
-> be substantially an artefact of the benchmark's *per-complex* backbones, not the
-> metric. Scoring every mutant on ONE shared reference backbone per target lifts the
-> pooled correlation to **+0.247** (from +0.080 for the same ProteinMPNN score on
-> per-complex backbones) — roughly the published ≈0.30, and the strongest affinity
-> signal anywhere in the arc. It is target-heterogeneous (+0.56 on 3gbn, +0.45 on 4fqi,
-> but −0.44 on 1n8z), so it is a *lead*, not a validated ranker. Details in §3.1 and §6.
+> **Update after the native-backbone arm (stages 1 and 2).** Arm A's low +0.097 was
+> substantially an artefact of the benchmark's *per-complex* backbones, not the metric.
+> On ONE shared predicted backbone per target the pooled correlation rose to **+0.247**
+> (stage 1); on the real **crystal** backbone, 4fqi reached **ρ=+0.591** — the strongest
+> affinity signal in the arc (stage 2). So a fixed native backbone + ProteinMPNN *does*
+> rank affinity. But it is target-specific in a way structure quality cannot fix: 1n8z
+> (HER2/trastuzumab) inverts on the crystal too (−0.16). A real lead, not a universal
+> ranker. Details in §3.1–3.2 and §6.
 
 Generated numbers: [`results/asd_comparison.md`](results/asd_comparison.md) /
 [`.json`](results/asd_comparison.json), regenerable with `analyze_asd.py`.
 Scores produced by `compute_proteinmpnn.py` (per-complex) and
 `compute_proteinmpnn_shared.py` (shared backbone).
 
-**One-line answer: the metric is not the lever — the backbone protocol is.** On the
-benchmark's per-complex backbones ProteinMPNN ranks ASD affinity at ρ = +0.097, slightly
-*below* ESM-IF1's +0.111 and ~3× under the published ≈0.30. But fixing one backbone per
-target and threading the mutants lifts it to **+0.247** — ≈ the published number, and
-the first real affinity signal in the arc. It is target-heterogeneous (a −0.44 inversion
-on 1n8z), so it is a lead to chase, not yet a usable ranker.
+**One-line answer: the metric is not the lever — the backbone *protocol* is.** On the
+benchmark's per-complex backbones ProteinMPNN ranks ASD affinity at ρ = +0.097, ~3× under
+the published ≈0.30. Fix one backbone per target and thread the mutants and it rises to
+**+0.247** (shared predicted) and **+0.591 on a real crystal for 4fqi** — the strongest
+affinity signal in the arc. So inverse folding *does* rank affinity on a fixed native
+backbone. But it is genuinely target-specific (1n8z/HER2 inverts even on the crystal):
+a real lead to chase, not a universal ranker.
 
 ---
 
@@ -127,6 +129,38 @@ Four targets jump strongly positive; 1n8z (HER2/trastuzumab) is strongly *invert
 1mhp (n=30, underpowered) mildly so. The pooled +0.247 is four strong positives dragged
 by two negatives, not a uniform effect.
 
+### 3.2 The native-backbone arm, stage 2: the real crystal
+
+Stage 1's reference was an arbitrary *predicted* cofold, so its inversions could have
+been reference pathologies. Stage 2 (`compute_proteinmpnn_native.py`) replaces it with
+the actual **SAbDab crystal complex** per target — threading mutant sequences onto the
+crystal variable-domain backbone, conditioned on the crystal antigen. An **alignment
+gate** (manifest vs crystal resolved sequence, ≥0.85 identity, contained, gap-free)
+protects against mis-registration; it passed 1mhp/1n8z/4fqi and **excluded 3gbn** (light
+chain only 0.74 — a gap or divergent chain, refused rather than threaded on a guess).
+
+| target | n | **crystal ρ** | shared (predicted) | per-complex (Arm A) |
+|---|---|---|---|---|
+| 4fqi | 300 | **+0.591** | +0.445 | −0.079 |
+| 1n8z | 300 | −0.158 | −0.441 | −0.200 |
+| 1mhp | 30 | −0.075 | −0.186 | −0.037 |
+
+Two clean conclusions:
+
+- **4fqi: ρ=+0.591 on the real crystal — the strongest affinity signal anywhere in the
+  arc, and *higher* than the predicted shared backbone.** When the structure is a real
+  crystal and the target cooperates, ProteinMPNN inverse-folding likelihood genuinely
+  ranks affinity. The lead is real, not an artifact of any predicted reference.
+- **1n8z's inversion is real, not a reference artifact.** It stays negative on the
+  crystal (−0.158, milder than shared's −0.44 but the same sign). HER2/trastuzumab
+  affinity genuinely does *not* track native-likeness — a target/assay property no amount
+  of structure quality fixes.
+
+(1mhp is n=30 and underpowered; ignore its sign.) A caveat on the gate: a stricter gate
+would have threaded a native backbone for the two influenza-HA targets where it works
+best (3gbn, 4fqi), and 3gbn — stage 1's strongest predicted target (+0.56) — is exactly
+the one excluded for a light-chain gap, so the clean positive here rests on 4fqi alone.
+
 ## 4. What dataset did we use
 
 Unchanged from EXPERIMENT_03/04: the six-target ASD within-antigen benchmark, 1,530
@@ -152,6 +186,18 @@ Rosetta scored, so this is a controlled metric swap, not a new benchmark.
    metric.
 4. **Carried both nulls through.** ProteinMPNN gets its own `ll_antigen` null, so the
    comparison to the published number is read against the right chance baseline.
+5. **Shared-backbone arm** (`compute_proteinmpnn_shared.py`): best-ipTM cofold per target
+   as the fixed reference, mutants threaded by sequence swap (exact-length, zero
+   alignment risk).
+6. **Crystal arm** (`compute_proteinmpnn_native.py`): SAbDab crystal per target, mutant
+   VH/VL threaded onto the crystal variable-domain backbone behind an **alignment gate**
+   (≥0.85 identity, contained, gap-free) that skips a target rather than mis-thread.
+   One parsing trap caught here and worth recording: ProteinMPNN's own `parse_PDB`
+   inserts `-` placeholders for unresolved residues and insertion codes, which
+   frame-shifted the alignment and made the gate reject all four clean targets at id≈0.4.
+   The fix was to extract a *gap-free* resolved backbone straight from gemmi. The gate
+   firing on the buggy parse — rather than threading onto a gapped sequence — is exactly
+   what it is for.
 
 All reproducible from the TSVs; nothing hand-transcribed.
 
@@ -174,34 +220,38 @@ new target without knowing which regime it is in. So this reopens inverse foldin
 *candidate* binding signal — the first in the whole arc worth chasing — without yet
 delivering a usable one.
 
-**3. Why this is still not AbBiBench's protocol, and stage 2.** The shared backbone here
-is an *arbitrary predicted* reference (the best-ipTM cofold), not a crystal. The
-inversions (1n8z, 1mhp) could be reference-backbone pathologies as easily as real
-biology. Stage 2 — the true native arm — fetches the crystal complex for the four
-PDB-backed targets (all present in `databases/sabdab/`), threads the mutant sequences
-onto the *crystal* backbone, and re-scores. That both (a) removes the arbitrary-reference
-concern and (b) verifies AbBiBench's absolute number in our hands. It carries real
-mis-registration risk (1n8z and 4fqi crystals are Fabs — VH+CH1 — so the manifest's
-VH-only mutants need verified VH-region alignment, unlike stage 1's exact-length
-threading), which is why it was staged second and is not yet run.
+**3. The crystal confirms it, and rules out "just a predicted-reference artifact."**
+Stage 2 (§3.2) replaced the arbitrary predicted reference with the real SAbDab crystal.
+On 4fqi the crystal gives **ρ=+0.591** — higher than the predicted backbone and the
+strongest affinity signal in the arc — so a real native backbone + ProteinMPNN genuinely
+ranks affinity. And 1n8z's inversion *persists on the crystal* (−0.16), proving it is a
+real target property, not a reference pathology. The signal is real; so is its
+target-specificity. (3gbn, stage 1's strongest predicted target, was excluded by the
+alignment gate for a light-chain gap, so the clean crystal positive rests on 4fqi.)
 
-**4. For the funnel (the practical consequence).** Stage 1 changes the Step-3 picture
-from "no binding ranker is possible" to "a *fixed-reference-backbone* inverse-folding
-score is a real but unreliable lead." It is **not** yet recommended for the production
-funnel — the 1n8z inversion means it could actively mis-rank a new target — so the
-funnel recommendation is unchanged for now (gate on ipTM + filter_rmsd, diversify by
-cluster, rank by free plausibility metrics). But it is the one avenue that earned a
-follow-up, and `design_ranking`'s "why no binding ranker" note records it as the open
-lead rather than a closed door.
+**4. For the funnel (the practical consequence).** The arc's Step-3 picture moves from
+"no binding ranker is possible" to "a *fixed-native-backbone* inverse-folding score
+ranks affinity for *some* targets (4fqi +0.59) and inverts for others (1n8z)." It is
+**still not deployable** as a production ranker — a score that flips sign between targets
+will actively mis-rank a new one you cannot pre-classify — so the `design_ranking` funnel
+recommendation is unchanged (gate on ipTM + filter_rmsd, diversify by cluster, rank by
+free plausibility metrics). What stage 2 adds is *why*: the limit is no longer "no signal
+exists" but "we cannot yet predict which targets the signal works on." That is the real
+open problem, and it is a better-posed one than where the arc started.
 
 ### Limitations
 
-- **The shared-backbone reference is an arbitrary predicted cofold** (finding 3) — the
-  central caveat on the +0.247, and the reason stage 2 (crystal) is needed before this
-  is more than a lead.
-- **Strong target heterogeneity** including a −0.44 inversion — the pooled number hides
-  it, and a funnel cannot.
-- **We have not reproduced AbBiBench's absolute number on a native backbone** — "0.30"
-  is still their figure; stage 1's +0.247 is suggestive agreement, not verification.
-- **Six targets, two of them AlphaSeq** (aayl49/51, a different assay) — two of the four
-  positive targets. Worth remembering before leaning on the aggregate.
+- **The crystal positive rests on one well-powered target.** Of the three that passed
+  the gate, 4fqi (n=300) is the clean strong positive; 1n8z inverts; 1mhp is n=30. 3gbn
+  — stage 1's strongest — was gate-excluded. So "crystal backbone + ProteinMPNN ranks
+  affinity" is demonstrated decisively on 4fqi and is suggestive, not proven, in general.
+- **Strong, real target heterogeneity** including the 1n8z inversion that survives to the
+  crystal — a funnel cannot absorb a metric that flips sign between targets.
+- **We still have not reproduced AbBiBench's *pooled* absolute number** — the arc shows
+  the signal is real per-target (4fqi +0.59) but its spread across targets is wider than
+  a single published ≈0.30 conveys.
+- **Six targets, two of them AlphaSeq** (aayl49/51, a different assay); and the crystal
+  arm covers only 3 of 6. Worth remembering before leaning on any aggregate.
+- **The open problem is now target-selection, not metric choice.** We cannot yet predict,
+  for a new target, whether inverse-folding likelihood will track or invert against
+  affinity — that is what a usable Step-3 ranker would require.

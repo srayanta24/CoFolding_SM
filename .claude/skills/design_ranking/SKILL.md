@@ -99,16 +99,18 @@ by binding in a way that survives a change of question (two-benchmark ordering a
 
 **The one lead worth watching.** EXPERIMENT_06 found that scoring antibodies against
 *per-complex* predicted backbones washes out inverse-folding signal, but fixing **one
-reference backbone per target** and threading the sequences lifts ProteinMPNN's affinity
-correlation from +0.08 to **+0.247** (≈ the published AbBiBench baseline). So a
-*fixed-reference-backbone* inverse-folding score is the first thing in the arc that
-tracks binding at all. **Do not wire it into this funnel yet**: it is strongly
-target-heterogeneous (+0.56 on one target, −0.44 on another), so on a new target it
-could actively mis-rank. If a future Step 3 wants a binding-aware score, this is the
-candidate — thread designs onto a single canonical reference (e.g. the predicted target
-structure), score with ProteinMPNN — but only after the crystal-backbone confirmation
-(EXPERIMENT_06 stage 2) and a characterisation of *when* it works. The alternative is a
-supervised model, blocked on binding data that
+backbone per target** and threading the sequences makes ProteinMPNN's affinity
+correlation real: +0.247 on a shared predicted backbone, and **+0.591 on the real
+crystal for 4fqi** — the strongest affinity signal in the arc. So a *fixed-native-
+backbone* inverse-folding score genuinely ranks affinity for some targets. **Do not wire
+it into this funnel yet, and the reason is now sharper than "unvalidated":** it is
+genuinely target-specific — 1n8z (HER2/trastuzumab) *inverts* even on the crystal
+(ρ=−0.16), and we cannot yet predict which targets it tracks vs. inverts. A score that
+flips sign between targets will actively mis-rank a new one you cannot pre-classify. If a
+future Step 3 wants a binding-aware score, this is the candidate — thread designs onto a
+single canonical reference (the predicted or crystal target structure), score with
+ProteinMPNN — but only once there is a way to tell, per target, whether it will work. The
+alternative is a supervised model, blocked on binding data that
 [does not exist in `databases/`](../../experiments/finetuning/MILESTONE_01_label_validation.md).
 Until one of those lands, this funnel is the honest best.
 

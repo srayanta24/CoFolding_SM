@@ -24,6 +24,7 @@
         "ProteinMPNN ll_heavy": -0.0541,
         "ProteinMPNN ll_antibody": -0.037,
         "ProteinMPNN ll (shared backbone)": -0.1858,
+        "ProteinMPNN ll (crystal backbone)": -0.0749,
         "ESM-IF1 ll_antigen": 0.2885,
         "ProteinMPNN ll_antigen": 0.1202
       }
@@ -51,6 +52,7 @@
         "ProteinMPNN ll_heavy": -0.2171,
         "ProteinMPNN ll_antibody": -0.1995,
         "ProteinMPNN ll (shared backbone)": -0.4405,
+        "ProteinMPNN ll (crystal backbone)": -0.1579,
         "ESM-IF1 ll_antigen": -0.0944,
         "ProteinMPNN ll_antigen": -0.1249
       }
@@ -78,6 +80,7 @@
         "ProteinMPNN ll_heavy": 0.2242,
         "ProteinMPNN ll_antibody": 0.19,
         "ProteinMPNN ll (shared backbone)": 0.5618,
+        "ProteinMPNN ll (crystal backbone)": null,
         "ESM-IF1 ll_antigen": 0.2406,
         "ProteinMPNN ll_antigen": 0.433
       }
@@ -105,6 +108,7 @@
         "ProteinMPNN ll_heavy": -0.08,
         "ProteinMPNN ll_antibody": -0.0788,
         "ProteinMPNN ll (shared backbone)": 0.4447,
+        "ProteinMPNN ll (crystal backbone)": 0.5913,
         "ESM-IF1 ll_antigen": 0.0505,
         "ProteinMPNN ll_antigen": -0.0284
       }
@@ -132,6 +136,7 @@
         "ProteinMPNN ll_heavy": 0.3255,
         "ProteinMPNN ll_antibody": 0.2818,
         "ProteinMPNN ll (shared backbone)": 0.4002,
+        "ProteinMPNN ll (crystal backbone)": null,
         "ESM-IF1 ll_antigen": 0.0519,
         "ProteinMPNN ll_antigen": -0.0732
       }
@@ -159,6 +164,7 @@
         "ProteinMPNN ll_heavy": 0.3302,
         "ProteinMPNN ll_antibody": 0.2741,
         "ProteinMPNN ll (shared backbone)": 0.3882,
+        "ProteinMPNN ll (crystal backbone)": null,
         "ESM-IF1 ll_antigen": 0.0997,
         "ProteinMPNN ll_antigen": 0.0874
       }
@@ -260,6 +266,12 @@
       "n": 1530,
       "null_control": false,
       "partial_vs_null": 0.2421
+    },
+    "ProteinMPNN ll (crystal backbone)": {
+      "spearman": 0.1748,
+      "n": 630,
+      "null_control": false,
+      "partial_vs_null": 0.175
     },
     "ESM-IF1 ll_antigen": {
       "spearman": 0.0696,
@@ -534,6 +546,17 @@
         ],
         "null_control": false
       },
+      "ProteinMPNN ll (crystal backbone)": {
+        "wins": 1,
+        "n_targets": 3,
+        "p": 0.875,
+        "deltas_sd": [
+          -0.205,
+          -0.656,
+          1.91
+        ],
+        "null_control": false
+      },
       "ESM-IF1 ll_antigen": {
         "wins": 5,
         "n_targets": 6,
@@ -788,6 +811,17 @@
         ],
         "null_control": false
       },
+      "ProteinMPNN ll (crystal backbone)": {
+        "wins": 2,
+        "n_targets": 3,
+        "p": 0.5,
+        "deltas_sd": [
+          0.097,
+          -0.562,
+          1.481
+        ],
+        "null_control": false
+      },
       "ESM-IF1 ll_antigen": {
         "wins": 5,
         "n_targets": 6,
@@ -1039,6 +1073,17 @@
           0.806,
           0.757,
           0.809
+        ],
+        "null_control": false
+      },
+      "ProteinMPNN ll (crystal backbone)": {
+        "wins": 1,
+        "n_targets": 3,
+        "p": 0.875,
+        "deltas_sd": [
+          -0.503,
+          -0.144,
+          0.996
         ],
         "null_control": false
       },

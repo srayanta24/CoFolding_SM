@@ -378,12 +378,14 @@ experiments/scoring_calibration/
   analyze_asd.py           # EXPERIMENT_03 + _04: within-antigen ranking, partials
   analyze_crossbench.py    # sec 11: do the two benchmarks agree? (no)
   compute_proteinmpnn.py   # EXPERIMENT_06: ProteinMPNN ll, per-complex backbone
-  compute_proteinmpnn_shared.py # EXPERIMENT_06 §3.1: ll on one shared backbone/target
+  compute_proteinmpnn_shared.py # EXPERIMENT_06 §3.1: ll on one shared predicted backbone
+  compute_proteinmpnn_native.py # EXPERIMENT_06 §3.2: ll on the real crystal backbone
   build_design_sets.py     # EXPERIMENT_05: stratified design manifests
   analyze_designs.py       # EXPERIMENT_05: AUC per target, leak-free verdicts
   analyze_crossbench.py    # sec 11: do the two benchmarks agree? (no)
   compute_proteinmpnn.py   # EXPERIMENT_06: ProteinMPNN ll, per-complex backbone
-  compute_proteinmpnn_shared.py # EXPERIMENT_06 §3.1: ll on one shared backbone/target
+  compute_proteinmpnn_shared.py # EXPERIMENT_06 §3.1: ll on one shared predicted backbone
+  compute_proteinmpnn_native.py # EXPERIMENT_06 §3.2: ll on the real crystal backbone
 
   sets/                    # manifests (tracked - small, decision-bearing)
   results/                 # scored TSVs + generated .md/.json (tracked)
@@ -583,15 +585,19 @@ Either way it is **not the metric**. Separating the two causes needs a
   benchmark construction was washing out a real signal. **But target-heterogeneous**:
   +0.56/+0.45/+0.40/+0.39 on four targets, −0.44 on 1n8z, −0.19 on 1mhp — a lead, not a
   usable ranker, and the shared reference is still a predicted cofold.
-- **Stage 2 (open):** the *true crystal* arm — thread onto the SAbDab crystal backbone
-  for the four PDB targets. Removes the arbitrary-predicted-reference concern and
-  verifies AbBiBench's absolute number in our hands. Carries mis-registration risk (1n8z
-  and 4fqi crystals are Fabs, so VH-only mutants need verified VH-region alignment),
-  which is why it is staged second and not yet run.
+- **Stage 2 (done):** the *true crystal* arm — thread onto the SAbDab crystal backbone
+  behind an alignment gate (passed 1mhp/1n8z/4fqi; excluded 3gbn for a light-chain gap).
+  **4fqi reaches ρ=+0.591 on the crystal** — higher than the predicted backbone and the
+  strongest affinity signal in the arc — so inverse folding genuinely ranks affinity on
+  a real native backbone. And **1n8z inverts on the crystal too** (−0.16), proving the
+  inversion is a real target property, not a predicted-reference artefact.
 
-**Net:** the arc's "no binding ranker" softens to "a fixed-reference-backbone
-inverse-folding score is a real but target-heterogeneous affinity signal — the first
-lead worth chasing." See [EXPERIMENT_06](EXPERIMENT_06_proteinmpnn_transfer.md) §3.1.
+**Net:** the arc's "no binding ranker" is now precisely bounded. A fixed-native-backbone
+inverse-folding score DOES rank affinity for some targets (4fqi +0.59) and inverts for
+others (1n8z) — a real signal, not a universal ranker. The limit is no longer "no signal
+exists" but "we cannot yet predict which targets it works on," which is a better-posed
+open problem than the arc started with. See
+[EXPERIMENT_06](EXPERIMENT_06_proteinmpnn_transfer.md) §3.1–3.2.
 
 ### 11.6 Where this leaves the programme
 

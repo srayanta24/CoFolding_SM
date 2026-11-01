@@ -71,6 +71,7 @@ METRICS = [
     # target, mutants threaded. The per-complex washout control -- if this beats Arm A
     # above, our benchmark's one-cofold-per-mutant construction was flattening signal.
     ("mpnn_shared_ll", "ProteinMPNN ll (shared backbone)", False),
+    ("mpnn_native_ll", "ProteinMPNN ll (crystal backbone)", False),
     ("ll_antigen", "ESM-IF1 ll_antigen", True),
     ("mpnn_ll_antigen", "ProteinMPNN ll_antigen", True),
 ]
@@ -145,6 +146,12 @@ def main() -> None:
         with (RES / "asd_proteinmpnn_shared.tsv").open(encoding="utf-8") as fh:
             mpnn_sh = {r["entry_id"]: r for r in csv.DictReader(fh, delimiter="\t")
                        if r["status"] == "ok"}
+    # Stage 2: true crystal backbone (3 of 6 targets pass the alignment gate).
+    mpnn_nat = {}
+    if (RES / "asd_proteinmpnn_native.tsv").exists():
+        with (RES / "asd_proteinmpnn_native.tsv").open(encoding="utf-8") as fh:
+            mpnn_nat = {r["entry_id"]: r for r in csv.DictReader(fh, delimiter="\t")
+                        if r["status"] == "ok"}
     with (RES / "asd_scores.tsv").open(encoding="utf-8") as fh:
         base = [r for r in csv.DictReader(fh, delimiter="\t") if r["status"] == "ok"]
     with MANIFEST.open(encoding="utf-8") as fh:
@@ -170,6 +177,9 @@ def main() -> None:
         ms = mpnn_sh.get(r["entry_id"])
         if ms:
             row["mpnn_shared_ll"] = ms["ll_antibody"]
+        mn = mpnn_nat.get(r["entry_id"])
+        if mn:
+            row["mpnn_native_ll"] = mn["ll_antibody"]
         rows.append(row)
     print(f"[asd] {len(rows)} entries, {sum(1 for r in rows if 'packstat' in r)} "
           f"with Rosetta, {sum(1 for r in rows if 'mpnn_ll_heavy' in r)} with ProteinMPNN")
