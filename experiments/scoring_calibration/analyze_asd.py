@@ -61,7 +61,14 @@ METRICS = [
     ("sc_value", "shape complementarity", False),
     ("dSASA_int", "buried SASA", False),
     ("interface_hbonds", "interface H-bonds", False),
+    # ProteinMPNN (§11.5): the decisive metric swap. Reported directly beneath ESM-IF1
+    # because the pair is a controlled test of whether a stronger inverse-folding model
+    # recovers the published ~0.30 baseline on our predicted backbones, where ESM-IF1
+    # reached only +0.111. Its own antigen score is a second null control.
+    ("mpnn_ll_heavy", "ProteinMPNN ll_heavy", False),
+    ("mpnn_ll_antibody", "ProteinMPNN ll_antibody", False),
     ("ll_antigen", "ESM-IF1 ll_antigen", True),
+    ("mpnn_ll_antigen", "ProteinMPNN ll_antigen", True),
 ]
 
 # Columns copied in from the side tables, and the negations derived from them.
@@ -120,6 +127,13 @@ def main() -> None:
         with (RES / "asd_rosetta.tsv").open(encoding="utf-8") as fh:
             ros = {r["entry_id"]: r for r in csv.DictReader(fh, delimiter="\t")
                    if r["status"] == "ok"}
+    # ProteinMPNN (§11.5), optional. Its ll_* columns collide by name with ESM-IF1's,
+    # so they are joined under an mpnn_ prefix.
+    mpnn = {}
+    if (RES / "asd_proteinmpnn.tsv").exists():
+        with (RES / "asd_proteinmpnn.tsv").open(encoding="utf-8") as fh:
+            mpnn = {r["entry_id"]: r for r in csv.DictReader(fh, delimiter="\t")
+                    if r["status"] == "ok"}
     with (RES / "asd_scores.tsv").open(encoding="utf-8") as fh:
         base = [r for r in csv.DictReader(fh, delimiter="\t") if r["status"] == "ok"]
     with MANIFEST.open(encoding="utf-8") as fh:
@@ -137,9 +151,14 @@ def main() -> None:
             # Negated so that, like every other column here, higher = tighter binder.
             row["neg_dG_dSASA"] = str(-float(q["dG_dSASA_x100"]))
             row["neg_dG_separated"] = str(-float(q["dG_separated"]))
+        m = mpnn.get(r["entry_id"])
+        if m:
+            row["mpnn_ll_heavy"] = m["ll_heavy"]
+            row["mpnn_ll_antibody"] = m["ll_antibody"]
+            row["mpnn_ll_antigen"] = m["ll_antigen"]
         rows.append(row)
     print(f"[asd] {len(rows)} entries, {sum(1 for r in rows if 'packstat' in r)} "
-          f"with Rosetta")
+          f"with Rosetta, {sum(1 for r in rows if 'mpnn_ll_heavy' in r)} with ProteinMPNN")
 
     by = defaultdict(list)
     for r in rows:

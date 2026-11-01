@@ -88,11 +88,14 @@ reproducible script and a null control:
   credible interface exists* and neither ranks *how good one is* — the pipeline has been
   selecting on interface existence while we believed it was selecting on quality.
   [Conclusions](experiments/scoring_calibration/PLAN.md#11-conclusions--what-five-experiments-established).
-- **The one open check that could overturn that**: AbBiBench publishes ProteinMPNN
-  ρ≈0.30 on the same affinity data where our best column is +0.141. We never reproduced
-  that baseline locally, so the benchmark's resolving power is borrowed rather than
-  demonstrated. If it reproduces, the problem is our predicted structures, not the
-  metrics — a materially different programme.
+- **The overturning check was run, and the metric is not the lever.** AbBiBench
+  publishes ProteinMPNN ρ≈0.30 on this affinity data where our best column is +0.141, so
+  we scored the stronger published model (ProteinMPNN) on our own structures
+  ([EXPERIMENT_06](experiments/scoring_calibration/EXPERIMENT_06_proteinmpnn_transfer.md)).
+  It reproduced ESM-IF1's weak result (+0.097, below ESM-IF1's +0.111) and came nowhere
+  near 0.30 — so swapping scorers buys nothing, and the gap to the published number is
+  the structures or the scoring protocol, not the metric. (A native-backbone arm would
+  separate those two; our structures are predicted per-complex backbones.)
 - **Nothing in this stack was ever trained on antibodies.** `antibody-anything` and
   `nanobody-anything` are byte-identical config dicts, no checkpoint differs by
   modality, and no BoltzGen training config mentions antibodies — while the same configs

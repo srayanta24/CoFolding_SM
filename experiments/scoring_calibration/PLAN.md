@@ -2,7 +2,7 @@
 
 Status: **arc complete · 2026-11-01** (plan text below is draft v1, 2026-10-17)
 
-> **Outcome, after five experiments and three benchmarks.** The benchmark this plan set
+> **Outcome, after six experiments and three benchmarks.** The benchmark this plan set
 > out to build exists three times over: 28 parent complexes with paired
 > retained/destroyed point mutants; six antigens with 1,530 affinity-labelled
 > antibodies; and 1,096 real BoltzGen designs across two antigens with a
@@ -33,7 +33,8 @@ Status: **arc complete · 2026-11-01** (plan text below is draft v1, 2026-10-17)
 > [_02](EXPERIMENT_02_alternative_metrics.md) ·
 > [_03](EXPERIMENT_03_within_antigen_ranking.md) ·
 > [_04](EXPERIMENT_04_packstat_transfer.md) ·
-> [_05](EXPERIMENT_05_design_transfer.md). Generated numbers in `results/`,
+> [_05](EXPERIMENT_05_design_transfer.md) ·
+> [_06](EXPERIMENT_06_proteinmpnn_transfer.md). Generated numbers in `results/`,
 > regenerable with `analyze.py`, `analyze_metrics.py`, `analyze_paired.py`,
 > `analyze_asd.py`, `analyze_designs.py`, `analyze_crossbench.py`.
 >
@@ -376,9 +377,11 @@ experiments/scoring_calibration/
   analyze_paired.py        # the 28-parent paired sign test (the trustworthy column)
   analyze_asd.py           # EXPERIMENT_03 + _04: within-antigen ranking, partials
   analyze_crossbench.py    # sec 11: do the two benchmarks agree? (no)
+  compute_proteinmpnn.py   # EXPERIMENT_06: ProteinMPNN inverse-folding ll
   build_design_sets.py     # EXPERIMENT_05: stratified design manifests
   analyze_designs.py       # EXPERIMENT_05: AUC per target, leak-free verdicts
   analyze_crossbench.py    # sec 11: do the two benchmarks agree? (no)
+  compute_proteinmpnn.py   # EXPERIMENT_06: ProteinMPNN inverse-folding ll
 
   sets/                    # manifests (tracked - small, decision-bearing)
   results/                 # scored TSVs + generated .md/.json (tracked)
@@ -526,26 +529,57 @@ one (point mutants of near-native backbones) and is at or below chance on the tw
 involve the real objects — graded affinity and generated designs. It is not wired into
 anything.
 
-### 11.5 The one thing that could overturn this
+### 11.5 The overturning check — run 2026-11-01, and it does not overturn
 
 **AbBiBench publishes ProteinMPNN ρ ≈ 0.30 and ESM-IF1 ≈ 0.28 on the same affinity data
-where our best column is +0.141.** Someone else gets roughly double our best, and we
-never attempted to reproduce their baseline ourselves.
+where our best inverse-folding column (ESM-IF1 ll_heavy) reached +0.111.** Someone else
+got roughly double our best, so the "nothing ranks affinity" conclusion rested on a
+benchmark whose resolving power was *borrowed rather than demonstrated*. The check: run
+the stronger published scorer (ProteinMPNN) on our own structures and see which reading
+holds.
 
-So the "nothing ranks affinity" conclusion currently rests on a benchmark whose
-resolving power is **borrowed rather than demonstrated**. Two readings, and they point
-opposite ways:
+`compute_proteinmpnn.py` (official ProteinMPNN v_48_020, vendored) scored all 1,530 ASD
+complexes — same structures, same benchmark, same null as ESM-IF1, so a clean metric
+swap. Pooled Spearman vs −log KD:
 
-- If ProteinMPNN reproduces at ≈0.30 here, the problem is **our predicted structures**,
-  not the metrics — and the programme should redirect to structure quality rather than
-  to training a scorer.
-- If it lands near +0.14 like everything else, the published baselines do not transfer
-  to predicted backbones, and §11.1 stands as stated.
+| | our result | published (AbBiBench) |
+|---|---|---|
+| ESM-IF1 ll_heavy | +0.111 | ≈0.28 |
+| **ProteinMPNN ll_heavy** | **+0.097** | **≈0.30** |
+| ProteinMPNN ll_antibody | +0.080 | — |
+| *ProteinMPNN ll_antigen (null)* | +0.059 | — |
 
-**This is the highest-value open check in the arc.** It is cheap — ProteinMPNN scoring
-on 1,530 existing structures, no new cofolding — and it discriminates between two very
-different programme directions. It should be done before any significant investment in
-the training branch.
+**The stronger scorer did not help — it landed slightly below ESM-IF1, ~3× under the
+published number, and barely above its own null.** Per target it tracks ESM-IF1 almost
+exactly: both reach ~0.33 on the two AlphaSeq targets and both go weak-to-negative on
+the three AbBiBench targets where the 0.30 is claimed (1n8z −0.22, 4fqi −0.08, 3gbn
++0.22 but sitting *below* its own +0.43 null). No target reproduces 0.30.
+
+**So the reading is the second one: a better inverse-folding model is not the lever on
+our structures.** Metric choice is not what separates us from the published baseline.
+Of the two things that could be — the scorer or the structures — the scorer is now
+ruled out. §11.1 stands: swapping ESM-IF1 → ProteinMPNN buys nothing, and there is still
+no validated binding ranker.
+
+**What the check does NOT settle, and the clean follow-up.** This scored each antibody
+against *its own per-complex predicted backbone* (what we have on disk, directly
+comparable to ESM-IF1). AbBiBench's protocol instead threads every mutant onto *one
+native crystal backbone per target*. So a low result here is consistent with two
+non-exclusive causes, and this arm cannot separate them:
+
+- **predicted-backbone quality** — our cofolded structures are too noisy to rank from;
+- **per-complex-backbone washout** — scoring a sequence against the backbone folded
+  *from that sequence* is partly circular and flattens mutation effects.
+
+Either way it is **not the metric**, which is the result that matters for the funnel
+(Step 3 gains no ranker from a scorer swap). Separating the two causes needs a
+**native-backbone arm**: fetch the crystal complex for the PDB-backed targets (1mhp,
+1n8z, 3gbn, 4fqi), thread the mutant antibody sequences onto it, and re-score with
+ProteinMPNN. If *that* reaches ≈0.30, the bottleneck is our predicted structures and the
+programme should target structure quality; if it stays ≈0.10, the published baseline
+does not transfer to this benchmark at all. Not run here — it needs crystal fetch +
+sequence threading, and it is a new experiment rather than a re-score of existing files.
+See [EXPERIMENT_06](EXPERIMENT_06_proteinmpnn_transfer.md).
 
 ### 11.6 Where this leaves the programme
 
@@ -561,17 +595,29 @@ either (five antigens of graded affinity; `bool` negatives mostly mislabelled
 neutralization; antigen diversity collapsing 832 → 6 clusters).
 
 **Those two findings together are the real constraint on this project**, and they are
-better stated plainly than worked around. The honest options remaining are: reproduce
-the published baseline to find out whether structures are the problem (§11.5), generate
-our own binding labels rather than hunting for existing ones, or accept the funnel as an
-existence filter and compete on generator quality and throughput instead of selection.
+better stated plainly than worked around. Of the honest options that remained, the
+cheapest — reproduce the published inverse-folding baseline, to find out whether the gap
+is the *metric* or the *structure* — has now been run (§11.5 / EXPERIMENT_06). **It ruled
+the metric out**: ProteinMPNN, the stronger published scorer, reproduced ESM-IF1's weak
+result (+0.097 vs +0.111) and came nowhere near 0.30. So no scorer swap rescues
+selection, and the gap to the published number is now narrowed to the structures or the
+scoring *protocol* (per-complex predicted backbone vs native crystal backbone), which a
+native-backbone arm would separate.
 
-EXPERIMENT_05 sharpens the last of those into something concrete. The best design-level
+That leaves two forward directions worth the effort, and one that is not:
+
+- **Worth it:** the native-backbone arm (does ranking work on crystal backbones? — if
+  so, invest in structure quality); and generating our *own* binding labels rather than
+  hunting for existing ones (the whole supervised branch is blocked on their absence).
+- **Not worth it:** more scoring metrics. Five metric families across three benchmarks,
+  plus a sixth scorer in EXPERIMENT_06, have now all failed to rank binding — the
+  shortlist is exhausted.
+
+EXPERIMENT_05 makes the fallback concrete and non-defeatist. The best design-level
 signals it found — ipTM and `delta_sasa_refolded` — are the ones **BoltzGen's own
-ranking already uses**, and they predict structural self-consistency, which is exactly
-what an existence filter should do. So "accept the funnel as an existence filter" is not
-a counsel of defeat: the funnel already is one, and it is using close to the best
-cheap metrics available for that job. What it is *not*, on all five experiments'
-evidence, is a selector for binding — and no amount of metric choice makes it one. That
-is the case for spending the next effort on generator quality, on generating real
-binding labels, or on the §11.5 structure-quality check, rather than on more scoring.
+ranking already uses**, and they predict structural self-consistency, exactly what an
+existence filter should do. So "accept the funnel as an existence filter" is not a
+retreat: the funnel already is one, using close to the best cheap metrics for that job.
+What it is *not*, on all six experiments' evidence, is a selector for binding — and no
+choice of scorer makes it one. The next effort belongs on generator quality, real
+binding labels, or the native-backbone structure-quality check — not on more scoring.
