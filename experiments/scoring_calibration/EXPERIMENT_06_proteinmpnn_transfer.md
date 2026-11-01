@@ -1,14 +1,27 @@
 # Experiment 06 — Does a stronger inverse-folding scorer recover the published baseline?
 
-Status: **complete · 2026-11-01**
+Status: **complete · 2026-11-01** · Arm A (per-complex backbone) + native-backbone arm
+stage 1 (shared backbone). Headline below updated after stage 1.
+
+> **Update after the native-backbone arm (stage 1).** Arm A's low +0.097 turned out to
+> be substantially an artefact of the benchmark's *per-complex* backbones, not the
+> metric. Scoring every mutant on ONE shared reference backbone per target lifts the
+> pooled correlation to **+0.247** (from +0.080 for the same ProteinMPNN score on
+> per-complex backbones) — roughly the published ≈0.30, and the strongest affinity
+> signal anywhere in the arc. It is target-heterogeneous (+0.56 on 3gbn, +0.45 on 4fqi,
+> but −0.44 on 1n8z), so it is a *lead*, not a validated ranker. Details in §3.1 and §6.
 
 Generated numbers: [`results/asd_comparison.md`](results/asd_comparison.md) /
 [`.json`](results/asd_comparison.json), regenerable with `analyze_asd.py`.
-Scores produced by `compute_proteinmpnn.py`.
+Scores produced by `compute_proteinmpnn.py` (per-complex) and
+`compute_proteinmpnn_shared.py` (shared backbone).
 
-**One-line answer: no.** ProteinMPNN ranks ASD affinity at ρ = +0.097 pooled — slightly
-*below* ESM-IF1's +0.111, ~3× under the published ≈0.30, and barely above its own null.
-The metric is not the lever; §11.1's conclusion stands.
+**One-line answer: the metric is not the lever — the backbone protocol is.** On the
+benchmark's per-complex backbones ProteinMPNN ranks ASD affinity at ρ = +0.097, slightly
+*below* ESM-IF1's +0.111 and ~3× under the published ≈0.30. But fixing one backbone per
+target and threading the mutants lifts it to **+0.247** — ≈ the published number, and
+the first real affinity signal in the arc. It is target-heterogeneous (a −0.44 inversion
+on 1n8z), so it is a lead to chase, not yet a usable ranker.
 
 ---
 
@@ -78,6 +91,42 @@ The only targets where inverse folding works at all are the two AlphaSeq ones
 claimed, ProteinMPNN is weak-to-negative — and on 3gbn, its +0.224 sits *below* its own
 +0.433 null, so even that apparent signal is target-specific leakage, not affinity.
 
+### 3.1 The native-backbone arm, stage 1: one shared backbone per target
+
+The §6.3 follow-up, run. Instead of scoring each mutant on its own per-complex cofold
+(Arm A), fix **one reference backbone per target** — the best-modelled cofold (highest
+ipTM) — and thread every mutant's heavy+light onto it (`compute_proteinmpnn_shared.py`).
+Zero alignment risk: every cofold of a target shares the manifest's exact chain lengths,
+so threading is a sequence swap with coordinates untouched. This isolates the
+*per-complex-backbone washout* — scoring a sequence against the backbone folded from it
+is partly circular and flattens the mutation signal.
+
+| | pooled ρ | partial vs null |
+|---|---|---|
+| ProteinMPNN, **per-complex** backbone (Arm A) | +0.080 | +0.075 |
+| ProteinMPNN, **shared** backbone | **+0.247** | **+0.242** |
+| *(published AbBiBench ProteinMPNN)* | *≈0.30* | — |
+
+**Fixing the backbone roughly tripled the correlation** and brought it to ≈ the
+published baseline — the strongest affinity signal in the whole arc, and the partial
+(+0.242 ≈ raw) says it is not null leakage. So Arm A's low number was substantially a
+*benchmark-construction artefact*, not a metric or absolute-structure failure.
+
+But it is **not a clean universal ranker** — it is strongly target-heterogeneous:
+
+| target | shared-backbone ρ | per-complex (Arm A) ρ |
+|---|---|---|
+| 3gbn | **+0.562** | +0.190 |
+| 4fqi | **+0.445** | −0.079 |
+| aayl49 | +0.400 | +0.282 |
+| aayl51 | +0.388 | +0.274 |
+| 1mhp (n=30) | −0.186 | −0.037 |
+| 1n8z | **−0.441** | −0.200 |
+
+Four targets jump strongly positive; 1n8z (HER2/trastuzumab) is strongly *inverted*, and
+1mhp (n=30, underpowered) mildly so. The pooled +0.247 is four strong positives dragged
+by two negatives, not a uniform effect.
+
 ## 4. What dataset did we use
 
 Unchanged from EXPERIMENT_03/04: the six-target ASD within-antigen benchmark, 1,530
@@ -108,41 +157,51 @@ All reproducible from the TSVs; nothing hand-transcribed.
 
 ## 6. What were the findings
 
-**1. The metric is not the lever.** A stronger, differently-trained inverse-folding
-model reproduces ESM-IF1's weak result almost exactly (+0.097 vs +0.111), nowhere near
-the published 0.30. Of the two candidate explanations for the gap to AbBiBench — the
-scorer or the structures — **the scorer is now ruled out.** §11.1 stands: swapping in a
-better inverse-folding model buys the funnel nothing, and there is still no validated
-binding ranker.
+**1. The metric was not the lever — the backbone protocol was.** On *per-complex*
+backbones (Arm A) a stronger, differently-trained inverse-folding model reproduced
+ESM-IF1's weak result almost exactly (+0.097 vs +0.111). But §3.1 shows that was a
+benchmark-construction artefact: holding ONE backbone fixed per target and threading the
+mutants lifts ProteinMPNN to **+0.247**, roughly the published ≈0.30. The scorer was
+never the problem; scoring each sequence against the backbone *folded from it* was. This
+revises the earlier reading — it is not "no inverse-folding signal," it is "the signal is
+there but the per-complex-cofold benchmark washed it out."
 
-**2. What this does not settle.** We scored each antibody against *its own per-complex
-predicted backbone*, which is directly comparable to ESM-IF1 but is **not** AbBiBench's
-protocol (one native crystal backbone per target, threaded mutants). So the low result
-has two non-exclusive causes this arm cannot separate: (a) our predicted structures are
-too noisy to rank from, or (b) scoring a sequence against the backbone folded from it is
-partly circular and washes out the mutation signal. Both are *structure/protocol*
-problems, not metric problems.
+**2. It is a lead, not a validated ranker — and the heterogeneity is the catch.** The
++0.247 is four strongly-positive targets (3gbn +0.56, 4fqi +0.45, aayl49/51 ≈+0.39)
+dragged by two negatives, including a strong **inversion on 1n8z** (HER2/trastuzumab,
+−0.44). A ranker that is +0.56 on one target and −0.44 on another cannot be trusted on a
+new target without knowing which regime it is in. So this reopens inverse folding as a
+*candidate* binding signal — the first in the whole arc worth chasing — without yet
+delivering a usable one.
 
-**3. The clean follow-up is a native-backbone arm.** Fetch the crystal complex for the
-four PDB-backed targets, thread the mutant antibody sequences onto it, re-score with
-ProteinMPNN. If that reaches ≈0.30, the bottleneck is our predicted structures and the
-programme should target structure quality; if it stays ≈0.10, the published baseline
-simply does not transfer to this benchmark. Not run here — it needs a crystal fetch and
-sequence threading, i.e. a genuinely new benchmark rather than a re-score.
+**3. Why this is still not AbBiBench's protocol, and stage 2.** The shared backbone here
+is an *arbitrary predicted* reference (the best-ipTM cofold), not a crystal. The
+inversions (1n8z, 1mhp) could be reference-backbone pathologies as easily as real
+biology. Stage 2 — the true native arm — fetches the crystal complex for the four
+PDB-backed targets (all present in `databases/sabdab/`), threads the mutant sequences
+onto the *crystal* backbone, and re-scores. That both (a) removes the arbitrary-reference
+concern and (b) verifies AbBiBench's absolute number in our hands. It carries real
+mis-registration risk (1n8z and 4fqi crystals are Fabs — VH+CH1 — so the manifest's
+VH-only mutants need verified VH-region alignment, unlike stage 1's exact-length
+threading), which is why it was staged second and is not yet run.
 
-**4. For the funnel (the practical consequence).** The ProteinMPNN check was the lever
-that could have added a binding-aware Step-3 ranker. It did not. So the funnel
-recommendation is unchanged: gate on ipTM + filter_rmsd (plausibility), diversify by
-cluster, and rank within cluster by the free plausibility metrics — no inverse-folding
-scorer, however strong, earns a place as a binding ranker on current evidence.
+**4. For the funnel (the practical consequence).** Stage 1 changes the Step-3 picture
+from "no binding ranker is possible" to "a *fixed-reference-backbone* inverse-folding
+score is a real but unreliable lead." It is **not** yet recommended for the production
+funnel — the 1n8z inversion means it could actively mis-rank a new target — so the
+funnel recommendation is unchanged for now (gate on ipTM + filter_rmsd, diversify by
+cluster, rank by free plausibility metrics). But it is the one avenue that earned a
+follow-up, and `design_ranking`'s "why no binding ranker" note records it as the open
+lead rather than a closed door.
 
 ### Limitations
 
-- **Predicted, per-complex backbones** (see finding 2) — the central confound, and the
-  reason a *low* result is less conclusive than a high one would have been.
-- **We did not reproduce AbBiBench's absolute number** on *any* backbone, so "0.30" is
-  taken from their paper, not verified in our hands. The native-backbone arm would also
-  serve as that verification.
-- **Six targets, two of them AlphaSeq.** The only targets where inverse folding worked
-  are the two whose labels are AlphaSeq (a different assay), which is worth remembering
-  before leaning on them.
+- **The shared-backbone reference is an arbitrary predicted cofold** (finding 3) — the
+  central caveat on the +0.247, and the reason stage 2 (crystal) is needed before this
+  is more than a lead.
+- **Strong target heterogeneity** including a −0.44 inversion — the pooled number hides
+  it, and a funnel cannot.
+- **We have not reproduced AbBiBench's absolute number on a native backbone** — "0.30"
+  is still their figure; stage 1's +0.247 is suggestive agreement, not verification.
+- **Six targets, two of them AlphaSeq** (aayl49/51, a different assay) — two of the four
+  positive targets. Worth remembering before leaning on the aggregate.

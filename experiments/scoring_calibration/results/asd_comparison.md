@@ -6,14 +6,14 @@ Each target is **one antigen, many antibodies, heavy chain only varying**. Affin
 
 ## Per target
 
-| target | n | ipTM | pTM | complex pLDDT | confidence_score | ESM-IF1 ll_heavy | ESM-IF1 ll_light | ESM-IF1 ll_antibody | packstat | -dG/dSASA | -dG_separated | shape complementarity | buried SASA | interface H-bonds | ProteinMPNN ll_heavy | ProteinMPNN ll_antibody | ESM-IF1 ll_antigen | ProteinMPNN ll_antigen |
-|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| 1mhp | 30 | -0.110 | -0.106 | -0.083 | -0.113 | -0.225 | -0.013 | -0.136 | -0.055 | -0.097 | -0.091 | -0.097 | +0.026 | +0.047 | -0.054 | -0.037 | +0.288 | +0.120 |
-| 1n8z | 300 | +0.209 | +0.155 | -0.208 | +0.112 | -0.102 | +0.072 | -0.068 | -0.013 | -0.171 | +0.009 | -0.069 | +0.149 | +0.069 | -0.217 | -0.200 | -0.094 | -0.125 |
-| 3gbn | 300 | +0.289 | +0.367 | +0.554 | +0.399 | +0.207 | -0.201 | +0.144 | +0.108 | +0.521 | +0.525 | +0.401 | +0.337 | +0.203 | +0.224 | +0.190 | +0.241 | +0.433 |
-| 4fqi | 300 | +0.024 | +0.038 | -0.053 | +0.011 | -0.014 | +0.061 | +0.010 | +0.182 | +0.219 | +0.149 | +0.117 | +0.004 | -0.143 | -0.080 | -0.079 | +0.051 | -0.028 |
-| aayl49 | 300 | +0.083 | +0.078 | +0.051 | +0.053 | +0.340 | -0.162 | +0.213 | -0.008 | -0.006 | -0.013 | +0.085 | -0.014 | +0.014 | +0.326 | +0.282 | +0.052 | -0.073 |
-| aayl51 | 300 | +0.042 | +0.055 | +0.045 | +0.053 | +0.210 | +0.084 | +0.206 | +0.050 | +0.032 | +0.002 | +0.075 | -0.049 | +0.059 | +0.330 | +0.274 | +0.100 | +0.087 |
+| target | n | ipTM | pTM | complex pLDDT | confidence_score | ESM-IF1 ll_heavy | ESM-IF1 ll_light | ESM-IF1 ll_antibody | packstat | -dG/dSASA | -dG_separated | shape complementarity | buried SASA | interface H-bonds | ProteinMPNN ll_heavy | ProteinMPNN ll_antibody | ProteinMPNN ll (shared backbone) | ESM-IF1 ll_antigen | ProteinMPNN ll_antigen |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| 1mhp | 30 | -0.110 | -0.106 | -0.083 | -0.113 | -0.225 | -0.013 | -0.136 | -0.055 | -0.097 | -0.091 | -0.097 | +0.026 | +0.047 | -0.054 | -0.037 | -0.186 | +0.288 | +0.120 |
+| 1n8z | 300 | +0.209 | +0.155 | -0.208 | +0.112 | -0.102 | +0.072 | -0.068 | -0.013 | -0.171 | +0.009 | -0.069 | +0.149 | +0.069 | -0.217 | -0.200 | -0.441 | -0.094 | -0.125 |
+| 3gbn | 300 | +0.289 | +0.367 | +0.554 | +0.399 | +0.207 | -0.201 | +0.144 | +0.108 | +0.521 | +0.525 | +0.401 | +0.337 | +0.203 | +0.224 | +0.190 | +0.562 | +0.241 | +0.433 |
+| 4fqi | 300 | +0.024 | +0.038 | -0.053 | +0.011 | -0.014 | +0.061 | +0.010 | +0.182 | +0.219 | +0.149 | +0.117 | +0.004 | -0.143 | -0.080 | -0.079 | +0.445 | +0.051 | -0.028 |
+| aayl49 | 300 | +0.083 | +0.078 | +0.051 | +0.053 | +0.340 | -0.162 | +0.213 | -0.008 | -0.006 | -0.013 | +0.085 | -0.014 | +0.014 | +0.326 | +0.282 | +0.400 | +0.052 | -0.073 |
+| aayl51 | 300 | +0.042 | +0.055 | +0.045 | +0.053 | +0.210 | +0.084 | +0.206 | +0.050 | +0.032 | +0.002 | +0.075 | -0.049 | +0.059 | +0.330 | +0.274 | +0.388 | +0.100 | +0.087 |
 
 ## Pooled (z-scored within target)
 
@@ -36,6 +36,7 @@ Each target is **one antigen, many antibodies, heavy chain only varying**. Affin
 | interface H-bonds — **below null** | +0.039 | +0.035 | 1530 |
 | ProteinMPNN ll_heavy | +0.097 | +0.090 | 1530 |
 | ProteinMPNN ll_antibody | +0.080 | +0.075 | 1530 |
+| ProteinMPNN ll (shared backbone) | +0.247 | +0.242 | 1530 |
 | *ESM-IF1 ll_antigen* **(null control)** | +0.070 | — | 1530 |
 | *ProteinMPNN ll_antigen* **(null control)** | +0.059 | — | 1530 |
 
@@ -68,6 +69,7 @@ Scored exactly as the paired benchmark is — a sign test over groups — at thr
 | interface H-bonds | +0.14 | +0.39 | +0.34 | -0.51 | -0.05 | +0.22 | 4/6 | 0.344 |
 | ProteinMPNN ll_heavy | +0.09 | -0.65 | +0.72 | -0.12 | +0.81 | +0.89 | 4/6 | 0.344 |
 | ProteinMPNN ll_antibody | +0.47 | -0.51 | +0.40 | -0.01 | +0.61 | +0.68 | 4/6 | 0.344 |
+| ProteinMPNN ll (shared backbone) | +0.18 | -1.49 | +2.00 | +1.44 | +0.94 | +1.09 | 5/6 | 0.109 |
 | *ESM-IF1 ll_antigen* **(null control)** | +0.87 | -0.24 | +0.62 | +0.33 | +0.36 | +0.11 | 5/6 | 0.109 |
 | *ProteinMPNN ll_antigen* **(null control)** | +0.50 | -0.56 | +1.29 | +0.29 | -0.00 | +0.24 | 4/6 | 0.344 |
 
@@ -90,6 +92,7 @@ Scored exactly as the paired benchmark is — a sign test over groups — at thr
 | interface H-bonds | +0.12 | +0.25 | +0.28 | -0.46 | +0.03 | +0.16 | 5/6 | 0.109 |
 | ProteinMPNN ll_heavy | +0.05 | -0.57 | +0.42 | -0.21 | +0.88 | +0.75 | 4/6 | 0.344 |
 | ProteinMPNN ll_antibody | +0.20 | -0.47 | +0.37 | -0.17 | +0.75 | +0.66 | 4/6 | 0.344 |
+| ProteinMPNN ll (shared backbone) | -0.01 | -1.18 | +1.36 | +1.21 | +0.91 | +0.86 | 4/6 | 0.344 |
 | *ESM-IF1 ll_antigen* **(null control)** | +0.81 | -0.30 | +0.62 | +0.20 | +0.05 | +0.19 | 5/6 | 0.109 |
 | *ProteinMPNN ll_antigen* **(null control)** | +0.62 | -0.21 | +1.06 | +0.05 | -0.20 | +0.13 | 4/6 | 0.344 |
 
@@ -112,6 +115,7 @@ Scored exactly as the paired benchmark is — a sign test over groups — at thr
 | interface H-bonds | -0.19 | +0.04 | +0.33 | -0.16 | -0.06 | +0.14 | 3/6 | 0.656 |
 | ProteinMPNN ll_heavy | -0.52 | -0.36 | +0.35 | -0.07 | +0.52 | +0.72 | 3/6 | 0.656 |
 | ProteinMPNN ll_antibody | -0.47 | -0.32 | +0.32 | -0.08 | +0.44 | +0.59 | 3/6 | 0.656 |
+| ProteinMPNN ll (shared backbone) | -0.63 | -0.74 | +0.97 | +0.81 | +0.76 | +0.81 | 4/6 | 0.344 |
 | *ESM-IF1 ll_antigen* **(null control)** | +0.39 | -0.21 | +0.38 | +0.18 | +0.12 | +0.27 | 5/6 | 0.109 |
 | *ProteinMPNN ll_antigen* **(null control)** | +0.04 | -0.23 | +0.65 | -0.01 | -0.09 | +0.17 | 3/6 | 0.656 |
 

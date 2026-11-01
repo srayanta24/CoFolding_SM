@@ -377,11 +377,13 @@ experiments/scoring_calibration/
   analyze_paired.py        # the 28-parent paired sign test (the trustworthy column)
   analyze_asd.py           # EXPERIMENT_03 + _04: within-antigen ranking, partials
   analyze_crossbench.py    # sec 11: do the two benchmarks agree? (no)
-  compute_proteinmpnn.py   # EXPERIMENT_06: ProteinMPNN inverse-folding ll
+  compute_proteinmpnn.py   # EXPERIMENT_06: ProteinMPNN ll, per-complex backbone
+  compute_proteinmpnn_shared.py # EXPERIMENT_06 §3.1: ll on one shared backbone/target
   build_design_sets.py     # EXPERIMENT_05: stratified design manifests
   analyze_designs.py       # EXPERIMENT_05: AUC per target, leak-free verdicts
   analyze_crossbench.py    # sec 11: do the two benchmarks agree? (no)
-  compute_proteinmpnn.py   # EXPERIMENT_06: ProteinMPNN inverse-folding ll
+  compute_proteinmpnn.py   # EXPERIMENT_06: ProteinMPNN ll, per-complex backbone
+  compute_proteinmpnn_shared.py # EXPERIMENT_06 §3.1: ll on one shared backbone/target
 
   sets/                    # manifests (tracked - small, decision-bearing)
   results/                 # scored TSVs + generated .md/.json (tracked)
@@ -571,15 +573,25 @@ non-exclusive causes, and this arm cannot separate them:
 - **per-complex-backbone washout** — scoring a sequence against the backbone folded
   *from that sequence* is partly circular and flattens mutation effects.
 
-Either way it is **not the metric**, which is the result that matters for the funnel
-(Step 3 gains no ranker from a scorer swap). Separating the two causes needs a
-**native-backbone arm**: fetch the crystal complex for the PDB-backed targets (1mhp,
-1n8z, 3gbn, 4fqi), thread the mutant antibody sequences onto it, and re-score with
-ProteinMPNN. If *that* reaches ≈0.30, the bottleneck is our predicted structures and the
-programme should target structure quality; if it stays ≈0.10, the published baseline
-does not transfer to this benchmark at all. Not run here — it needs crystal fetch +
-sequence threading, and it is a new experiment rather than a re-score of existing files.
-See [EXPERIMENT_06](EXPERIMENT_06_proteinmpnn_transfer.md).
+Either way it is **not the metric**. Separating the two causes needs a
+**native-backbone arm**, run in two stages:
+
+- **Stage 1 (done):** fix ONE shared reference backbone per target and thread the
+  mutants — isolating the washout confound with zero alignment risk. Result:
+  **ρ = +0.247** (up from +0.080 for the same score on per-complex backbones), ≈ the
+  published 0.30 and the strongest affinity signal in the arc. So the per-complex-cofold
+  benchmark construction was washing out a real signal. **But target-heterogeneous**:
+  +0.56/+0.45/+0.40/+0.39 on four targets, −0.44 on 1n8z, −0.19 on 1mhp — a lead, not a
+  usable ranker, and the shared reference is still a predicted cofold.
+- **Stage 2 (open):** the *true crystal* arm — thread onto the SAbDab crystal backbone
+  for the four PDB targets. Removes the arbitrary-predicted-reference concern and
+  verifies AbBiBench's absolute number in our hands. Carries mis-registration risk (1n8z
+  and 4fqi crystals are Fabs, so VH-only mutants need verified VH-region alignment),
+  which is why it is staged second and not yet run.
+
+**Net:** the arc's "no binding ranker" softens to "a fixed-reference-backbone
+inverse-folding score is a real but target-heterogeneous affinity signal — the first
+lead worth chasing." See [EXPERIMENT_06](EXPERIMENT_06_proteinmpnn_transfer.md) §3.1.
 
 ### 11.6 Where this leaves the programme
 
@@ -600,18 +612,22 @@ cheapest — reproduce the published inverse-folding baseline, to find out wheth
 is the *metric* or the *structure* — has now been run (§11.5 / EXPERIMENT_06). **It ruled
 the metric out**: ProteinMPNN, the stronger published scorer, reproduced ESM-IF1's weak
 result (+0.097 vs +0.111) and came nowhere near 0.30. So no scorer swap rescues
-selection, and the gap to the published number is now narrowed to the structures or the
-scoring *protocol* (per-complex predicted backbone vs native crystal backbone), which a
-native-backbone arm would separate.
+selection **on the per-complex-backbone benchmark** — but the native-backbone arm
+(§11.5 stage 1) then showed that protocol was itself the problem: a shared backbone
+lifts the same score to +0.247, ≈ the published number. The gap was the scoring
+*protocol*, not the metric or (necessarily) the structures.
 
 That leaves two forward directions worth the effort, and one that is not:
 
-- **Worth it:** the native-backbone arm (does ranking work on crystal backbones? — if
-  so, invest in structure quality); and generating our *own* binding labels rather than
-  hunting for existing ones (the whole supervised branch is blocked on their absence).
-- **Not worth it:** more scoring metrics. Five metric families across three benchmarks,
-  plus a sixth scorer in EXPERIMENT_06, have now all failed to rank binding — the
-  shortlist is exhausted.
+- **Worth it:** the fixed-reference-backbone inverse-folding score — the one real
+  affinity lead the arc produced (+0.247, but target-heterogeneous with a −0.44
+  inversion). Confirm it with the crystal arm (stage 2) and characterise *when* it works
+  before trusting it; and generate our *own* binding labels rather than hunting for
+  existing ones (the supervised branch is blocked on their absence).
+- **Not worth it:** more scoring metrics on per-complex backbones. Five metric families
+  across three benchmarks, plus a sixth scorer, all failed there — the shortlist is
+  exhausted, and stage 1 shows the limitation was the benchmark protocol, not the lack
+  of yet another metric.
 
 EXPERIMENT_05 makes the fallback concrete and non-defeatist. The best design-level
 signals it found — ipTM and `delta_sasa_refolded` — are the ones **BoltzGen's own

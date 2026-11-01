@@ -29,15 +29,17 @@ This README is the practical entry point; those docs are the detailed record.
 
 ## What's actually in here
 
-Three distinct capabilities, backed by different models, invoked through two
+Four distinct capabilities, backed by different models, invoked through three
 Claude Code skills (`.claude/skills/design/SKILL.md` for A/B,
-`.claude/skills/epitope_guided_design/SKILL.md` for C):
+`.claude/skills/epitope_guided_design/SKILL.md` for C,
+`.claude/skills/design_ranking/SKILL.md` for D):
 
 | Capability | Question it answers | Backend(s) | Typical runtime |
 |---|---|---|---|
 | **A. Cofolding** | "If protein X and Y/this small molecule/this nucleic acid are put together, what structure do they form, and how confident is that prediction?" | Boltz-2, OpenFold3 | 1–3 min |
 | **B. Binder design** | "Generate novel antibody candidates that might bind target X" | BoltzGen | tens of minutes to hours |
 | **C. Epitope-guided binder design** | "Generate novel antibody candidates that bind target X **at a specific, model-predicted epitope**, not wherever BoltzGen's own sampling happens to land" | BoltzGen + an epitope predictor (`experiments/epitope_prediction/`; whether Model A or Model D is the production default is an open question — see that folder's README §2.7) | epitope prediction: seconds; design: same as B |
+| **D. Design ranking / down-selection** | "Given a finished campaign of hundreds–60,000 designs, which diverse, plausible shortlist should go to a wet lab?" — cluster for diversity, gate on plausibility (ipTM + filter_rmsd), rank by free metrics. An *existence filter*, not a binding ranker, because [six experiments](experiments/scoring_calibration/PLAN.md#111-the-headline) found no metric ranks designs by binding. | none (reuses each campaign's own metrics CSV) | seconds, no GPU |
 
 These are genuinely different problems. (A) evaluates a *given* pair — you
 supply both sides. (B) *generates* something new — you supply only the
@@ -653,7 +655,8 @@ co_folding/
 │   ├── design/SKILL.md               # Skill A/B, cofolding + antibody/binder design
 │   ├── database/SKILL.md              # create/recreate databases/
 │   ├── splits/SKILL.md                 # build databases/splits/
-│   └── epitope_guided_design/SKILL.md   # predict epitope + steer via binding_types conditioning
+│   ├── epitope_guided_design/SKILL.md   # predict epitope + steer via binding_types conditioning
+│   └── design_ranking/SKILL.md          # Skill D: down-select a campaign into a diverse plausible shortlist
 ├── src/                        # shallow clones, editable-installed — real source, not opaque pip packages
 │   ├── boltz/  openfold3/  protenix/  boltzgen/
 ├── weights/                    # permanent model weights (not a cache — see above)
