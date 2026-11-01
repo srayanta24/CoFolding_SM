@@ -232,27 +232,33 @@ def main() -> None:
                     help="print withheld targets to stdout (never to the report)")
     args = ap.parse_args()
 
-    summary = json.loads((SETS / "designs_summary.json").read_text())
-    tracked = sorted(summary["targets"])
-    # Withheld target names are NOT in the committed summary (they would reveal the
-    # excluded campaign). They live only in the gitignored sidecar, read here the same
-    # way build_design_sets.py writes the manifests. Without the sidecar — e.g. a fresh
-    # clone — the analysis simply runs on the tracked targets, which is correct.
-    sidecar = SETS / "withheld_campaigns.tsv"
-    withheld = []
-    if sidecar.exists():
-        for line in sidecar.read_text().splitlines():
-            line = line.strip()
-            if line and not line.startswith("#"):
-                withheld.append(line.split("\t")[0])
+    # Campaigns come from the gitignored sidecar (real_key, alias, tracked). Everything
+    # written to a tracked file is keyed by ALIAS, never real_key; the per-design TSVs
+    # loaded here are gitignored. Without the sidecar — a fresh clone — there is nothing
+    # to recompute, and the committed comparison stands as the record.
+    sidecar = SETS / "campaigns.tsv"
+    if not sidecar.exists():
+        raise SystemExit(f"[designs] sidecar {sidecar} absent (gitignored); the "
+                         "committed designs_comparison.* is the record on a fresh clone.")
+    campaigns = []
+    for line in sidecar.read_text().splitlines():
+        line = line.strip()
+        if line and not line.startswith("#"):
+            real_key, alias, tracked, *_ = line.split("\t")
+            campaigns.append((real_key, alias, tracked.strip().lower() == "yes"))
 
-    per_target, per_withheld = {}, {}
-    for t in tracked + withheld:
-        rows = load(t)
+    real_keys = [c[0] for c in campaigns]   # for the leak guard later
+    per_target, per_withheld = {}, {}       # keyed by ALIAS for tracked, real_key hidden
+    for real_key, alias, tracked in campaigns:
+        rows = load(real_key)               # gitignored designs_rosetta_<real_key>.tsv
         if not rows:
-            print(f"[designs] {t}: no results yet, skipping")
+            print(f"[designs] {alias if tracked else 'withheld'}: no results, skipping")
             continue
-        (per_withheld if t in withheld else per_target)[t] = analyse(rows)
+        if tracked:
+            per_target[alias] = analyse(rows)
+        else:
+            # Withheld: key by a neutral placeholder so no real_key enters any dict.
+            per_withheld[f"withheld_{len(per_withheld)+1}"] = analyse(rows)
 
     if not per_target:
         raise SystemExit("[designs] no tracked-target results to report")
@@ -268,9 +274,9 @@ def main() -> None:
                "and in `analyze_designs.py --include-withheld`.")}
     # Guard: no withheld target name may appear anywhere in the committed JSON.
     blob = json.dumps(rep)
-    leaked = [w for w in withheld if w in blob]
+    leaked = [k for k in real_keys if k in blob]
     if leaked:
-        raise SystemExit(f"[designs] REFUSING TO WRITE: withheld target(s) {leaked} "
+        raise SystemExit(f"[designs] REFUSING TO WRITE: real campaign key(s) {leaked} "
                          f"leaked into the committed report")
     OUT_JSON.write_text(json.dumps(rep, indent=2) + "\n")
 

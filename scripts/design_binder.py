@@ -17,7 +17,7 @@ spending GPU time on step 2. If you have a real structure available
 don't.
 
 Usage:
-    python3 scripts/design_binder.py --target-id P09758 --name trop2_from_seq
+    python3 scripts/design_binder.py --target-id <UNIPROT_ID> --name my_target
     python3 scripts/design_binder.py --target-seq MKT... --name my_target \\
         --protocol nanobody-anything --num_designs 50 --budget 5 --launch
 """

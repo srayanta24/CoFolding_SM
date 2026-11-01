@@ -200,7 +200,7 @@ validation.
 
 **3. The design-vs-binder gap is real, not a threshold artefact.** Real binders sit at
 median 0.699; our campaign designs sit at ~0.33. Our single best design ever recorded
-(`ctrop2` at 0.692) lands almost exactly at the *median* of real binders — one design in
+(Target A, at 0.692) lands almost exactly at the *median* of real binders — one design in
 1,100 reaching typical-binder quality. The distributions barely overlap.
 
 **4. A third explanation for the pipeline's performance joins the two in

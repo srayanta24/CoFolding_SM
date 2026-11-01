@@ -4,7 +4,7 @@
     "weak_auc": 0.6
   },
   "targets": {
-    "ctrop2": {
+    "Target A": {
       "n": 655,
       "n_pass": 165,
       "n_fail": 490,
@@ -114,7 +114,7 @@
       "beats_null_on_tracked": true,
       "min_auc_tracked": 0.5836,
       "auc_by_tracked_target": {
-        "ctrop2": 0.5836
+        "Target A": 0.5836
       },
       "tracked_direction_above_chance": true,
       "withheld_agreed_direction": true
@@ -124,7 +124,7 @@
       "beats_null_on_tracked": true,
       "min_auc_tracked": 0.6656,
       "auc_by_tracked_target": {
-        "ctrop2": 0.6656
+        "Target A": 0.6656
       },
       "tracked_direction_above_chance": true,
       "withheld_agreed_direction": true
@@ -134,7 +134,7 @@
       "beats_null_on_tracked": true,
       "min_auc_tracked": 0.5512,
       "auc_by_tracked_target": {
-        "ctrop2": 0.5512
+        "Target A": 0.5512
       },
       "tracked_direction_above_chance": true,
       "withheld_agreed_direction": false
@@ -144,7 +144,7 @@
       "beats_null_on_tracked": true,
       "min_auc_tracked": 0.5476,
       "auc_by_tracked_target": {
-        "ctrop2": 0.5476
+        "Target A": 0.5476
       },
       "tracked_direction_above_chance": true,
       "withheld_agreed_direction": false
@@ -154,7 +154,7 @@
       "beats_null_on_tracked": true,
       "min_auc_tracked": 0.6457,
       "auc_by_tracked_target": {
-        "ctrop2": 0.6457
+        "Target A": 0.6457
       },
       "tracked_direction_above_chance": true,
       "withheld_agreed_direction": true
@@ -164,7 +164,7 @@
       "beats_null_on_tracked": true,
       "min_auc_tracked": 0.6751,
       "auc_by_tracked_target": {
-        "ctrop2": 0.6751
+        "Target A": 0.6751
       },
       "tracked_direction_above_chance": true,
       "withheld_agreed_direction": true
@@ -174,7 +174,7 @@
       "beats_null_on_tracked": true,
       "min_auc_tracked": 0.6149,
       "auc_by_tracked_target": {
-        "ctrop2": 0.6149
+        "Target A": 0.6149
       },
       "tracked_direction_above_chance": true,
       "withheld_agreed_direction": true
@@ -184,7 +184,7 @@
       "beats_null_on_tracked": true,
       "min_auc_tracked": 0.708,
       "auc_by_tracked_target": {
-        "ctrop2": 0.708
+        "Target A": 0.708
       },
       "tracked_direction_above_chance": true,
       "withheld_agreed_direction": true
@@ -194,7 +194,7 @@
       "beats_null_on_tracked": false,
       "min_auc_tracked": 0.4891,
       "auc_by_tracked_target": {
-        "ctrop2": 0.4891
+        "Target A": 0.4891
       },
       "tracked_direction_above_chance": false,
       "withheld_agreed_direction": true
@@ -204,7 +204,7 @@
       "beats_null_on_tracked": false,
       "min_auc_tracked": 0.508,
       "auc_by_tracked_target": {
-        "ctrop2": 0.508
+        "Target A": 0.508
       },
       "tracked_direction_above_chance": true,
       "withheld_agreed_direction": false
@@ -214,7 +214,7 @@
       "beats_null_on_tracked": false,
       "min_auc_tracked": 0.4949,
       "auc_by_tracked_target": {
-        "ctrop2": 0.4949
+        "Target A": 0.4949
       },
       "tracked_direction_above_chance": false,
       "withheld_agreed_direction": true

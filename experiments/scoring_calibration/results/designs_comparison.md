@@ -8,7 +8,7 @@ Pre-registered: **PASS** = AUC ≥ 0.65 on every target *and* above the null on 
 
 > **1 further target withheld.** One design pool is gitignored along with its campaign at the user's request, so its numbers are not in this report. **The verdict column below does incorporate it**, which means the verdicts rest partly on data that is not in this repository and cannot be checked from it. Stated here rather than buried.
 
-## ctrop2 — 655 designs (165 pass / 490 fail)
+## Target A — 655 designs (165 pass / 490 fail)
 
 | metric | AUC | p | median pass | median fail | ρ vs −rmsd |
 |---|---|---|---|---|---|

@@ -4,7 +4,7 @@ Aggregates the per-design metrics BoltzGen already computes for each campaign (`
 
 ## Per-campaign summary
 
-### `ctrop2_antibody` — TROP2 (predicted (boltz2))
+### `target_a_predicted` — Target A (predicted (boltz2))
 
 1000 designs generated, 146 passed BoltzGen's own filters (14.6%).
 
@@ -26,7 +26,7 @@ Aggregates the per-design metrics BoltzGen already computes for each campaign (`
 | `complex_plddt` | 0.754 | 0.754 | 0.704 | 0.800 | 0.0% | heuristic |
 | `liability_num_violations` | 14.460 | 13.000 | 8.000 | 26.000 | 88.0% | heuristic |
 
-### `trop2_antibody` — TROP2 (real_pdb (7e5n))
+### `target_a_real` — Target A (real_pdb ((withheld)))
 
 50 designs generated, 0 passed BoltzGen's own filters (0.0%).
 

@@ -1,10 +1,10 @@
 {
   "date": "2026-10-17",
   "per_campaign": {
-    "ctrop2_antibody": {
-      "csv_path": "data/designs/ctrop2_antibody/run1/final_ranked_designs/all_designs_metrics.csv",
+    "target_a_predicted": {
+      "csv_path": "data/designs/target_a_predicted/run1/final_ranked_designs/all_designs_metrics.csv",
       "meta": {
-        "target": "TROP2",
+        "target": "Target A",
         "structure_source": "predicted (boltz2)"
       },
       "num_designs": 1000,
@@ -223,11 +223,11 @@
         }
       }
     },
-    "trop2_antibody": {
-      "csv_path": "data/designs/trop2_antibody/run1/final_ranked_designs/all_designs_metrics.csv",
+    "target_a_real": {
+      "csv_path": "data/designs/target_a_real/run1/final_ranked_designs/all_designs_metrics.csv",
       "meta": {
-        "target": "TROP2",
-        "structure_source": "real_pdb (7e5n)"
+        "target": "Target A",
+        "structure_source": "real_pdb ((withheld))"
       },
       "num_designs": 50,
       "num_passed_filters": 0,

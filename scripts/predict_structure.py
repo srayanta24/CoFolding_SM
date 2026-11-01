@@ -15,7 +15,7 @@ predicted structure's average pLDDT specifically so that judgment call is
 visible, not hidden — always look at it before proceeding to Skill B.
 
 Usage:
-    python3 scripts/predict_structure.py --target-id P09758 --name trop2_predicted
+    python3 scripts/predict_structure.py --target-id <UNIPROT_ID> --name my_target
     python3 scripts/predict_structure.py --target-seq MKT... --name my_target
 """
 

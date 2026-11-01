@@ -12,6 +12,7 @@ Usage:
 """
 
 import csv
+import json
 import sys
 from pathlib import Path
 from statistics import mean, median
@@ -26,13 +27,20 @@ DESIGNS_DIR = REPO_ROOT / "data" / "designs"
 # Hardcoded, not parsed from campaign YAML/Hydra configs: this project has no YAML
 # dependency in the stdlib-only script layer, and there are only a handful of
 # campaigns to track by hand. structure_source matters because it's a real confound —
-# ctrop2_antibody's target structure was Boltz-2-predicted, not experimentally real,
-# which is a meaningfully different starting point than trop2_antibody's fetched 7e5n.
+# a Boltz-2-predicted target structure is a meaningfully different starting point than
+# an experimentally fetched one.
+#
+# Only campaigns on public benchmark targets are named here. Campaigns on private
+# targets keep their metadata in a gitignored sidecar (CAMPAIGN_META_SIDECAR), so no
+# private target name, PDB id or campaign name appears in this tracked source. The
+# sidecar is merged over these defaults at load time; absent (a fresh clone), those
+# campaigns simply tag as "unknown", which is harmless.
 CAMPAIGN_META: dict[str, dict] = {
     "hel_antibody": {"target": "HEL (hen egg lysozyme)", "structure_source": "real_pdb (1dpx, apo)"},
-    "ctrop2_antibody": {"target": "TROP2", "structure_source": "predicted (boltz2)"},
-    "trop2_antibody": {"target": "TROP2", "structure_source": "real_pdb (7e5n)"},
 }
+CAMPAIGN_META_SIDECAR = Path(__file__).resolve().parent / ".campaign_meta.json"
+if CAMPAIGN_META_SIDECAR.exists():
+    CAMPAIGN_META.update(json.loads(CAMPAIGN_META_SIDECAR.read_text()))
 
 NUMERIC_METRICS = [
     "design_to_target_iptm",

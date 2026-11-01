@@ -67,7 +67,7 @@ construction, and the bar is to beat it.
 (`ll_antigen` 0.512 on target 1 — it did *not* fire, see below). AUC = P(a random
 structurally-consistent design outscores a random wrecked one); 0.5 is chance.
 
-**target 1 (`ctrop2`, committed), by pre-registered verdict:**
+**Target A (committed), by pre-registered verdict:**
 
 | metric | AUC | verdict | note |
 |---|---|---|---|
@@ -122,7 +122,7 @@ Two BoltzGen antibody campaigns with their **full rank range** of refolded struc
 retained — 1:1 against their `all_designs_metrics.csv` rows, spanning ranks 1–N rather
 than only the top-10 the pipeline already selected.
 
-| | target 1 (`ctrop2_antibody`) | target 2 (withheld) |
+| | Target A (committed) | Target B (withheld) |
 |---|---|---|
 | designs in pool | 1,000 | 3,000 |
 | refold CIFs retained | 1,000 | 3,000 |

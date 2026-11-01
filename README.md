@@ -133,7 +133,7 @@ python3 scripts/run_design.py \
 # Skill B — generate novel antibodies against a target, starting from
 # nothing but a sequence (predicts the target's structure first, then
 # designs against that prediction — see "How antibody design works" below)
-python3 scripts/design_binder.py --target-id P09758 --name my_target
+python3 scripts/design_binder.py --target-id <UNIPROT_ID> --name my_target
 # ^ validates and prints the launch command; add --launch to run immediately
 
 # Skill B, alternative — if you already have a real (experimental)
@@ -557,8 +557,7 @@ when one doesn't, not as a strictly-better default.
            path:
                - ../../boltzgen_examples/repo/example/fab_scaffolds/adalimumab.6cr1.yaml
                - ../../boltzgen_examples/repo/example/fab_scaffolds/belimumab.5y9k.yaml
-               # ... (see data/designs/hel_antibody/hel.yaml or
-               #      data/designs/trop2_antibody/trop2.yaml in this repo
+               # ... (see data/designs/hel_antibody/hel.yaml in this repo
                #      for the full 14-scaffold list used so far — or let
                #      design_binder.py generate this for you automatically)
    ```
@@ -606,21 +605,20 @@ biology benchmark target). 50 designs → top candidate `hel_18`:
 "the pipeline works as intended" result, as expected for a well-behaved
 benchmark target with no real drug-discovery difficulty.
 
-**Target: human TROP2 / TACSTD2** (PDB `7E5N`, an active oncology antigen
-— the target of two approved antibody-drug conjugates, sacituzumab
-govitecan and datopotamab deruxtecan). 50 designs → top candidate
-`trop2_36`: `design_to_target_iptm=0.44`, `filter_rmsd=2.60`, 7 predicted
+**Target A** (a real oncology antigen; identity withheld, as this was an
+actual design campaign). 50 designs → top candidate `target_a_36`:
+`design_to_target_iptm=0.44`, `filter_rmsd=2.60`, 7 predicted
 H-bonds, but **20 liability violations flagged**. Substantially lower
-confidence than the HEL run — consistent with TROP2 being a harder, more
+confidence than the HEL run — consistent with Target A being a harder, more
 realistic target than a benchmark protein. This is the expected pattern:
 don't be surprised or alarmed when a real target scores worse than a
 textbook one; that's the campaign correctly reflecting real difficulty,
 not a broken pipeline.
 
-`trop2_36`'s heavy and light chains (`full_sequence_1`/`full_sequence_2`
+`target_a_36`'s heavy and light chains (`full_sequence_1`/`full_sequence_2`
 in the metrics CSV) were then independently cross-validated by chaining
 into Skill A — cofolding the designed antibody (both chains, as a real
-Fab) against TROP2 from scratch via Boltz-2 and OpenFold3, neither of
+Fab) against Target A from scratch via Boltz-2 and OpenFold3, neither of
 which was involved in scoring the original design:
 
 | Source | ptm | ipTM |
@@ -745,7 +743,7 @@ completed pipeline stages aren't redone.
 to your job — this machine may have other GPU processes running (a local
 LLM server, a desktop compositor, etc.) that can be mistaken for your job's
 progress if you're not filtering to the specific PID(s) you launched. This
-mistake actually happened during this project's own TROP2 campaign: an
+mistake actually happened during this project's own Target A campaign: an
 unrelated `llama-server` process sitting on 32GB was mistaken for a stalled
 BoltzGen run for several hours. Always filter to your own tracked PID(s)
 specifically.

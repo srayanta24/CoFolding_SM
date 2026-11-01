@@ -104,26 +104,33 @@ N_STRATA = 10
 # (sets/withheld_campaigns.tsv: key<TAB>metrics_csv<TAB>cif_glob) that this script reads
 # if present. That keeps tracked code referencing only tracked things, while the sidecar
 # and every artifact it produces stay out of the repo.
-CAMPAIGNS = [
-    ("ctrop2",
-     "data/designs/ctrop2_antibody/run1/final_ranked_designs/all_designs_metrics.csv",
-     "data/designs/ctrop2_antibody/run1/intermediate_designs_inverse_folded/refold_cif/*.cif",
-     True),
-]
-WITHHELD_SIDECAR = HERE / "sets" / "withheld_campaigns.tsv"
+# Every real design campaign's identity is private, so NO campaign name, path or PDB id
+# appears in this tracked source. Campaigns are defined in a gitignored sidecar,
+# sets/campaigns.tsv, one per line:
+#
+#     real_key <TAB> public_alias <TAB> tracked(yes|no) <TAB> metrics_csv <TAB> cif_glob
+#
+# `tracked=yes` means the campaign's AGGREGATE results may be committed, under its
+# public_alias (e.g. "Target A") and never its real_key; `tracked=no` means fully
+# withheld (aggregate not committed, only a direction bit). Per-design manifests and
+# scored TSVs are gitignored for every campaign regardless (they carry ids and structure
+# paths). Without the sidecar — a fresh clone — this script has nothing to build, which
+# is correct: the private inputs are absent.
+CAMPAIGNS_SIDECAR = HERE / "sets" / "campaigns.tsv"
 
 
-def load_campaigns() -> list[tuple]:
-    """Tracked campaigns, plus any withheld ones from the gitignored sidecar."""
-    out = list(CAMPAIGNS)
-    if WITHHELD_SIDECAR.exists():
-        with WITHHELD_SIDECAR.open(encoding="utf-8") as fh:
-            for line in fh:
-                line = line.strip()
-                if not line or line.startswith("#"):
-                    continue
-                key, mcsv, cglob = line.split("\t")
-                out.append((key, mcsv, cglob, False))
+def load_campaigns() -> list[dict]:
+    if not CAMPAIGNS_SIDECAR.exists():
+        return []
+    out = []
+    for line in CAMPAIGNS_SIDECAR.read_text().splitlines():
+        line = line.strip()
+        if not line or line.startswith("#"):
+            continue
+        real_key, alias, tracked, mcsv, cglob = line.split("\t")
+        out.append({"key": real_key, "alias": alias,
+                    "tracked": tracked.strip().lower() == "yes",
+                    "metrics_csv": mcsv, "cif_glob": cglob})
     return out
 
 CARRY = ["id", "final_rank", "design_to_target_iptm", "design_ptm",
@@ -181,41 +188,47 @@ def main() -> None:
     globals()["NEG_RATIO"] = args.neg_ratio
 
     SETS.mkdir(parents=True, exist_ok=True)
-    summary = {"rmsd_bar": RMSD_BAR, "neg_ratio": args.neg_ratio,
-               "n_strata": N_STRATA, "targets": {}}
-    for key, mcsv, cglob, tracked in load_campaigns():
-        rows = build(key, mcsv, cglob, key)
-        path = SETS / f"designs_{key}.tsv"
+    campaigns = load_campaigns()
+    if not campaigns:
+        raise SystemExit(f"[designs] no campaigns — sidecar {CAMPAIGNS_SIDECAR} absent. "
+                         "It is gitignored; it holds the private campaign definitions.")
+
+    # Per-campaign manifests are gitignored for ALL campaigns (they carry design ids and
+    # structure paths), so they are written under the real key. The tracked summary
+    # records tracked campaigns under their public ALIAS only, and withheld ones as a
+    # bare count — no real key ever reaches it.
+    pub_targets, n_withheld, total = {}, 0, 0
+    for c in campaigns:
+        rows = build(c["key"], c["metrics_csv"], c["cif_glob"], c["key"])
+        path = SETS / f"designs_{c['key']}.tsv"        # gitignored (designs_*.tsv)
         with path.open("w", newline="", encoding="utf-8") as fh:
             w = csv.DictWriter(fh, fieldnames=FIELDS, delimiter="\t",
                                extrasaction="ignore", lineterminator="\n")
             w.writeheader()
             w.writerows(rows)
-        summary["targets"][key] = {
-            "n": len(rows),
-            "n_pass": sum(r["label"] for r in rows),
-            "n_fail": sum(1 - r["label"] for r in rows),
-            "tracked_in_git": tracked,
-            "manifest": str(path.relative_to(ROOT)),
-        }
-        print(f"  [{key}] -> {path.name}"
-              f"{'' if tracked else '   (gitignored)'}")
+        total += len(rows)
+        print(f"  [{c['key']} -> {c['alias'] if c['tracked'] else 'withheld'}] "
+              f"designs_{c['key']}.tsv (gitignored)")
+        if c["tracked"]:
+            pub_targets[c["alias"]] = {
+                "n": len(rows),
+                "n_pass": sum(r["label"] for r in rows),
+                "n_fail": sum(1 - r["label"] for r in rows),
+            }
+        else:
+            n_withheld += 1
 
-    # The committed summary names tracked targets only; withheld targets contribute a
-    # COUNT, never a name (the name would reveal the excluded campaign). Their names
-    # live only in the gitignored sidecar, which analyze_designs.py reads the same way.
-    withheld = sorted(k for k, v in summary["targets"].items()
-                      if not v["tracked_in_git"])
-    pub = {**summary, "targets": {k: v for k, v in summary["targets"].items()
-                                  if v["tracked_in_git"]},
-           "n_withheld_targets": len(withheld)}
-    leaked = [k for k in withheld if k in json.dumps(pub)]
+    pub = {"rmsd_bar": RMSD_BAR, "neg_ratio": args.neg_ratio, "n_strata": N_STRATA,
+           "targets": pub_targets, "n_withheld_targets": n_withheld}
+    # Guard: no real campaign key may appear in the committed summary.
+    blob = json.dumps(pub)
+    leaked = [c["key"] for c in campaigns if c["key"] in blob]
     if leaked:
-        raise SystemExit(f"[designs] withheld name(s) {leaked} leaked into summary")
+        raise SystemExit(f"[designs] real key(s) {leaked} leaked into summary")
     (SETS / "designs_summary.json").write_text(json.dumps(pub, indent=2) + "\n")
     print(f"\nwrote {SETS/'designs_summary.json'} "
-          f"({len(withheld)} withheld target(s), names kept out of the summary)")
-    print(f"total to score: {sum(v['n'] for v in summary['targets'].values())}")
+          f"({len(pub_targets)} tracked as alias, {n_withheld} withheld)")
+    print(f"total to score: {total}")
 
 
 if __name__ == "__main__":

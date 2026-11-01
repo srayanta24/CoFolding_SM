@@ -81,12 +81,11 @@ __pycache__/
 # OS/editor cruft
 .DS_Store
 
-# CHRNA2 campaign — excluded by request. 3.9GB of BoltzGen run outputs (design,
-# inverse-folding, folding artifacts for 3,000 designs) plus its own planning docs.
-# Same class of thing as .downstream_runs/ above: reproducible campaign output, too
-# large to track. If a future campaign under experiments/actual_campaigns/ should be
-# tracked, add its docs explicitly and keep its run1/ ignored.
-experiments/actual_campaigns/chrna2/
+# Real design campaigns — excluded by request. Multi-GB BoltzGen run outputs plus
+# planning docs, and the identity of the targets is private. Reproducible campaign
+# output, too large and too sensitive to track. The whole directory is ignored; if a
+# future campaign here should be tracked, add its docs explicitly.
+experiments/actual_campaigns/
 
 # Backup copy of the v1 epitope-model checkpoints, kept on disk for comparison against
 # the v2 retrain. Ignored for the same reason as checkpoints/ above (trained artifacts,
@@ -116,14 +115,15 @@ experiments/scoring_calibration/.antifold_stage/
 experiments/scoring_calibration/results/antifold_run.log
 experiments/scoring_calibration/results/packstat_raw.log
 
-# Milestone 7 (scoring_calibration): the CHRNA2 design pool is analysed locally but
-# none of its derived results enter the repo -- same exclusion as the campaign itself
-# (line 89). The committed write-up states that a second target was checked and in
-# which direction, without its numbers. See EXPERIMENT_05.
-# The withheld-campaign sidecar names the excluded campaign and maps it to its paths;
-# it and every design-benchmark artifact derived from a withheld campaign stay out of
-# git. The tracked target is ctrop2 (designs_*_ctrop2.tsv), which these do NOT match.
-experiments/scoring_calibration/sets/withheld_campaigns.tsv
-experiments/scoring_calibration/sets/designs_chrna2.tsv
-experiments/scoring_calibration/results/designs_rosetta_chrna2.tsv
-experiments/scoring_calibration/results/designs_esmif_chrna2.tsv
+# Design-benchmark (milestone 7) per-design artifacts. Every real design campaign's
+# identity is private, so NO per-design manifest or scored TSV is tracked — they carry
+# campaign names, design ids and structure paths. Only the anonymised aggregates are
+# tracked (designs_summary.json, designs_comparison.{md,json}), which these patterns do
+# NOT match. The sidecar maps public aliases to the private campaign paths.
+experiments/scoring_calibration/sets/campaigns.tsv
+experiments/scoring_calibration/sets/designs_*.tsv
+experiments/scoring_calibration/results/designs_rosetta_*.tsv
+experiments/scoring_calibration/results/designs_esmif_*.tsv
+
+# Private campaign metadata (maps gitignored campaign dirs to anonymised targets).
+experiments/.campaign_meta.json
