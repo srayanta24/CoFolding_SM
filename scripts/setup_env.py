@@ -56,6 +56,11 @@ REPOS = {
 REFERENCE_REPOS = {
     "ipsae": "https://github.com/DunbrackLab/IPSAE",
     "epiformer": "https://github.com/mansoor181/epiformer",
+    # Official ProteinMPNN, vendored for the scoring-calibration §11.5 check: is the
+    # published inverse-folding affinity baseline (ProteinMPNN rho~0.30 on AbBiBench)
+    # reproducible on our predicted backbones, where ESM-IF1 only reached +0.11?
+    # Pure-torch, runs in the boltz2 venv; weights ship in the repo (v_48_020).
+    "proteinmpnn": "https://github.com/dauparas/ProteinMPNN",
 }
 
 # Isolated pip-installed tools that MUST NOT share a venv with anything else.
@@ -113,14 +118,60 @@ def install_torch(name: str) -> None:
     uv_pip(name, "torch", "--index-url", TORCH_INDEX)
 
 
+# Exact upstream commit for every vendored clone. src/ is gitignored, so without these
+# a fresh `setup_env.py` would fetch whatever upstream HEAD happens to be that day --
+# or fail if the branch was force-pushed. Pinning makes a fresh machine reproduce the
+# SAME code this project was built and benchmarked against. Recorded 2026-11-01 from the
+# SHAs then on disk; bump deliberately, never silently.
+# Keyed by the name ensure_source() is called with (so boltz2 -> src/boltz2). Only the
+# clones setup_env.py actually fetches are here. src/germinal and src/antifold exist on
+# disk as hand-clones but are NOT fetched or imported by anything tracked (germinal_
+# comparison is paused; AntiFold runs from its pip install in .venvs/antifold, whose
+# version is the thing that pins it), so pinning them here would be dead keys — left out
+# deliberately. If germinal is ever reactivated, register + pin it then.
+PINS = {
+    "boltz2": "b1ebfc46ecf57f5414e0d1a6f9027bbb122c53bc",
+    "boltzgen": "a3149cf18eeb58648d1abbb27539bd73f746cdda",
+    "epiformer": "f420745e28adf759ccdab327d06459da9a9382fe",
+    "ipsae": "6174cf9e71cb1bd660cc805856a18c4871a6dec3",
+    "openfold3": "594186e03da5b7f893bbebe4483108e2209c321e",
+    "proteinmpnn": "8907e6671bfbfc92303b5f79c4b5e6ce47cdef57",
+    "protenix": "c3bfc365b3e1341a11935eddfe7bfdc308092147",
+}
+
+# Local patches to a vendored clone, applied after checkout. src/ is gitignored, so a
+# patch that lives only inside the clone is backed up nowhere and lost on a fresh
+# machine. Keeping the diff here (patches/ is tracked) is how "code we fetched + the
+# change we made to it" stays reproducible. One per name, in order.
+PATCHES_DIR = REPO_ROOT / "patches"
+PATCHES = {
+    # ANARCI result nesting: the installed anarci returns one more level than epiformer's
+    # inference.py assumed, crashing CDR numbering. See the patch header.
+    "epiformer": ["epiformer-inference.diff"],
+}
+
+
 def ensure_source(name: str, url: str | None = None) -> Path:
     src_path = SRC_DIR / name
     if src_path.exists():
+        # Reuse as-is: never clobber a working tree (it may hold applied patches or
+        # local debugging). Pinning and patching apply to a FRESH clone only.
         print(f"[{name}] source already cloned at {src_path}, reusing")
         return src_path
     url = url or REPOS[name]
     print(f"[{name}] cloning source from {url}")
     run(["git", "clone", "--depth", "1", url, str(src_path)])
+    sha = PINS.get(name)
+    if sha:
+        # Fetch the pinned commit shallowly and check it out. GitHub serves a specific
+        # reachable SHA; if upstream removed it, this fails loudly rather than silently
+        # building against different code.
+        print(f"[{name}] pinning to {sha[:10]}")
+        run(["git", "-C", str(src_path), "fetch", "--depth", "1", "origin", sha])
+        run(["git", "-C", str(src_path), "checkout", "--quiet", sha])
+    for patch in PATCHES.get(name, []):
+        print(f"[{name}] applying patch {patch}")
+        run(["git", "-C", str(src_path), "apply", str(PATCHES_DIR / patch)])
     return src_path
 
 

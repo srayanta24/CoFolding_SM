@@ -1,0 +1,47 @@
+diff --git a/inference.py b/inference.py
+index c9cc2a7..1db27fa 100755
+--- a/inference.py
++++ b/inference.py
+@@ -189,11 +189,25 @@ def identify_cdr_residues_anarci(pdb_path: str) -> Tuple[List[int], str]:
+         # Run ANARCI numbering
+         results = anarci([("chain", chain_seq)], scheme="imgt")
+ 
+-        if results[0] is None:
+-            print(f"Warning: ANARCI failed for chain {chain_id}, using Chothia fallback")
++        # Verified against the installed `anarci` package (PyPI anarci==2026.2.13.2):
++        # results[0] = [domain_hits...], each domain_hit = [(numbering, start, end)]
++        # -- one more level of nesting than this code originally assumed, which made
++        # `numbering` the 3-tuple (numbering_list, start, end) instead of the flat
++        # numbering list, crashing the unpack below ("too many values to unpack").
++        #
++        # Real gap found scoring real BoltzGen-generated designs (not just natural
++        # sequences, the only thing tested when the fix above was made): for one whole
++        # target (10/10 designs), results[0] was a non-None list whose first element
++        # was itself None -- i.e. ANARCI detected *something* domain-like but couldn't
++        # actually number it, a failure mode distinct from "no domain found at all"
++        # (results[0] is None, already handled). Designed sequences are more likely to
++        # hit this than natural ones (unusual CDR-adjacent framework residues a
++        # natural-sequence-trained HMM alignment doesn't expect). Guard every level
++        # explicitly rather than assuming a fixed depth is always populated.
++        if not results[0] or results[0][0] is None:
++            print(f"Warning: ANARCI could not number chain {chain_id}, using Chothia fallback")
+             continue
+-
+-        numbering = results[0][0][0]
++        numbering = results[0][0][0][0]
+ 
+         # Map ANARCI positions to original residue IDs
+         for i, (pos, aa) in enumerate(numbering):
+@@ -763,7 +777,11 @@ def build_hetero_data_for_inference(ag_graph, ab_graph, ag_plm, ab_plm):
+ def load_checkpoint(checkpoint_path: str, device):
+     """Load model checkpoint and reconstruct config."""
+     print(f"Loading checkpoint from: {checkpoint_path}")
+-    checkpoint = torch.load(checkpoint_path, map_location='cpu')
++    # PyTorch 2.6+ defaults torch.load to weights_only=True, which this repo's own
++    # checkpoints (config dict + numpy objects inside) don't satisfy. Trusted source
++    # (freshly cloned from the repo itself, not a third party) -- weights_only=False
++    # is safe here per torch's own warning text.
++    checkpoint = torch.load(checkpoint_path, map_location='cpu', weights_only=False)
+ 
+     cfg = OmegaConf.create(checkpoint['config'])
+ 
