@@ -99,17 +99,32 @@ NEG_RATIO = 3
 N_STRATA = 10
 
 # (key, metrics csv, refold cif glob, tracked-in-git?)
+# Tracked campaigns only. A campaign the user has excluded from git must not be named
+# in tracked source, so withheld campaigns live in a gitignored sidecar
+# (sets/withheld_campaigns.tsv: key<TAB>metrics_csv<TAB>cif_glob) that this script reads
+# if present. That keeps tracked code referencing only tracked things, while the sidecar
+# and every artifact it produces stay out of the repo.
 CAMPAIGNS = [
     ("ctrop2",
      "data/designs/ctrop2_antibody/run1/final_ranked_designs/all_designs_metrics.csv",
      "data/designs/ctrop2_antibody/run1/intermediate_designs_inverse_folded/refold_cif/*.cif",
      True),
-    # Gitignored campaign; its manifest and results are gitignored too (.gitignore).
-    ("chrna2",
-     "experiments/actual_campaigns/chrna2/campaign/run1/final_ranked_designs/all_designs_metrics.csv",
-     "experiments/actual_campaigns/chrna2/campaign/run1/intermediate_designs_inverse_folded/refold_cif/*.cif",
-     False),
 ]
+WITHHELD_SIDECAR = HERE / "sets" / "withheld_campaigns.tsv"
+
+
+def load_campaigns() -> list[tuple]:
+    """Tracked campaigns, plus any withheld ones from the gitignored sidecar."""
+    out = list(CAMPAIGNS)
+    if WITHHELD_SIDECAR.exists():
+        with WITHHELD_SIDECAR.open(encoding="utf-8") as fh:
+            for line in fh:
+                line = line.strip()
+                if not line or line.startswith("#"):
+                    continue
+                key, mcsv, cglob = line.split("\t")
+                out.append((key, mcsv, cglob, False))
+    return out
 
 CARRY = ["id", "final_rank", "design_to_target_iptm", "design_ptm",
          "min_design_to_target_pae", "filter_rmsd", "plip_hbonds_refolded",
@@ -168,7 +183,7 @@ def main() -> None:
     SETS.mkdir(parents=True, exist_ok=True)
     summary = {"rmsd_bar": RMSD_BAR, "neg_ratio": args.neg_ratio,
                "n_strata": N_STRATA, "targets": {}}
-    for key, mcsv, cglob, tracked in CAMPAIGNS:
+    for key, mcsv, cglob, tracked in load_campaigns():
         rows = build(key, mcsv, cglob, key)
         path = SETS / f"designs_{key}.tsv"
         with path.open("w", newline="", encoding="utf-8") as fh:
@@ -186,14 +201,20 @@ def main() -> None:
         print(f"  [{key}] -> {path.name}"
               f"{'' if tracked else '   (gitignored)'}")
 
-    # Only the tracked targets' counts go in the committed summary.
+    # The committed summary names tracked targets only; withheld targets contribute a
+    # COUNT, never a name (the name would reveal the excluded campaign). Their names
+    # live only in the gitignored sidecar, which analyze_designs.py reads the same way.
+    withheld = sorted(k for k, v in summary["targets"].items()
+                      if not v["tracked_in_git"])
     pub = {**summary, "targets": {k: v for k, v in summary["targets"].items()
-                                  if v["tracked_in_git"]}}
-    pub["withheld_targets"] = sorted(k for k, v in summary["targets"].items()
-                                     if not v["tracked_in_git"])
+                                  if v["tracked_in_git"]},
+           "n_withheld_targets": len(withheld)}
+    leaked = [k for k in withheld if k in json.dumps(pub)]
+    if leaked:
+        raise SystemExit(f"[designs] withheld name(s) {leaked} leaked into summary")
     (SETS / "designs_summary.json").write_text(json.dumps(pub, indent=2) + "\n")
     print(f"\nwrote {SETS/'designs_summary.json'} "
-          f"(withholding: {', '.join(pub['withheld_targets']) or 'none'})")
+          f"({len(withheld)} withheld target(s), names kept out of the summary)")
     print(f"total to score: {sum(v['n'] for v in summary['targets'].values())}")
 
 

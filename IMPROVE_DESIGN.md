@@ -452,9 +452,18 @@ designs.
 > should recover on the affinity extremes — could not be established either, because at
 > 6 targets the sign test is so underpowered that the null control also wins 5/6.
 > packstat's scope is therefore **binding-retained vs binding-destroyed, and nothing
-> wider**: an interface-integrity detector, not a ranker. See
-> [EXPERIMENT_04](experiments/scoring_calibration/EXPERIMENT_04_packstat_transfer.md). The within-antigen
-ranking question remains open pending the 6-target expansion.
+> wider**: at the time, an interface-integrity detector, not a ranker. See
+> [EXPERIMENT_04](experiments/scoring_calibration/EXPERIMENT_04_packstat_transfer.md).
+>
+> **Update 2026-11-01 — even "interface-integrity detector" does not hold on designs.**
+> [EXPERIMENT_05](experiments/scoring_calibration/EXPERIMENT_05_design_transfer.md)
+> scored packstat on 1,096 real BoltzGen designs against a structural-self-consistency
+> label: **AUC 0.508 (chance, below its own null) on the committed target, worse than
+> chance on a second.** The 23/28 was specific to point mutants of near-native crystal
+> backbones and does not survive the backbone being generated. packstat is retracted as
+> a selection *or* filtering metric, and **finetuning milestone 2 (distil packstat) is
+> cancelled** — there is nothing worth distilling. The best design-level signal is ipTM
+> (AUC 0.708), already free, and it predicts structure quality, not binding.
 
 ---
 

@@ -64,15 +64,21 @@ reproducible script and a null control:
   mutants. [EXPERIMENT_01](experiments/scoring_calibration/EXPERIMENT_01_iptm_calibration.md),
   [_02](experiments/scoring_calibration/EXPERIMENT_02_alternative_metrics.md),
   [_03](experiments/scoring_calibration/EXPERIMENT_03_within_antigen_ranking.md).
-- **One metric beats it, on one question only**: Rosetta's `packstat`, at 23/28
-  (p=0.0005, survives Bonferroni) at telling a binding-*retained* point mutant from a
-  binding-*destroyed* one. It costs 22–90 min/complex against BoltzGen's protocol of
-  60,000 designs, and [the cheap escape was tested and
-  closed](experiments/finetuning/PLAN.md) — skipping FastRelax drops it to 15/28.
-  **It does not generalise**: on a six-target, 1,530-complex within-antigen benchmark it
-  ranks graded affinity at ρ=+0.058, *below* its own null control
+- **One metric beat it on one question, and then failed everywhere else.** Rosetta's
+  `packstat` scored 23/28 (p=0.0005, survives Bonferroni) at telling a binding-*retained*
+  point mutant from a binding-*destroyed* one. But that was the ceiling, not a foothold:
+  it ranks graded affinity at ρ=+0.058 — *below* its own null
   ([EXPERIMENT_04](experiments/scoring_calibration/EXPERIMENT_04_packstat_transfer.md),
-  1,201 core-hours). So it is an interface-integrity detector, not a selection signal.
+  1,201 core-hours) — and on 1,096 **real designs** it is at chance (AUC 0.508, below
+  its null) and worse than chance on a second target
+  ([EXPERIMENT_05](experiments/scoring_calibration/EXPERIMENT_05_design_transfer.md)).
+  The 23/28 was specific to point mutants of near-native crystal backbones; it does not
+  survive the backbone being designed. `packstat` is wired into nothing.
+- **On real designs the one usable signal is ipTM — but of structure, not binding.**
+  ipTM (free) best-separates self-consistent designs from wrecked ones (AUC 0.708),
+  while the expensive Rosetta metrics add nothing over it. That is EXPERIMENT_01's
+  finding confirmed from the other side: ipTM measures whether a credible structure can
+  be modelled, which is not whether it binds.
 - **The two benchmarks do not agree about which metrics work** — rank agreement
   **ρ = +0.087** across eight shared metrics, with the best on one near-worst on the
   other. Two metrics beat the null on both, which is exactly what chance predicts

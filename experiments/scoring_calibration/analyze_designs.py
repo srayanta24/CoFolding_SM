@@ -173,30 +173,56 @@ def analyse(rows: list[dict]) -> dict:
     return out
 
 
-def verdict(per_target: dict) -> dict:
-    """Compute the pre-registered verdict for each metric across targets."""
-    if not per_target:
+def _verdict_one(aucs: dict, nulls: dict) -> tuple[str, bool]:
+    """PASS/WEAK/FAIL over whatever targets are passed, plus beats-null-everywhere."""
+    beats = all(aucs[t] > nulls.get(t, 0.5) for t in aucs) if nulls else None
+    lo = min(aucs.values())
+    if beats and lo >= CRITERIA["pass_auc"]:
+        return "PASS", beats
+    if beats and lo >= CRITERIA["weak_auc"]:
+        return "WEAK", beats
+    return "FAIL", beats
+
+
+def verdict(per_tracked: dict, per_withheld: dict) -> dict:
+    """Leak-free verdicts.
+
+    The committed fields are computed on TRACKED targets only, so every number in them
+    is checkable from this repository. The withheld target(s) contribute exactly one
+    bit per metric -- `withheld_agreed`, whether the metric landed on the same side of
+    chance there -- which is a *direction*, the only thing the user permitted to leave
+    the gitignored pool. No withheld AUC, median or min is ever written here; those live
+    only in the gitignored TSVs and the `--include-withheld` stdout.
+
+    The stronger, pre-registered two-target verdict (which does use the withheld
+    numbers) is reported in the EXPERIMENT_05 prose, backed by the gitignored data.
+    """
+    if not per_tracked:
         return {}
-    names = set.intersection(*(set(d["metrics"]) for d in per_target.values()))
+    names = set.intersection(*(set(d["metrics"]) for d in per_tracked.values()))
     out = {}
     for lab in sorted(names):
         if lab == NULL_LABEL:
             continue
-        aucs = {t: d["metrics"][lab]["auc"] for t, d in per_target.items()}
-        nulls = {t: d["metrics"][NULL_LABEL]["auc"] for t, d in per_target.items()
+        aucs = {t: d["metrics"][lab]["auc"] for t, d in per_tracked.items()}
+        nulls = {t: d["metrics"][NULL_LABEL]["auc"] for t, d in per_tracked.items()
                  if NULL_LABEL in d["metrics"]}
-        beats_null = all(aucs[t] > nulls.get(t, 0.5) for t in aucs) if nulls else None
-        lo = min(aucs.values())
-        if beats_null and lo >= CRITERIA["pass_auc"]:
-            v = "PASS"
-        elif beats_null and lo >= CRITERIA["weak_auc"]:
-            v = "WEAK"
-        else:
-            v = "FAIL"
-        out[lab] = {"verdict": v, "min_auc": round(lo, 4),
-                    "beats_null_on_all_targets": beats_null,
-                    "auc_by_target": {t: round(a, 4) for t, a in aucs.items()},
-                    "same_direction_all_targets": all(a > 0.5 for a in aucs.values())}
+        v, beats = _verdict_one(aucs, nulls)
+        tracked_dir_up = all(a > 0.5 for a in aucs.values())
+        # Direction-only summary of the withheld target(s): did they agree with the
+        # tracked direction? A single boolean, never a magnitude.
+        withheld_agreed = None
+        if per_withheld:
+            wdir = []
+            for d in per_withheld.values():
+                if lab in d["metrics"]:
+                    wdir.append((d["metrics"][lab]["auc"] > 0.5) == tracked_dir_up)
+            withheld_agreed = all(wdir) if wdir else None
+        out[lab] = {"verdict_tracked": v, "beats_null_on_tracked": beats,
+                    "min_auc_tracked": round(min(aucs.values()), 4),
+                    "auc_by_tracked_target": {t: round(a, 4) for t, a in aucs.items()},
+                    "tracked_direction_above_chance": tracked_dir_up,
+                    "withheld_agreed_direction": withheld_agreed}
     return out
 
 
@@ -208,7 +234,17 @@ def main() -> None:
 
     summary = json.loads((SETS / "designs_summary.json").read_text())
     tracked = sorted(summary["targets"])
-    withheld = summary.get("withheld_targets", [])
+    # Withheld target names are NOT in the committed summary (they would reveal the
+    # excluded campaign). They live only in the gitignored sidecar, read here the same
+    # way build_design_sets.py writes the manifests. Without the sidecar — e.g. a fresh
+    # clone — the analysis simply runs on the tracked targets, which is correct.
+    sidecar = SETS / "withheld_campaigns.tsv"
+    withheld = []
+    if sidecar.exists():
+        for line in sidecar.read_text().splitlines():
+            line = line.strip()
+            if line and not line.startswith("#"):
+                withheld.append(line.split("\t")[0])
 
     per_target, per_withheld = {}, {}
     for t in tracked + withheld:
@@ -222,12 +258,20 @@ def main() -> None:
         raise SystemExit("[designs] no tracked-target results to report")
 
     rep = {"criteria": CRITERIA, "targets": per_target,
-           "verdicts": verdict({**per_target, **per_withheld}),
+           "verdicts": verdict(per_target, per_withheld),
            "n_withheld_targets": len(per_withheld),
            "withheld_note": (
                "One design pool is gitignored with its campaign at the user's request. "
-               "Its numbers are computed locally and excluded here; the verdicts below "
-               "DO incorporate it, so they rest partly on data not in this repo.")}
+               "Every number in this file is from the tracked target(s). The withheld "
+               "target contributes only `withheld_agreed_direction` (one bit per "
+               "metric). Its magnitudes live in the gitignored designs_*_<withheld>.tsv "
+               "and in `analyze_designs.py --include-withheld`.")}
+    # Guard: no withheld target name may appear anywhere in the committed JSON.
+    blob = json.dumps(rep)
+    leaked = [w for w in withheld if w in blob]
+    if leaked:
+        raise SystemExit(f"[designs] REFUSING TO WRITE: withheld target(s) {leaked} "
+                         f"leaked into the committed report")
     OUT_JSON.write_text(json.dumps(rep, indent=2) + "\n")
 
     L = ["# EXPERIMENT_05 — packstat on real designs (generated)", "",
@@ -261,14 +305,32 @@ def main() -> None:
                      f"{m['median_fail']} | {m['spearman_vs_neg_rmsd']:+.3f} |")
         L.append("")
 
-    L += ["## Verdicts (pre-registered)", "",
-          "| metric | verdict | min AUC across targets | beats null everywhere |",
-          "|---|---|---|---|"]
+    n_tr = len(per_target)
+    tr_word = "target" if n_tr == 1 else f"{n_tr} tracked targets"
+    wh = "" if not per_withheld else " withheld agrees? |"
+    L += ["## Verdicts", "",
+          f"Verdict and AUC below are computed on the **{tr_word}** only, so every "
+          "number here is checkable from this repository. "
+          + ("" if not per_withheld else
+             "The withheld target contributes one bit — *did it land on the same side "
+             "of chance* — and nothing else; its magnitudes are in the gitignored "
+             "`designs_*` TSVs. The stronger pre-registered two-target verdict (which "
+             "uses those magnitudes) is in "
+             "[EXPERIMENT_05](../EXPERIMENT_05_design_transfer.md) §3.") + "",
+          f"| metric | verdict ({'tracked' if per_withheld else 'pre-registered'}) | "
+          f"AUC | beats null |{wh}",
+          "|---|---|---|---|" + ("---|" if per_withheld else "")]
+    # (header cells: metric, verdict, AUC, beats null[, withheld agrees?])
     order = {"PASS": 0, "WEAK": 1, "FAIL": 2}
     for lab, v in sorted(rep["verdicts"].items(),
-                         key=lambda kv: (order[kv[1]["verdict"]], -kv[1]["min_auc"])):
-        L.append(f"| {lab} | **{v['verdict']}** | {v['min_auc']:.3f} | "
-                 f"{'yes' if v['beats_null_on_all_targets'] else 'no'} |")
+                         key=lambda kv: (order[kv[1]["verdict_tracked"]],
+                                         -kv[1]["min_auc_tracked"])):
+        agree = ""
+        if per_withheld:
+            a = v["withheld_agreed_direction"]
+            agree = f" {'yes' if a else 'no' if a is not None else '—'} |"
+        L.append(f"| {lab} | **{v['verdict_tracked']}** | {v['min_auc_tracked']:.3f} | "
+                 f"{'yes' if v['beats_null_on_tracked'] else 'no'} |{agree}")
     L += ["",
           "`ρ vs −rmsd` is **secondary and biased**: negatives were sampled stratified "
           "by `filter_rmsd`, which distorts its marginal distribution. The AUC column "

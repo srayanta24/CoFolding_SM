@@ -11,7 +11,5 @@
       "manifest": "experiments/scoring_calibration/sets/designs_ctrop2.tsv"
     }
   },
-  "withheld_targets": [
-    "chrna2"
-  ]
+  "n_withheld_targets": 1
 }

@@ -120,5 +120,10 @@ experiments/scoring_calibration/results/packstat_raw.log
 # none of its derived results enter the repo -- same exclusion as the campaign itself
 # (line 89). The committed write-up states that a second target was checked and in
 # which direction, without its numbers. See EXPERIMENT_05.
-experiments/scoring_calibration/results/designs_*_chrna2.tsv
+# The withheld-campaign sidecar names the excluded campaign and maps it to its paths;
+# it and every design-benchmark artifact derived from a withheld campaign stay out of
+# git. The tracked target is ctrop2 (designs_*_ctrop2.tsv), which these do NOT match.
+experiments/scoring_calibration/sets/withheld_campaigns.tsv
 experiments/scoring_calibration/sets/designs_chrna2.tsv
+experiments/scoring_calibration/results/designs_rosetta_chrna2.tsv
+experiments/scoring_calibration/results/designs_esmif_chrna2.tsv

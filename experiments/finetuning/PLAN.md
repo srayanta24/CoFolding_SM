@@ -157,7 +157,23 @@ comparable to AbBiBench's published baselines (ProteinMPNN ρ≈0.30, ESM-IF1 �
 7. ⬜ **Decide**: is a sequence-only filter worth wiring into the funnel, given it
    cannot see structure and the funnel's other metrics can?
 
-## 4b. Milestone 2 — distilling packstat (scoped 2026-10-30)
+## 4b. Milestone 2 — distilling packstat — **CANCELLED 2026-11-01**
+
+> **Cancelled by [EXPERIMENT_05](../scoring_calibration/EXPERIMENT_05_design_transfer.md).**
+> This milestone would have distilled a cheap model to predict relaxed packstat, on the
+> premise (from EXPERIMENT_04) that packstat is at least an *interface-integrity
+> detector* even if it cannot rank affinity. EXPERIMENT_05 scored packstat on 1,096 real
+> BoltzGen designs against a structural-self-consistency label and found it **at chance
+> on the committed target (AUC 0.508, below its own null) and worse than chance on the
+> withheld one.** packstat does not detect integrity in generated structures, so there
+> is nothing worth distilling — the target property is itself at chance on the objects
+> the funnel produces. The 23/28 was specific to point mutants of near-native crystal
+> backbones and does not survive the backbone being designed.
+>
+> EXPERIMENT_05 also found the two best metrics for this label (ipTM, delta_sasa_refolded)
+> are **already computed free** by the pipeline, so even a working distillation would
+> have had to beat free metrics it does not beat. The section below is kept as written,
+> for the record of what was planned and why it was dropped.
 
 **The problem.** packstat is the only metric that has beaten ipTM on a valid test
 (23/28, p=0.0005, clears its null). It is also unusable at funnel scale: Rosetta

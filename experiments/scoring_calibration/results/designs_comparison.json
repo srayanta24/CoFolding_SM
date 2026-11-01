@@ -1,0 +1,225 @@
+{
+  "criteria": {
+    "pass_auc": 0.65,
+    "weak_auc": 0.6
+  },
+  "targets": {
+    "ctrop2": {
+      "n": 655,
+      "n_pass": 165,
+      "n_fail": 490,
+      "metrics": {
+        "packstat": {
+          "auc": 0.508,
+          "p": 0.758269,
+          "null_control": false,
+          "spearman_vs_neg_rmsd": -0.0178,
+          "median_pass": 0.6281,
+          "median_fail": 0.6265
+        },
+        "shape complementarity": {
+          "auc": 0.4949,
+          "p": 0.844445,
+          "null_control": false,
+          "spearman_vs_neg_rmsd": 0.0071,
+          "median_pass": 0.5874,
+          "median_fail": 0.5865
+        },
+        "-dG/dSASA": {
+          "auc": 0.5836,
+          "p": 0.001299,
+          "null_control": false,
+          "spearman_vs_neg_rmsd": 0.1458,
+          "median_pass": 2.3192,
+          "median_fail": 2.2314
+        },
+        "-dG_separated": {
+          "auc": 0.6656,
+          "p": 0.0,
+          "null_control": false,
+          "spearman_vs_neg_rmsd": 0.2735,
+          "median_pass": 60.1766,
+          "median_fail": 54.1192
+        },
+        "buried SASA": {
+          "auc": 0.6457,
+          "p": 0.0,
+          "null_control": false,
+          "spearman_vs_neg_rmsd": 0.223,
+          "median_pass": 2631.9,
+          "median_fail": 2405.53
+        },
+        "interface H-bonds": {
+          "auc": 0.6149,
+          "p": 9e-06,
+          "null_control": false,
+          "spearman_vs_neg_rmsd": 0.1967,
+          "median_pass": 14.0,
+          "median_fail": 12.0
+        },
+        "ipTM (free)": {
+          "auc": 0.708,
+          "p": 0.0,
+          "null_control": false,
+          "spearman_vs_neg_rmsd": 0.3983,
+          "median_pass": 0.3893,
+          "median_fail": 0.3352
+        },
+        "pTM (free)": {
+          "auc": 0.4891,
+          "p": 0.674305,
+          "null_control": false,
+          "spearman_vs_neg_rmsd": -0.0522,
+          "median_pass": 0.705,
+          "median_fail": 0.705
+        },
+        "delta_sasa_refolded (free)": {
+          "auc": 0.6751,
+          "p": 0.0,
+          "null_control": false,
+          "spearman_vs_neg_rmsd": 0.291,
+          "median_pass": 1207.5527,
+          "median_fail": 1087.9507
+        },
+        "ESM-IF1 ll_heavy": {
+          "auc": 0.5476,
+          "p": 0.067198,
+          "null_control": false,
+          "spearman_vs_neg_rmsd": 0.0686,
+          "median_pass": -1.3122,
+          "median_fail": -1.3426
+        },
+        "ESM-IF1 ll_antibody": {
+          "auc": 0.5512,
+          "p": 0.049007,
+          "null_control": false,
+          "spearman_vs_neg_rmsd": 0.0662,
+          "median_pass": -1.3232,
+          "median_fail": -1.3381
+        },
+        "ESM-IF1 ll_antigen": {
+          "auc": 0.5123,
+          "p": 0.634993,
+          "null_control": true,
+          "spearman_vs_neg_rmsd": 0.0401,
+          "median_pass": -1.4794,
+          "median_fail": -1.4772
+        }
+      }
+    }
+  },
+  "verdicts": {
+    "-dG/dSASA": {
+      "verdict_tracked": "FAIL",
+      "beats_null_on_tracked": true,
+      "min_auc_tracked": 0.5836,
+      "auc_by_tracked_target": {
+        "ctrop2": 0.5836
+      },
+      "tracked_direction_above_chance": true,
+      "withheld_agreed_direction": true
+    },
+    "-dG_separated": {
+      "verdict_tracked": "PASS",
+      "beats_null_on_tracked": true,
+      "min_auc_tracked": 0.6656,
+      "auc_by_tracked_target": {
+        "ctrop2": 0.6656
+      },
+      "tracked_direction_above_chance": true,
+      "withheld_agreed_direction": true
+    },
+    "ESM-IF1 ll_antibody": {
+      "verdict_tracked": "FAIL",
+      "beats_null_on_tracked": true,
+      "min_auc_tracked": 0.5512,
+      "auc_by_tracked_target": {
+        "ctrop2": 0.5512
+      },
+      "tracked_direction_above_chance": true,
+      "withheld_agreed_direction": false
+    },
+    "ESM-IF1 ll_heavy": {
+      "verdict_tracked": "FAIL",
+      "beats_null_on_tracked": true,
+      "min_auc_tracked": 0.5476,
+      "auc_by_tracked_target": {
+        "ctrop2": 0.5476
+      },
+      "tracked_direction_above_chance": true,
+      "withheld_agreed_direction": false
+    },
+    "buried SASA": {
+      "verdict_tracked": "WEAK",
+      "beats_null_on_tracked": true,
+      "min_auc_tracked": 0.6457,
+      "auc_by_tracked_target": {
+        "ctrop2": 0.6457
+      },
+      "tracked_direction_above_chance": true,
+      "withheld_agreed_direction": true
+    },
+    "delta_sasa_refolded (free)": {
+      "verdict_tracked": "PASS",
+      "beats_null_on_tracked": true,
+      "min_auc_tracked": 0.6751,
+      "auc_by_tracked_target": {
+        "ctrop2": 0.6751
+      },
+      "tracked_direction_above_chance": true,
+      "withheld_agreed_direction": true
+    },
+    "interface H-bonds": {
+      "verdict_tracked": "WEAK",
+      "beats_null_on_tracked": true,
+      "min_auc_tracked": 0.6149,
+      "auc_by_tracked_target": {
+        "ctrop2": 0.6149
+      },
+      "tracked_direction_above_chance": true,
+      "withheld_agreed_direction": true
+    },
+    "ipTM (free)": {
+      "verdict_tracked": "PASS",
+      "beats_null_on_tracked": true,
+      "min_auc_tracked": 0.708,
+      "auc_by_tracked_target": {
+        "ctrop2": 0.708
+      },
+      "tracked_direction_above_chance": true,
+      "withheld_agreed_direction": true
+    },
+    "pTM (free)": {
+      "verdict_tracked": "FAIL",
+      "beats_null_on_tracked": false,
+      "min_auc_tracked": 0.4891,
+      "auc_by_tracked_target": {
+        "ctrop2": 0.4891
+      },
+      "tracked_direction_above_chance": false,
+      "withheld_agreed_direction": true
+    },
+    "packstat": {
+      "verdict_tracked": "FAIL",
+      "beats_null_on_tracked": false,
+      "min_auc_tracked": 0.508,
+      "auc_by_tracked_target": {
+        "ctrop2": 0.508
+      },
+      "tracked_direction_above_chance": true,
+      "withheld_agreed_direction": false
+    },
+    "shape complementarity": {
+      "verdict_tracked": "FAIL",
+      "beats_null_on_tracked": false,
+      "min_auc_tracked": 0.4949,
+      "auc_by_tracked_target": {
+        "ctrop2": 0.4949
+      },
+      "tracked_direction_above_chance": false,
+      "withheld_agreed_direction": true
+    }
+  },
+  "n_withheld_targets": 1,
+  "withheld_note": "One design pool is gitignored with its campaign at the user's request. Every number in this file is from the tracked target(s). The withheld target contributes only `withheld_agreed_direction` (one bit per metric). Its magnitudes live in the gitignored designs_*_<withheld>.tsv and in `analyze_designs.py --include-withheld`."
+}
